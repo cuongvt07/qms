@@ -27,15 +27,14 @@ class FormSubmissionController extends Controller
         ]);
     }
 
-    /** Xuất .docx cho bản điền trực tiếp (raw vals: text + chk_ ☒/☐). */
-    public function inlineExport(FormSubmission $submission, HtmlFormService $html): BinaryFileResponse
+    /** Xuất .docx cho bản điền trực tiếp — DÙNG CHUNG DocxExportService với dạng phiếu (đồng bộ). */
+    public function inlineExport(FormSubmission $submission, DocxExportService $exportService): BinaryFileResponse
     {
         if ($submission->user_id !== auth()->id() && ! (auth()->user()->is_admin ?? false)) {
             abort(403);
         }
-        $version  = $submission->templateVersion;
-        $template = $version->formTemplate;
-        $tmpPath  = $html->fill($template, $submission->data_json ?? [], $version->fields);
+        $template = $submission->templateVersion->formTemplate;
+        $tmpPath  = $exportService->export($submission);
         $filename = sprintf('%s_%s.docx', $template->ma_bm, $submission->ngay_nhap->format('Ymd'));
 
         return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);

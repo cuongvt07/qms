@@ -3,20 +3,24 @@
 namespace App\Livewire;
 
 use App\Models\FormSubmission;
+use App\Models\FormSubmissionRow;
 use App\Models\FormTemplate;
 use App\Models\FormTemplateVersion;
 use Livewire\Component;
 
 /**
  * Điền trực tiếp GIỐNG BẢN GỐC — render docx bằng docx-preview (client), chèn ô nhập inline.
- * Giá trị gom ở trình duyệt, bấm Lưu đẩy 1 lần về server. Xuất .docx vẫn qua HtmlFormService::fill.
+ * LƯU CÙNG MÔ HÌNH với "dạng phiếu" (RegisterFill) để 2 màn đồng bộ:
+ *   - flat + checkbox lẻ (chk_*) + nhóm chọn (field_key = giá trị chọn) -> data_json
+ *   - bảng lặp -> form_submission_rows
+ * Xuất .docx dùng chung DocxExportService.
  */
 class InlineFill extends Component
 {
     public int    $versionId;
     public int    $templateId;
     public string $ngay;
-    public array  $vals         = [];     // phẳng + t[tkey][i][col]
+    public array  $vals         = [];     // client: flat + chk_ph(bool) + t[tkey][i][col]
     public ?int   $submissionId = null;
 
     public function mount(int $versionId): void
@@ -30,21 +34,101 @@ class InlineFill extends Component
             ->where('user_id', auth()->id())
             ->where('ngay_nhap', $this->ngay)->first();
         if ($existing) {
-            $this->vals         = $existing->data_json ?? [];
             $this->submissionId = $existing->id;
+            $this->vals         = $this->toClientVals($existing, $v->fields);
         }
     }
 
-    /** Nhận vals gom từ client rồi lưu. */
+    /** Mô hình chuẩn (data_json field_key + form_submission_rows) -> vals client (chk_ph bool + t[tkey]). */
+    private function toClientVals(FormSubmission $sub, array $fields): array
+    {
+        $vals = $sub->data_json ?? [];   // đã gồm flat + chk_ lẻ; giữ nguyên
+        foreach ($fields as $f) {
+            $type = $f['type'] ?? 'text';
+            if ($type === 'repeatable_table') {
+                $rows = FormSubmissionRow::where('form_submission_id', $sub->id)
+                    ->where('field_key', $f['key'])->orderBy('row_index')->get();
+                if ($rows->isNotEmpty()) {
+                    $vals['t'][$f['key']] = $rows->map(fn ($r) => $r->row_data_json)->all();
+                } elseif (! empty($sub->data_json['t'][$f['key']])) {
+                    $vals['t'][$f['key']] = $sub->data_json['t'][$f['key']];   // tương thích data inline cũ
+                }
+            } elseif (! empty($f['option_ph'])) {
+                // field_key = giá trị chọn -> bật các chk_ph tương ứng cho client
+                $chosenVal = $vals[$f['key']] ?? null;
+                $chosen = is_array($chosenVal)
+                    ? array_map('strval', $chosenVal)
+                    : ($chosenVal !== null && $chosenVal !== '' ? [(string) $chosenVal] : []);
+                foreach ($f['option_ph'] as $opt => $ph) {
+                    if (in_array((string) $opt, $chosen, true)) {
+                        $vals[$ph] = true;
+                    }
+                }
+            }
+        }
+        return $vals;
+    }
+
+    /** Nhận vals client rồi lưu về MÔ HÌNH CHUẨN (đồng bộ dạng phiếu). */
     public function save($clientVals = null): void
     {
-        if (is_array($clientVals)) {
-            $this->vals = $clientVals;
+        $vals   = is_array($clientVals) ? $clientVals : $this->vals;
+        $fields = FormTemplateVersion::find($this->versionId)?->fields ?? [];
+
+        $phOfGroup    = [];   // chk_ph thuộc nhóm option -> loại khỏi data_json (thay bằng field_key)
+        $optionFields = [];   // field_key -> [opt => ph]
+        $tableFields  = [];   // field_key -> columns
+        foreach ($fields as $f) {
+            if (($f['type'] ?? '') === 'repeatable_table') {
+                $tableFields[$f['key']] = $f['columns'] ?? [];
+            } elseif (! empty($f['option_ph'])) {
+                $optionFields[$f['key']] = $f['option_ph'];
+                foreach ($f['option_ph'] as $ph) {
+                    $phOfGroup[$ph] = true;
+                }
+            }
         }
+
+        // data_json = flat + chk_ LẺ (giữ); bỏ 't' và chk_ph của nhóm
+        $data = [];
+        foreach ($vals as $k => $vv) {
+            if ($k === 't' || isset($phOfGroup[$k])) {
+                continue;
+            }
+            $data[$k] = $vv;
+        }
+        // nhóm chọn -> data_json[field_key] = giá trị chọn (scalar nếu 1, mảng nếu nhiều)
+        foreach ($optionFields as $fk => $optph) {
+            $chosen = [];
+            foreach ($optph as $opt => $ph) {
+                if (! empty($vals[$ph])) {
+                    $chosen[] = (string) $opt;
+                }
+            }
+            // 0 chọn -> '' (tránh mảng rỗng làm dạng phiếu lỗi render), 1 -> scalar, nhiều -> mảng
+            $data[$fk] = count($chosen) <= 1 ? ($chosen[0] ?? '') : $chosen;
+        }
+
         $sub = FormSubmission::updateOrCreate(
             ['form_template_version_id' => $this->versionId, 'user_id' => auth()->id(), 'ngay_nhap' => $this->ngay],
-            ['data_json' => $this->vals, 'trang_thai' => 'hoan_thanh']
+            ['data_json' => $data, 'trang_thai' => 'hoan_thanh']
         );
+
+        // bảng -> form_submission_rows (mô hình chuẩn: dạng phiếu + xuất .docx đọc chỗ này)
+        foreach ($tableFields as $fk => $cols) {
+            $sttKeys = collect($cols)->filter(fn ($c) => RegisterFill::isSttCol($c))->pluck('key')->all();
+            FormSubmissionRow::where('form_submission_id', $sub->id)->where('field_key', $fk)->delete();
+            foreach (array_values($vals['t'][$fk] ?? []) as $ri => $rd) {
+                foreach ($sttKeys as $sk) {
+                    $rd[$sk] = $ri + 1;
+                }
+                FormSubmissionRow::create([
+                    'form_submission_id' => $sub->id, 'field_key' => $fk,
+                    'row_index' => $ri, 'row_data_json' => $rd,
+                ]);
+            }
+        }
+
         $this->submissionId = $sub->id;
         session()->flash('success', 'Đã lưu. Bấm "Tải .docx" để xuất bản điền.');
     }

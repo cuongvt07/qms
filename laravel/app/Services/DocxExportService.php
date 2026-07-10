@@ -53,10 +53,15 @@ class DocxExportService
                 }
             }
 
-            // Quét xoá MỌI placeholder còn sót (bảng chưa nhập dòng, field không map…)
-            // để không bao giờ lọt ${key} ra file xuất.
+            // Quét placeholder còn sót:
+            //  - chk_* LẺ (không thuộc field option nào, vd chk_yeu_cau) -> ☒/☐ theo data_json
+            //  - còn lại (bảng chưa nhập dòng, field không map…) -> rỗng, không lọt ${key}.
             foreach ($processor->getVariables() as $leftover) {
-                $processor->setValue($leftover, '');
+                if (str_starts_with($leftover, 'chk_')) {
+                    $processor->setValue($leftover, ! empty($data[$leftover]) ? '☒' : '☐');
+                } else {
+                    $processor->setValue($leftover, '');
+                }
             }
 
             // Ghi vào file tạm
@@ -75,18 +80,20 @@ class DocxExportService
         array $field
     ): void {
         $rows = $submission->rowsForField($field['key'])->get();
-        if ($rows->isEmpty()) {
+        // Nguồn dòng: form_submission_rows (chuẩn); nếu trống thì fallback data_json['t'] (data inline cũ)
+        $source = $rows->isNotEmpty()
+            ? $rows->map(fn ($r) => $r->row_data_json)->all()
+            : ($submission->data_json['t'][$field['key']] ?? []);
+        if (empty($source)) {
             return;
         }
 
-        $columns    = $field['columns'] ?? [];
-        $firstRow   = $rows->first();
-        $rowData    = [];
-
-        foreach ($rows as $idx => $row) {
+        $columns = $field['columns'] ?? [];
+        $rowData = [];
+        foreach ($source as $row) {
             $entry = [];
             foreach ($columns as $col) {
-                $entry[$col['key']] = htmlspecialchars((string) ($row->row_data_json[$col['key']] ?? ''));
+                $entry[$col['key']] = htmlspecialchars((string) ($row[$col['key']] ?? ''));
             }
             $rowData[] = $entry;
         }
