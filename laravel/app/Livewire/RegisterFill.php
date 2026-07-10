@@ -24,6 +24,11 @@ class RegisterFill extends Component
     public int    $active     = 0;
     public string $title      = '';
 
+    // Sao chép dữ liệu 1 ngày sang nhiều ngày (chọn ngày)
+    public bool   $showCopy   = false;
+    public string $copyMonth  = '';
+    public array  $copyDates  = [];
+
     public function mount(int $versionId): void
     {
         $this->versionId = $versionId;
@@ -155,6 +160,83 @@ class RegisterFill extends Component
                 $this->addDay($ds);
             }
         }
+    }
+
+    /** Mở panel sao chép — mặc định tháng theo ngày đang chọn. */
+    public function openCopy(): void
+    {
+        $src = $this->rows[$this->active]['ngay'] ?? now()->toDateString();
+        $this->copyMonth = Carbon::parse($src)->format('Y-m');
+        $this->copyDates = [];
+        $this->showCopy  = true;
+    }
+
+    /** Danh sách ngày trong tháng đang chọn (để tick). */
+    public function getCopyDaysProperty(): array
+    {
+        if (! $this->copyMonth) {
+            return [];
+        }
+        [$y, $m] = array_map('intval', explode('-', $this->copyMonth));
+        $s   = Carbon::create($y, $m, 1);
+        $e   = $s->copy()->endOfMonth();
+        $out = [];
+        for ($d = $s->copy(); $d->lte($e); $d->addDay()) {
+            $out[] = $d->toDateString();
+        }
+        return $out;
+    }
+
+    public function toggleCopyDate(string $date): void
+    {
+        if (($k = array_search($date, $this->copyDates, true)) !== false) {
+            unset($this->copyDates[$k]);
+        } else {
+            $this->copyDates[] = $date;
+        }
+        $this->copyDates = array_values($this->copyDates);
+    }
+
+    public function selectAllCopyDates(): void
+    {
+        $src = $this->rows[$this->active]['ngay'] ?? null;
+        $this->copyDates = array_values(array_filter($this->copyDays, fn ($d) => $d !== $src));
+    }
+
+    public function clearCopyDates(): void
+    {
+        $this->copyDates = [];
+    }
+
+    /** Sao chép data + bảng của ngày đang chọn sang các ngày đã tick (tạo tab mới nếu chưa có, ghi đè nếu đã có). */
+    public function copyToSelected(): void
+    {
+        if (! isset($this->rows[$this->active])) {
+            return;
+        }
+        $src     = $this->rows[$this->active];
+        $srcDate = $src['ngay'];
+        $data    = $src['data'] ?? [];
+        $tables  = $src['tables'] ?? [];
+        $n = 0;
+        foreach ($this->copyDates as $date) {
+            if (! $date || $date === $srcDate) {
+                continue;
+            }
+            $idx = array_search($date, array_column($this->rows, 'ngay'), true);
+            if ($idx !== false) {
+                $this->rows[$idx]['data']       = $data;
+                $this->rows[$idx]['tables']     = $tables;
+                $this->rows[$idx]['trang_thai'] = 'nhap_dang_do';
+            } else {
+                $this->rows[] = ['id' => null, 'ngay' => $date, 'data' => $data, 'tables' => $tables, 'trang_thai' => 'nhap_dang_do'];
+            }
+            $n++;
+        }
+        $this->rows      = array_values($this->rows);
+        $this->showCopy  = false;
+        $this->copyDates = [];
+        session()->flash('success', 'Đã sao chép dữ liệu ngày ' . Carbon::parse($srcDate)->format('d/m/Y') . " sang {$n} ngày. Bấm “Lưu tất cả” để lưu.");
     }
 
     public function removeRow(int $i): void

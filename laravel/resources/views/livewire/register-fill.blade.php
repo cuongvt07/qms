@@ -67,6 +67,10 @@
         <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
             <span class="text-sm text-gray-500">Ngày:</span>
             <input type="date" wire:model.live="rows.{{ $A }}.ngay" class="border border-gray-200 rounded-lg text-sm px-2.5 py-1.5 focus:border-teal-500 outline-none">
+            <button type="button" wire:click="openCopy" class="inline-flex items-center gap-1 text-xs border border-gray-300 text-gray-600 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 shrink-0" title="Sao chép dữ liệu ngày này sang ngày khác">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Sao chép sang ngày…
+            </button>
             @if(!empty($row['id']))
                 <a href="{{ route('forms.export', $row['id']) }}" class="ml-auto inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-lg px-2.5 py-1.5 font-medium hover:bg-teal-100">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Tải .docx
@@ -78,6 +82,40 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
             </button>
         </div>
+
+        {{-- ── Panel sao chép sang nhiều ngày ── --}}
+        @if($showCopy)
+        <div class="mb-4 border border-teal-200 bg-teal-50/50 rounded-xl p-3.5">
+            <div class="flex items-center gap-2 mb-2.5">
+                <span class="text-sm font-semibold text-gray-700">Sao chép dữ liệu ngày <b>{{ \Carbon\Carbon::parse($row['ngay'])->format('d/m/Y') }}</b> sang các ngày:</span>
+                <input type="month" wire:model.live="copyMonth" class="ml-auto border border-gray-200 rounded-lg text-sm px-2 py-1">
+            </div>
+            <div class="flex flex-wrap gap-1.5 mb-2.5">
+                @foreach($this->copyDays as $d)
+                    @php $isSrc = $d === $row['ngay']; $sel = in_array($d, $copyDates, true); @endphp
+                    <button type="button" @if(!$isSrc) wire:click="toggleCopyDate('{{ $d }}')" @endif
+                        title="{{ \Carbon\Carbon::parse($d)->format('D d/m/Y') }}"
+                        @class([
+                            'text-xs rounded-lg w-9 py-1.5 border text-center transition',
+                            'bg-gray-100 text-gray-300 border-gray-100 cursor-default' => $isSrc,
+                            'bg-teal-600 text-white border-teal-600 font-semibold' => $sel && !$isSrc,
+                            'bg-white text-gray-600 border-gray-200 hover:border-teal-400' => !$sel && !$isSrc,
+                        ])>{{ \Carbon\Carbon::parse($d)->format('d') }}</button>
+                @endforeach
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" wire:click="selectAllCopyDates" class="text-xs text-teal-700 hover:underline">Chọn tất cả</button>
+                <button type="button" wire:click="clearCopyDates" class="text-xs text-gray-500 hover:underline">Bỏ chọn</button>
+                <span class="text-xs text-gray-400">Đã chọn {{ count($copyDates) }} ngày</span>
+                <button type="button" wire:click="copyToSelected" @disabled(!count($copyDates))
+                    class="ml-auto bg-teal-600 text-white rounded-lg px-3.5 py-1.5 text-sm font-semibold hover:bg-teal-700 disabled:opacity-40">
+                    Sao chép ({{ count($copyDates) }})
+                </button>
+                <button type="button" wire:click="$set('showCopy', false)" class="text-sm text-gray-500 px-2 py-1.5 hover:text-gray-700">Huỷ</button>
+            </div>
+            <p class="text-[11px] text-amber-600 mt-2">⚠ Ngày đã có dữ liệu sẽ bị GHI ĐÈ. Sau khi sao chép, bấm “Lưu tất cả” để lưu.</p>
+        </div>
+        @endif
 
         {{-- Các field theo đúng thứ tự bản gốc — lưới 2 cột (ngắn 1/2, dài full) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 items-start">
