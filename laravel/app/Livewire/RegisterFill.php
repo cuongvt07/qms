@@ -89,12 +89,28 @@ class RegisterFill extends Component
         return FormTemplateVersion::with('formTemplate')->findOrFail($this->versionId);
     }
 
-    /** Field hiển thị (bỏ field ẩn). Lọc ${...} lẫn trong NHÃN (không đụng option text = khoá map export). */
+    /**
+     * Field hiển thị (bỏ field ẩn), XẾP THEO THỨ TỰ TRONG FILE GỐC (trên→dưới), không phải ABC.
+     * Lọc ${...} lẫn trong NHÃN (không đụng option text = khoá map export).
+     */
     public function getFieldsProperty(): array
     {
         // bắt cả placeholder đủ ${x} lẫn mảnh cụt ${chk_giao_t (injector cắt nhãn giữa chừng)
         $clean = fn ($s) => trim(preg_replace('/\$\{[a-z0-9_]*\}?/i', '', (string) $s));
-        return array_values(array_map(function ($f) use ($clean) {
+        $order = $this->placeholderOrder();
+        $posOf = function ($f) use ($order) {
+            $keys = ($f['type'] ?? '') === 'repeatable_table'
+                ? array_column($f['columns'] ?? [], 'key')
+                : (! empty($f['option_ph']) ? array_values($f['option_ph']) : [$f['key'] ?? '']);
+            $p = PHP_INT_MAX;
+            foreach ($keys as $k) {
+                if (isset($order[$k])) {
+                    $p = min($p, $order[$k]);
+                }
+            }
+            return $p;
+        };
+        $fields = array_values(array_map(function ($f) use ($clean) {
             $f['label'] = $clean($f['label'] ?? '');
             if (! empty($f['columns'])) {
                 $f['columns'] = array_map(function ($c) use ($clean) {
@@ -104,6 +120,31 @@ class RegisterFill extends Component
             }
             return $f;
         }, array_filter($this->version->fields, fn ($f) => empty($f['hidden']))));
+        usort($fields, fn ($a, $b) => $posOf($a) <=> $posOf($b));   // PHP 8 usort ổn định
+        return $fields;
+    }
+
+    /** Vị trí placeholder theo thứ tự xuất hiện trong .docx gốc (key => index). Cache theo version. */
+    private function placeholderOrder(): array
+    {
+        static $cache = [];
+        $vid = $this->versionId;
+        if (isset($cache[$vid])) {
+            return $cache[$vid];
+        }
+        $order = [];
+        try {
+            $path = Storage::disk('local')->path($this->version->formTemplate->file_goc_path);
+            $tp   = new \PhpOffice\PhpWord\TemplateProcessor($path);
+            foreach (array_values($tp->getVariables()) as $i => $k) {
+                if (! isset($order[$k])) {
+                    $order[$k] = $i;
+                }
+            }
+        } catch (\Throwable $e) {
+            // không đọc được -> giữ thứ tự schema
+        }
+        return $cache[$vid] = $order;
     }
 
     public function getTableFieldsProperty(): array

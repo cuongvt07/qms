@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto pb-28">
+<div class="max-w-5xl mx-auto pb-28">
     @php
         $tpl = $this->version->formTemplate;
         $fields = $this->fields;
@@ -277,7 +277,7 @@
 
     {{-- ── Thanh lưu ── --}}
     <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 z-20" style="padding-bottom:calc(env(safe-area-inset-bottom) + .75rem);padding-top:.75rem">
-        <div class="max-w-3xl mx-auto flex items-center gap-3">
+        <div class="max-w-5xl mx-auto flex items-center gap-3">
             <span class="text-sm text-gray-500">{{ count($rows) }} ngày</span>
             <button type="button" wire:click="saveAll" wire:loading.attr="disabled" wire:target="saveAll"
                     class="ml-auto bg-teal-600 text-white rounded-xl px-6 py-3 text-sm font-bold hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2">
