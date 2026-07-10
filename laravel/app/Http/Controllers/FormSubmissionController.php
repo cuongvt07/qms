@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FormSubmission;
+use App\Models\FormSubmissionAttachment;
 use App\Models\FormTemplateVersion;
 use App\Services\DocxExportService;
 use App\Services\HtmlFormService;
@@ -38,6 +39,22 @@ class FormSubmissionController extends Controller
         $filename = sprintf('%s_%s.docx', $template->ma_bm, $submission->ngay_nhap->format('Ymd'));
 
         return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
+    }
+
+    /** Phục vụ file đính kèm (ảnh xem trực tiếp, file khác tải về). */
+    public function attachment(FormSubmissionAttachment $attachment): BinaryFileResponse
+    {
+        $sub = $attachment->submission;
+        if ($sub->user_id !== auth()->id() && ! (auth()->user()->is_admin ?? false)) {
+            abort(403);
+        }
+        $path = Storage::disk('local')->path($attachment->path);
+        abort_unless(is_file($path), 404);
+
+        return response()->file($path, [
+            'Content-Type'        => $attachment->mime ?: 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="' . addslashes($attachment->original_name) . '"',
+        ]);
     }
 
     public function export(FormSubmission $submission, DocxExportService $exportService): BinaryFileResponse

@@ -46,6 +46,11 @@ class FormSubmission extends Model
             ->orderBy('row_index');
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(FormSubmissionAttachment::class)->latest('id');
+    }
+
     public function isComplete(): bool
     {
         return $this->trang_thai === 'hoan_thanh';

@@ -226,6 +226,43 @@
                 @endif
             @endforeach
         </div>
+
+        {{-- ── Tệp / ảnh đính kèm ── --}}
+        <div class="mt-5 pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2 mb-2.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-gray-500"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.49-8.49"/></svg>
+                <span class="text-sm font-semibold text-gray-700">Tệp / ảnh đính kèm</span>
+                <span class="text-xs text-gray-400">(gắn vào bản lưu ngày này)</span>
+            </div>
+            @if(!empty($row['attachments']))
+            <div class="flex flex-wrap gap-2.5 mb-3">
+                @foreach($row['attachments'] as $att)
+                    <div class="relative group border border-gray-200 rounded-lg overflow-hidden bg-white" style="width:100px" wire:key="att-{{ $att['id'] }}">
+                        <a href="{{ route('forms.attachment', $att['id']) }}" target="_blank" title="{{ $att['name'] }}">
+                            @if($att['is_image'])
+                                <img src="{{ route('forms.attachment', $att['id']) }}" class="w-[100px] h-[76px] object-cover" alt="">
+                            @else
+                                <div class="w-[100px] h-[76px] grid place-items-center bg-gray-50 text-gray-400">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                </div>
+                            @endif
+                        </a>
+                        <div class="px-1.5 py-1 text-[10px] text-gray-500 leading-tight truncate">{{ $att['name'] }}</div>
+                        <button type="button" wire:click="deleteAttachment({{ $att['id'] }})" wire:confirm="Xoá tệp đính kèm này?"
+                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-5 text-center opacity-0 group-hover:opacity-100 transition">✕</button>
+                    </div>
+                @endforeach
+            </div>
+            @endif
+            <label class="inline-flex items-center gap-2 text-sm text-teal-700 border border-dashed border-teal-300 rounded-lg px-3.5 py-2 cursor-pointer hover:bg-teal-50">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Thêm tệp / ảnh
+                <input type="file" wire:model="uploads" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="hidden">
+            </label>
+            <span wire:loading wire:target="uploads" class="text-xs text-gray-400 ml-2">Đang tải lên…</span>
+            @error('uploads.*')<span class="text-xs text-red-500 ml-2">{{ $message }}</span>@enderror
+            <p class="text-[11px] text-gray-400 mt-1.5">Hỗ trợ ảnh (JPG/PNG…), PDF, Word, Excel — tối đa 20MB mỗi tệp.</p>
+        </div>
     </div>
     @endif
 

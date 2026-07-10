@@ -3,11 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\FormSubmission;
+use App\Models\FormSubmissionAttachment;
 use App\Models\FormSubmissionRow;
 use App\Models\FormTemplateVersion;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Nhập biểu mẫu theo NGÀY dạng TAB:
@@ -17,6 +20,8 @@ use Livewire\Component;
  */
 class RegisterFill extends Component
 {
+    use WithFileUploads;
+
     public int    $versionId  = 0;
     public array  $rows       = [];   // [['id','ngay','data'=>[k=>v],'tables'=>[fk=>[[c=>v]]],'trang_thai'], ...]
     public array  $deletedIds = [];
@@ -28,6 +33,9 @@ class RegisterFill extends Component
     public bool   $showCopy   = false;
     public string $copyMonth  = '';
     public array  $copyDates  = [];
+
+    // Tệp/ảnh đính kèm cho bản lưu (submission) của ngày đang chọn
+    public $uploads = [];
 
     public function mount(int $versionId): void
     {
@@ -50,6 +58,7 @@ class RegisterFill extends Component
             return [
                 'id' => $s->id, 'ngay' => Carbon::parse($s->ngay_nhap)->toDateString(),
                 'data' => $s->data_json ?? [], 'tables' => $tables, 'trang_thai' => $s->trang_thai,
+                'attachments' => $this->attList($s->id),
             ];
         })->all();
 
@@ -131,7 +140,7 @@ class RegisterFill extends Component
         foreach ($this->tableFields as $tf) {
             $tables[$tf['key']] = [];
         }
-        $this->rows[]  = ['id' => null, 'ngay' => $ngay, 'data' => [], 'tables' => $tables, 'trang_thai' => 'nhap_dang_do'];
+        $this->rows[]  = ['id' => null, 'ngay' => $ngay, 'data' => [], 'tables' => $tables, 'trang_thai' => 'nhap_dang_do', 'attachments' => []];
         $this->rows    = array_values($this->rows);
         $this->active  = count($this->rows) - 1;
     }
@@ -229,7 +238,7 @@ class RegisterFill extends Component
                 $this->rows[$idx]['tables']     = $tables;
                 $this->rows[$idx]['trang_thai'] = 'nhap_dang_do';
             } else {
-                $this->rows[] = ['id' => null, 'ngay' => $date, 'data' => $data, 'tables' => $tables, 'trang_thai' => 'nhap_dang_do'];
+                $this->rows[] = ['id' => null, 'ngay' => $date, 'data' => $data, 'tables' => $tables, 'trang_thai' => 'nhap_dang_do', 'attachments' => []];
             }
             $n++;
         }
@@ -285,6 +294,95 @@ class RegisterFill extends Component
         }
         $this->version->formTemplate->update(['ten_bm' => $t]);
         session()->flash('success', 'Đã đổi tên biểu mẫu.');
+    }
+
+    /** Danh sách đính kèm của 1 submission -> mảng cho blade. */
+    private function attList($subId): array
+    {
+        return FormSubmissionAttachment::where('form_submission_id', $subId)->latest('id')->get()
+            ->map(fn ($a) => [
+                'id' => $a->id, 'name' => $a->original_name, 'mime' => $a->mime,
+                'size' => $a->size, 'is_image' => $a->isImage(),
+            ])->all();
+    }
+
+    private function reloadAttachments(int $i): void
+    {
+        $id = $this->rows[$i]['id'] ?? null;
+        $this->rows[$i]['attachments'] = $id ? $this->attList($id) : [];
+    }
+
+    /** Lưu riêng 1 ngày (để có submission id trước khi đính kèm). */
+    private function persistRow(int $i): ?FormSubmission
+    {
+        if (empty($this->rows[$i]['ngay'])) {
+            return null;
+        }
+        $row = $this->rows[$i];
+        $sub = FormSubmission::updateOrCreate(
+            ['form_template_version_id' => $this->versionId, 'user_id' => auth()->id(), 'ngay_nhap' => $row['ngay']],
+            ['data_json' => $row['data'] ?? [], 'trang_thai' => $row['trang_thai'] ?? 'nhap_dang_do']
+        );
+        foreach (($row['tables'] ?? []) as $fk => $trows) {
+            $tf      = collect($this->tableFields)->firstWhere('key', $fk);
+            $sttKeys = collect($tf['columns'] ?? [])->filter(fn ($c) => self::isSttCol($c))->pluck('key')->all();
+            FormSubmissionRow::where('form_submission_id', $sub->id)->where('field_key', $fk)->delete();
+            foreach ($trows as $ri => $rd) {
+                foreach ($sttKeys as $sk) {
+                    $rd[$sk] = $ri + 1;
+                }
+                FormSubmissionRow::create(['form_submission_id' => $sub->id, 'field_key' => $fk, 'row_index' => $ri, 'row_data_json' => $rd]);
+            }
+        }
+        $this->rows[$i]['id'] = $sub->id;
+        return $sub;
+    }
+
+    /** Livewire tự gọi khi chọn tệp -> lưu ngày hiện tại (để có id) rồi đính kèm. */
+    public function updatedUploads(): void
+    {
+        $this->validate([
+            'uploads.*' => 'file|max:20480|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt',
+        ], [], ['uploads.*' => 'tệp']);
+
+        $sub = $this->persistRow($this->active);
+        if (! $sub) {
+            $this->uploads = [];
+            return;
+        }
+        foreach ($this->uploads as $file) {
+            $path = $file->store("attachments/{$sub->id}", 'local');
+            FormSubmissionAttachment::create([
+                'form_submission_id' => $sub->id,
+                'path'               => $path,
+                'original_name'      => $file->getClientOriginalName(),
+                'mime'               => $file->getMimeType(),
+                'size'               => $file->getSize(),
+            ]);
+        }
+        $this->uploads = [];
+        $this->reloadAttachments($this->active);
+        session()->flash('success', 'Đã tải lên tệp đính kèm.');
+    }
+
+    public function deleteAttachment(int $id): void
+    {
+        $a = FormSubmissionAttachment::find($id);
+        if (! $a) {
+            return;
+        }
+        $sub = $a->submission;
+        if ($sub && $sub->user_id !== auth()->id() && ! (auth()->user()->is_admin ?? false)) {
+            return;
+        }
+        Storage::disk('local')->delete($a->path);
+        $subId = $a->form_submission_id;
+        $a->delete();
+        foreach ($this->rows as $i => $r) {
+            if (($r['id'] ?? null) === $subId) {
+                $this->reloadAttachments($i);
+            }
+        }
     }
 
     public function saveAll(): void

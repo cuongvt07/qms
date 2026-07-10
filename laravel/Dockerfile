@@ -82,5 +82,8 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Nâng giới hạn upload (mặc định PHP chỉ 2MB) để đính kèm ảnh/PDF
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 EXPOSE 80
 ENTRYPOINT ["/entrypoint.sh"]

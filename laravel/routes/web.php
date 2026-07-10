@@ -35,6 +35,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('forms.inline-source');
     Route::get('/forms/inline-export/{submission}', [FormSubmissionController::class, 'inlineExport'])
         ->name('forms.inline-export');
+    Route::get('/forms/attachment/{attachment}', [FormSubmissionController::class, 'attachment'])
+        ->name('forms.attachment');
 
     // Nhập liệu 1 ngày (đủ field, gồm cả bảng lặp) — mở từ sổ khi cần chi tiết
     Route::get('/forms/fill/{versionId}', function ($versionId, \Illuminate\Http\Request $request) {
