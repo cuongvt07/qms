@@ -61,6 +61,9 @@ Route::middleware(['auth'])->group(function () {
         // Trung tâm điều hành (CMS)
         Route::get('/', \App\Livewire\Admin\OperationsCenter::class)->name('operations');
 
+        // Nhật ký hoạt động (audit log)
+        Route::get('nhat-ky-hoat-dong', \App\Livewire\Admin\AuditLog::class)->name('audit-log');
+
         // Mục tài liệu
         Route::resource('document-categories', DocumentCategoryController::class);
 

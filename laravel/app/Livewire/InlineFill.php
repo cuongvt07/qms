@@ -6,6 +6,7 @@ use App\Models\FormSubmission;
 use App\Models\FormSubmissionRow;
 use App\Models\FormTemplate;
 use App\Models\FormTemplateVersion;
+use App\Services\ActivityLogger;
 use Livewire\Component;
 
 /**
@@ -130,6 +131,10 @@ class InlineFill extends Component
         }
 
         $this->submissionId = $sub->id;
+
+        $maBm = FormTemplate::find($this->templateId)?->ma_bm;
+        ActivityLogger::log('save', "Điền trực tiếp & lưu biểu mẫu {$maBm} — ngày {$this->ngay}", $sub);
+
         session()->flash('success', 'Đã lưu. Bấm "Tải .docx" để xuất bản điền.');
     }
 

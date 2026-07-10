@@ -6,6 +6,7 @@ use App\Models\FormSubmission;
 use App\Models\FormSubmissionAttachment;
 use App\Models\FormSubmissionRow;
 use App\Models\FormTemplateVersion;
+use App\Services\ActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -245,6 +246,7 @@ class RegisterFill extends Component
         $this->rows      = array_values($this->rows);
         $this->showCopy  = false;
         $this->copyDates = [];
+        ActivityLogger::log('copy', 'Sao chép dữ liệu ngày ' . Carbon::parse($srcDate)->format('d/m/Y') . " sang {$n} ngày — biểu mẫu " . $this->version->formTemplate->ma_bm);
         session()->flash('success', 'Đã sao chép dữ liệu ngày ' . Carbon::parse($srcDate)->format('d/m/Y') . " sang {$n} ngày. Bấm “Lưu tất cả” để lưu.");
     }
 
@@ -362,6 +364,7 @@ class RegisterFill extends Component
         }
         $this->uploads = [];
         $this->reloadAttachments($this->active);
+        ActivityLogger::log('upload', 'Đính kèm tệp vào biểu mẫu ' . $this->version->formTemplate->ma_bm . ' — ngày ' . ($this->rows[$this->active]['ngay'] ?? ''), $sub);
         session()->flash('success', 'Đã tải lên tệp đính kèm.');
     }
 
@@ -377,6 +380,7 @@ class RegisterFill extends Component
         }
         Storage::disk('local')->delete($a->path);
         $subId = $a->form_submission_id;
+        ActivityLogger::log('delete_attachment', 'Xoá tệp đính kèm: ' . $a->original_name);
         $a->delete();
         foreach ($this->rows as $i => $r) {
             if (($r['id'] ?? null) === $subId) {
@@ -425,6 +429,8 @@ class RegisterFill extends Component
                 $this->rows[$i]['trang_thai'] = 'hoan_thanh';
             }
         });
+
+        ActivityLogger::log('save', 'Lưu biểu mẫu ' . $this->version->formTemplate->ma_bm . ' (' . count($this->rows) . ' ngày)');
 
         // Cảnh báo (không chặn) các ô BẮT BUỘC còn trống ở ngày đã có dữ liệu.
         $required = collect($this->fields)->where('required', true)->pluck('label', 'key');

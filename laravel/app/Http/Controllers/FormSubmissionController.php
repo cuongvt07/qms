@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FormSubmission;
 use App\Models\FormSubmissionAttachment;
 use App\Models\FormTemplateVersion;
+use App\Services\ActivityLogger;
 use App\Services\DocxExportService;
 use App\Services\HtmlFormService;
 use Illuminate\Http\Response;
@@ -37,6 +38,8 @@ class FormSubmissionController extends Controller
         $template = $submission->templateVersion->formTemplate;
         $tmpPath  = $exportService->export($submission);
         $filename = sprintf('%s_%s.docx', $template->ma_bm, $submission->ngay_nhap->format('Ymd'));
+
+        ActivityLogger::log('export', "Tải .docx biểu mẫu {$template->ma_bm} — ngày " . $submission->ngay_nhap->format('d/m/Y'), $submission);
 
         return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
@@ -72,6 +75,8 @@ class FormSubmissionController extends Controller
             $submission->user->name,
             $submission->ngay_nhap->format('Ymd')
         );
+
+        ActivityLogger::log('export', 'Tải .docx biểu mẫu ' . $submission->templateVersion->formTemplate->ma_bm . ' — ngày ' . $submission->ngay_nhap->format('d/m/Y'), $submission);
 
         return response()->download($tmpPath, $filename)->deleteFileAfterSend(true);
     }
