@@ -38,6 +38,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Tải .docx
                 </a>
             @endif
+            <span id="qf-status" class="text-xs shrink-0">@if($savedAt)<span style="color:#16a34a">✓ Đã lưu {{ $savedAt }}</span>@else<span class="text-gray-400">Tự lưu khi nhập</span>@endif</span>
             <button type="button" onclick="window.QFInline && window.QFInline.save()" wire:loading.attr="disabled" wire:target="save"
                     class="ml-auto bg-teal-600 text-white rounded-xl px-6 py-3 text-sm font-bold hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2">
                 <span wire:loading.remove wire:target="save" class="flex items-center gap-2">
@@ -52,7 +53,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=3"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=4"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}

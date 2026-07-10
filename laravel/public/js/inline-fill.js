@@ -1,7 +1,23 @@
 /* Điền trực tiếp: render .docx bằng docx-preview rồi chèn ô nhập vào chỗ ${key}.
    Giữ đúng cấu trúc vals cũ: phẳng vals[key] (+ chk true/false), bảng vals.t[tkey][i][col]. */
 window.QFInline = (function () {
-  let WIRE = null, ROOT = null;
+  let WIRE = null, ROOT = null, dirty = false, autosaveT = null, kbBound = false;
+
+  function setStatus(html) { const el = document.getElementById('qf-status'); if (el) el.innerHTML = html; }
+  function markDirty() { dirty = true; setStatus('<span style="color:#d97706">● Đang sửa…</span>'); }
+  function markSaved() {
+    dirty = false;
+    const t = new Date(), p = n => String(n).padStart(2, '0');
+    setStatus('<span style="color:#16a34a">✓ Đã lưu ' + p(t.getHours()) + ':' + p(t.getMinutes()) + '</span>');
+  }
+  function scheduleAutosave() {
+    clearTimeout(autosaveT);
+    autosaveT = setTimeout(() => {
+      if (!WIRE) return;
+      const r = WIRE.save(collectAll(), true);   // true = im lặng (không flash/không nhật ký)
+      (r && r.then) ? r.then(markSaved) : markSaved();
+    }, 1500);
+  }
 
   const cleanLabel = s => String(s || '').replace(/\$\{[a-z0-9_]+\}/ig, '').trim();
   const humanize   = k => String(k || '').replace(/[_-]+/g, ' ').trim();
@@ -224,6 +240,19 @@ window.QFInline = (function () {
         resizeBound = true;
         window.addEventListener('resize', fitWidth);
         window.addEventListener('load', fitWidth);
+      }
+      // Tự động lưu khi gõ/tích trong tờ giấy
+      ROOT.addEventListener('input', () => { markDirty(); scheduleAutosave(); });
+      ROOT.addEventListener('change', () => { markDirty(); scheduleAutosave(); });
+      if (!kbBound) {
+        kbBound = true;
+        window.addEventListener('keydown', e => {
+          if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            if (WIRE) { WIRE.save(collectAll()); markSaved(); }   // Ctrl+S = lưu rõ ràng (có nhật ký)
+          }
+        });
+        window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
       }
     } catch (e) {
       ROOT.innerHTML = '<div class="qf-err">Lỗi hiển thị bản gốc: ' + (e && e.message || e) + '</div>';

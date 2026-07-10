@@ -62,7 +62,12 @@
 
     {{-- ── Nội dung 1 ngày = phiếu dọc theo bản gốc ── --}}
     @if($row)
-    <div class="bg-white border border-gray-200 rounded-b-2xl rounded-tr-2xl shadow-sm p-4 md:p-5">
+    <div class="bg-white border border-gray-200 rounded-b-2xl rounded-tr-2xl shadow-sm p-4 md:p-5"
+         x-data="{ dirty: false, t: null }"
+         @input="dirty = true; clearTimeout(t); t = setTimeout(() => $wire.autosave(), 1500)"
+         x-on:saved.window="dirty = false"
+         @keydown.window.ctrl.s.prevent="$wire.saveAll()"
+         @beforeunload.window="if (dirty) $event.returnValue = ''">
         {{-- Thanh ngày: chọn ngày + xóa + tải --}}
         <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
             <span class="text-sm text-gray-500">Ngày:</span>
@@ -71,6 +76,10 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 Sao chép sang ngày…
             </button>
+            <span class="text-xs flex items-center gap-1 shrink-0">
+                <span x-show="dirty" class="text-amber-600">● Đang sửa…</span>
+                <span x-show="!dirty" class="{{ $savedAt ? 'text-green-600' : 'text-gray-400' }}">{{ $savedAt ? '✓ Đã lưu '.$savedAt : 'Tự lưu khi nhập' }}</span>
+            </span>
             @if(!empty($row['id']))
                 <a href="{{ route('forms.export', $row['id']) }}" class="ml-auto inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-lg px-2.5 py-1.5 font-medium hover:bg-teal-100">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Tải .docx

@@ -38,6 +38,9 @@ class RegisterFill extends Component
     // Tệp/ảnh đính kèm cho bản lưu (submission) của ngày đang chọn
     public $uploads = [];
 
+    // Tự động lưu
+    public ?string $savedAt = null;
+
     public function mount(int $versionId): void
     {
         $this->versionId = $versionId;
@@ -340,6 +343,15 @@ class RegisterFill extends Component
         return $sub;
     }
 
+    /** Tự động lưu (im lặng) ngày đang chọn — KHÔNG ghi nhật ký để tránh spam. */
+    public function autosave(): void
+    {
+        if ($this->persistRow($this->active)) {
+            $this->savedAt = now()->format('H:i');
+            $this->dispatch('saved');
+        }
+    }
+
     /** Livewire tự gọi khi chọn tệp -> lưu ngày hiện tại (để có id) rồi đính kèm. */
     public function updatedUploads(): void
     {
@@ -431,6 +443,8 @@ class RegisterFill extends Component
         });
 
         ActivityLogger::log('save', 'Lưu biểu mẫu ' . $this->version->formTemplate->ma_bm . ' (' . count($this->rows) . ' ngày)');
+        $this->savedAt = now()->format('H:i');
+        $this->dispatch('saved');
 
         // Cảnh báo (không chặn) các ô BẮT BUỘC còn trống ở ngày đã có dữ liệu.
         $required = collect($this->fields)->where('required', true)->pluck('label', 'key');

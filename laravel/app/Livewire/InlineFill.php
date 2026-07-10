@@ -23,6 +23,7 @@ class InlineFill extends Component
     public string $ngay;
     public array  $vals         = [];     // client: flat + chk_ph(bool) + t[tkey][i][col]
     public ?int   $submissionId = null;
+    public ?string $savedAt     = null;
 
     public function mount(int $versionId): void
     {
@@ -70,8 +71,8 @@ class InlineFill extends Component
         return $vals;
     }
 
-    /** Nhận vals client rồi lưu về MÔ HÌNH CHUẨN (đồng bộ dạng phiếu). */
-    public function save($clientVals = null): void
+    /** Nhận vals client rồi lưu về MÔ HÌNH CHUẨN (đồng bộ dạng phiếu). $silent=true khi autosave. */
+    public function save($clientVals = null, bool $silent = false): void
     {
         $vals   = is_array($clientVals) ? $clientVals : $this->vals;
         $fields = FormTemplateVersion::find($this->versionId)?->fields ?? [];
@@ -131,11 +132,14 @@ class InlineFill extends Component
         }
 
         $this->submissionId = $sub->id;
+        $this->savedAt      = now()->format('H:i');
+        $this->dispatch('saved');
 
-        $maBm = FormTemplate::find($this->templateId)?->ma_bm;
-        ActivityLogger::log('save', "Điền trực tiếp & lưu biểu mẫu {$maBm} — ngày {$this->ngay}", $sub);
-
-        session()->flash('success', 'Đã lưu. Bấm "Tải .docx" để xuất bản điền.');
+        if (! $silent) {
+            $maBm = FormTemplate::find($this->templateId)?->ma_bm;
+            ActivityLogger::log('save', "Điền trực tiếp & lưu biểu mẫu {$maBm} — ngày {$this->ngay}", $sub);
+            session()->flash('success', 'Đã lưu. Bấm "Tải .docx" để xuất bản điền.');
+        }
     }
 
     public function render()
