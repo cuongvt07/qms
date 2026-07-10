@@ -14,10 +14,12 @@ docx-preview-demo.html
 
 # ===== Dependencies (cài lại khi build) =====
 node_modules/
-vendor/
 laravel/node_modules/
 laravel/vendor/
 laravel-base/vendor/
+# LƯU Ý: KHÔNG dùng "vendor/" trơn — nó nuốt cả laravel/public/vendor
+# (jszip, docx-preview) vốn là ASSET của app, phải commit.
+!laravel/public/vendor/
 
 # ===== Laravel runtime (storage, cache, logs) =====
 laravel/storage/*.key
