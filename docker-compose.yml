@@ -1,0 +1,58 @@
+services:
+  app:
+    build:
+      context: ./laravel
+      dockerfile: Dockerfile
+    container_name: qms_laravel
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    environment:
+      APP_NAME: "QMS Forms"
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8088"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: qms_forms
+      DB_USERNAME: qms_user
+      DB_PASSWORD: secret
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      LOG_CHANNEL: stderr
+    volumes:
+      # Giữ file người dùng tải lên + file gốc BM + preview PDF qua các lần recreate
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      - db
+    networks:
+      - qms_network
+
+  db:
+    image: mysql:8.0
+    container_name: qms_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: qms_forms
+      MYSQL_USER: qms_user
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - qms_network
+
+  # (Đã bỏ container queue-worker: xử lý .docx giờ chạy đồng bộ ngay trong
+  #  request upload — file nhỏ, extract <1s, không cần hàng đợi + volume chung.)
+
+networks:
+  qms_network:
+    driver: bridge
+
+volumes:
+  db_data:
+  app_storage:

@@ -1,0 +1,43 @@
+# ===== Bí mật — TUYỆT ĐỐI không đẩy lên =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+cx.txt
+cr.html
+lx.html
+reg.html
+
+# ===== Data form thật / demo nhúng data =====
+docx-preview-demo.html
+
+# ===== Dependencies (cài lại khi build) =====
+node_modules/
+vendor/
+laravel/node_modules/
+laravel/vendor/
+laravel-base/vendor/
+
+# ===== Laravel runtime (storage, cache, logs) =====
+laravel/storage/*.key
+laravel/storage/app/
+laravel/storage/framework/cache/
+laravel/storage/framework/sessions/
+laravel/storage/framework/views/
+laravel/storage/logs/
+laravel/bootstrap/cache/*.php
+laravel-base/storage/app/
+laravel-base/storage/framework/
+laravel-base/storage/logs/
+
+# ===== Build tạm / cache html =====
+laravel/storage/app/html-cache/
+laravel/public/hot
+
+# ===== OS / editor =====
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

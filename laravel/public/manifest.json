@@ -1,0 +1,17 @@
+{
+  "name": "QMS Forms — Số hóa biểu mẫu",
+  "short_name": "QMS Forms",
+  "description": "Nhập liệu biểu mẫu QMS theo ngày",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f6f8fa",
+  "theme_color": "#0d7d8a",
+  "lang": "vi",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
