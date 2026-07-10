@@ -71,10 +71,21 @@ class RegisterFill extends Component
         return FormTemplateVersion::with('formTemplate')->findOrFail($this->versionId);
     }
 
-    /** Field hiển thị (bỏ field ẩn). */
+    /** Field hiển thị (bỏ field ẩn). Lọc ${...} lẫn trong NHÃN (không đụng option text = khoá map export). */
     public function getFieldsProperty(): array
     {
-        return array_values(array_filter($this->version->fields, fn ($f) => empty($f['hidden'])));
+        // bắt cả placeholder đủ ${x} lẫn mảnh cụt ${chk_giao_t (injector cắt nhãn giữa chừng)
+        $clean = fn ($s) => trim(preg_replace('/\$\{[a-z0-9_]*\}?/i', '', (string) $s));
+        return array_values(array_map(function ($f) use ($clean) {
+            $f['label'] = $clean($f['label'] ?? '');
+            if (! empty($f['columns'])) {
+                $f['columns'] = array_map(function ($c) use ($clean) {
+                    $c['label'] = $clean($c['label'] ?? '');
+                    return $c;
+                }, $f['columns']);
+            }
+            return $f;
+        }, array_filter($this->version->fields, fn ($f) => empty($f['hidden']))));
     }
 
     public function getTableFieldsProperty(): array

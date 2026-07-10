@@ -43,3 +43,7 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+
+# Tài liệu hướng dẫn (deliverable, không đẩy repo)
+HuongDan-Su-Dung-QMS.docx
+*.pdf
