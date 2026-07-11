@@ -53,7 +53,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=6"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=7"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}
@@ -71,7 +71,7 @@
         #qf-doc-root .qf-chk{width:15px;height:15px;accent-color:#1a4bd6;vertical-align:middle;cursor:pointer;margin:0 1px}
         #qf-doc-root .qf-stt{font-weight:600}
         #qf-doc-root td{position:relative}
-        #qf-doc-root .qf-del{position:absolute;right:-20px;top:50%;transform:translateY(-50%);opacity:0;
+        #qf-doc-root .qf-del{position:absolute;right:1px;top:1px;opacity:0;
             border:0;background:#fee2e2;color:#dc2626;border-radius:50%;width:18px;height:18px;line-height:16px;
             text-align:center;padding:0;cursor:pointer;font-size:11px;transition:opacity .15s}
         #qf-doc-root tr:hover .qf-del{opacity:1}

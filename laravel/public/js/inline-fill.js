@@ -132,10 +132,11 @@ window.QFInline = (function () {
     ctx.rows = rows.length ? rows : [{}];
   }
   function setupTables(root, tables, vals) {
+    const unhandled = [];   // cột bảng không tìm được dòng mẫu -> trả về để render thành ô nhập thường
     for (const t of tables) {
       if (!t.columns.length) continue;
       const tplRow = rowContaining(root, '${' + t.columns[0].key + '}');
-      if (!tplRow) continue;
+      if (!tplRow) { t.columns.forEach(c => unhandled.push(c.key)); continue; }
       const existing = (vals.t && vals.t[t.key]) ? vals.t[t.key] : [];
       const ctx = {
         key: t.key, columns: t.columns, parent: tplRow.parentNode, ref: tplRow.nextSibling,
@@ -152,6 +153,7 @@ window.QFInline = (function () {
       wrap.appendChild(add);
       if (table && table.parentNode) table.parentNode.insertBefore(wrap, table.nextSibling);
     }
+    return unhandled;
   }
 
   /* ---- Placeholder phẳng còn lại ---- */
@@ -235,14 +237,18 @@ window.QFInline = (function () {
       const buf = await fetch(cfg.docxUrl, { credentials: 'same-origin' })
         .then(r => { if (!r.ok) throw new Error('tải docx lỗi ' + r.status); return r.arrayBuffer(); });
       const holder = document.createElement('div');
-      await window.docx.renderAsync(buf, holder, null, {
-        className: 'docx', inWrapper: true, ignoreWidth: false, ignoreHeight: false,
-        breakPages: true, experimental: true, trimXmlDeclaration: true,
-        useBase64URL: true, renderHeaders: true, renderFooters: true,
-      });
+      await Promise.race([
+        window.docx.renderAsync(buf, holder, null, {
+          className: 'docx', inWrapper: true, ignoreWidth: false, ignoreHeight: false,
+          breakPages: true, experimental: true, trimXmlDeclaration: true,
+          useBase64URL: true, renderHeaders: true, renderFooters: true,
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('render quá lâu')), 15000)),
+      ]);
       ROOT.innerHTML = '';
       ROOT.appendChild(holder);
-      setupTables(holder, tables, vals);
+      const unhandled = setupTables(holder, tables, vals);
+      unhandled.forEach(k => tableCols.delete(k));   // bảng bố-trí-bằng-tab -> ô nhập thường
       walkReplace(holder, meta, tableCols, vals);
       scheduleFit();   // đo lại nhiều lần vì docx-preview layout/nạp font xong sau khi append
       if (!resizeBound) {
@@ -264,7 +270,8 @@ window.QFInline = (function () {
         window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
       }
     } catch (e) {
-      ROOT.innerHTML = '<div class="qf-err">Lỗi hiển thị bản gốc: ' + (e && e.message || e) + '</div>';
+      ROOT.innerHTML = '<div class="qf-err">Không hiển thị được bản gốc (' + (e && e.message || e) +
+        ').<br>Biểu mẫu này hãy nhập bằng nút <b>“Dạng phiếu”</b> ở góc trên.</div>';
     }
   }
 
