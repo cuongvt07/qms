@@ -123,11 +123,11 @@ class InlineDocxService
             return false;
         }
 
-        // 2) run thứ $occur có text == nodeText trong đoạn đó
+        // 2) run thứ $occur có text (đã bỏ ${..}) == nodeText — vì nhãn và ${..} có thể nằm CHUNG 1 w:t.
         $i       = 0;
         $targetT = null;
         foreach ($targetP->getElementsByTagNameNS($ns, 't') as $t) {
-            if ($t->nodeValue === $nodeText) {
+            if ($this->strip($t->nodeValue) === $nodeText) {
                 if ($i === $occur) {
                     $targetT = $t;
                     break;
@@ -137,7 +137,7 @@ class InlineDocxService
         }
         if (! $targetT) {
             foreach ($targetP->getElementsByTagNameNS($ns, 't') as $t) {
-                if ($t->nodeValue === $nodeText) {
+                if ($this->strip($t->nodeValue) === $nodeText) {
                     $targetT = $t;
                     break;
                 }
@@ -147,11 +147,37 @@ class InlineDocxService
             return false;
         }
 
-        $this->splitInsert($dom, $targetT, $offset, '${' . $key . '}');
+        // offset là vị trí trong text SẠCH -> ánh xạ về vị trí thật (bỏ qua ${..} phía trước)
+        $rawOffset = $this->rawOffset($targetT->nodeValue, $offset);
+        $this->splitInsert($dom, $targetT, $rawOffset, '${' . $key . '}');
         return true;
     }
 
-    /** Tách run tại $offset, chèn run placeholder (kế thừa định dạng) vào giữa. */
+    /** Đổi vị trí trong chuỗi đã bỏ ${..} sang vị trí trong chuỗi thật. */
+    private function rawOffset(string $raw, int $cleanOffset): int
+    {
+        $clean = 0;
+        $i     = 0;
+        $len   = mb_strlen($raw);
+        while ($i < $len) {
+            if (mb_substr($raw, $i, 2) === '${') {
+                $close = mb_strpos($raw, '}', $i);
+                if ($close === false) {
+                    break;
+                }
+                $i = $close + 1;
+                continue;
+            }
+            if ($clean === $cleanOffset) {
+                return $i;
+            }
+            $clean++;
+            $i++;
+        }
+        return $i;
+    }
+
+    /** Tách run tại $offset (vị trí thật), chèn run placeholder (kế thừa định dạng) vào giữa. */
     private function splitInsert(\DOMDocument $dom, \DOMNode $t, int $offset, string $ph): void
     {
         $run    = $t->parentNode;                 // <w:r>
