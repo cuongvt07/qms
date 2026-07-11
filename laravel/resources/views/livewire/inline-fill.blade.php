@@ -82,7 +82,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=13"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=14"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}

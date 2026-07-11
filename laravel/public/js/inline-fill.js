@@ -275,10 +275,15 @@ window.QFInline = (function () {
     if (!pEl) { toast('Không xác định được vị trí ở đây.'); return; }
     let occ = 0; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
     while (wk.nextNode()) { if (wk.currentNode === node) break; if (wk.currentNode.nodeValue === txt) occ++; }
+    // paraText = CHỮ TĨNH của đoạn, bỏ qua text bên trong chip (nút ✕/🗑, ô disabled) để khớp file gốc
+    let paraText = '';
+    const wp = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+    while (wp.nextNode()) { const c = wp.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; paraText += c.nodeValue; }
+    paraText = paraText.replace(/\s+/g, ' ').trim();
     e.preventDefault(); e.stopPropagation();
     ADD = false; setAddUI();
     toast('Đang thêm ô…');
-    if (WIRE) WIRE.addField({ paraText: (pEl.textContent || '').replace(/\s+/g, ' ').trim(), nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
+    if (WIRE) WIRE.addField({ paraText: paraText, nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
   }
   function bindAddMode() {
     if (addClickBound) return; addClickBound = true;
