@@ -179,14 +179,17 @@ class InlineFill extends Component
         $sj     = $v->schema_json;
         $fields = $sj['fields'] ?? [];
 
+        $placement = ($pos['placement'] ?? 'inline') === 'below' ? 'below' : 'inline';
         $key   = 'extra_' . substr(md5(($pos['paraText'] ?? '') . '|' . ($pos['nodeText'] ?? '') . '|' . ($pos['nodeOffset'] ?? '') . '|' . uniqid('', true)), 0, 8);
-        $label = 'Bổ sung: ' . trim(mb_substr(preg_replace('/\s+/u', ' ', (string) ($pos['paraText'] ?? '')) ?: 'ô nhập', 0, 40));
+        $near  = trim(mb_substr(preg_replace('/\s+/u', ' ', (string) ($pos['paraText'] ?? '')) ?: 'ô nhập', 0, 40));
+        $label = ($placement === 'below' ? 'Bổ sung (dưới): ' : 'Bổ sung: ') . $near;
 
         $fields[] = [
             'key'          => $key,
             'type'         => 'text',
             'label'        => $label,
             'added_inline' => [
+                'placement'  => $placement,
                 'paraText'   => (string) ($pos['paraText'] ?? ''),
                 'nodeText'   => (string) ($pos['nodeText'] ?? ''),
                 'nodeOffset' => (int) ($pos['nodeOffset'] ?? 0),

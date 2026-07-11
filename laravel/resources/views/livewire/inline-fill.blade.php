@@ -30,7 +30,7 @@
     @if($config)
         <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-xl px-3 py-2 mb-3">
             <b>Cấu hình ẩn ô:</b> di chuột (PC) hoặc chạm (điện thoại) vào ô rồi bấm nút <b class="text-red-600">✕</b> ở góc trên phải để <b>ẩn</b> ô không cần điền; bấm <b class="text-green-600">＋</b> để hiện lại. Xong bấm <b>Lưu cấu hình</b>.<br>
-            <b>Thêm ô nhập:</b> bấm nút <b>➕ Thêm ô nhập</b> dưới đây rồi bấm vào <b>ngay sau đoạn chữ</b> cần đặt ô — hệ thống chèn ô vào đúng chỗ (hiện trên web và xuất ra .docx). Ô đã thêm có nút <b>🗑</b> để xoá. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
+            <b>Thêm ô nhập:</b> bấm nút <b>➕ Thêm ô nhập</b> dưới đây, rồi: bấm <b>trúng đoạn chữ</b> → ô nằm ngay sau chỗ bấm (cùng dòng); bấm <b>vào khoảng trống dưới một dòng</b> → ô nằm ở <b>dòng dưới</b> dòng đó (dùng cho ô tên dưới "CHỦ NHIỆM KHOA"…). Ô đã thêm có nút <b>🗑</b> để xoá. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
         </div>
     @else
         <div class="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl px-3 py-2 mb-3">
@@ -82,7 +82,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=14"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=15"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}

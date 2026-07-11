@@ -77,48 +77,92 @@ class InlineDocxService
 
         foreach ($added as $f) {
             $a = $f['added_inline'];
-            $this->insertPlaceholder(
-                $dom,
-                (string) ($a['paraText'] ?? ''),
-                (string) ($a['nodeText'] ?? ''),
-                (int) ($a['nodeOffset'] ?? 0),
-                (int) ($a['nodeOccur'] ?? 0),
-                (string) $f['key']
-            );
+            if (($a['placement'] ?? 'inline') === 'below') {
+                $this->insertBelow($dom, (string) ($a['paraText'] ?? ''), (string) ($a['nodeText'] ?? ''), (string) $f['key']);
+            } else {
+                $this->insertPlaceholder(
+                    $dom,
+                    (string) ($a['paraText'] ?? ''),
+                    (string) ($a['nodeText'] ?? ''),
+                    (int) ($a['nodeOffset'] ?? 0),
+                    (int) ($a['nodeOccur'] ?? 0),
+                    (string) $f['key']
+                );
+            }
         }
 
         $zip->addFromString('word/document.xml', $dom->saveXML());
         $zip->close();
     }
 
-    /** Tìm đúng đoạn + đúng run chữ đã click rồi chèn ${key} vào giữa. */
+    /** Tìm đoạn theo text (đã bỏ ${..}); fallback đoạn chứa run có text == nodeText. */
+    private function findParagraph(\DOMDocument $dom, string $paraText, string $nodeText): ?\DOMNode
+    {
+        $ns   = self::NS;
+        $ps   = $dom->getElementsByTagNameNS($ns, 'p');
+        $want = $this->norm($paraText);
+        foreach ($ps as $p) {
+            if ($want !== '' && $this->norm($this->strip($this->pText($p))) === $want) {
+                return $p;
+            }
+        }
+        if ($nodeText !== '') {
+            foreach ($ps as $p) {
+                foreach ($p->getElementsByTagNameNS($ns, 't') as $t) {
+                    if ($this->strip($t->nodeValue) === $nodeText || $t->nodeValue === $nodeText) {
+                        return $p;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Chèn 1 ĐOẠN MỚI (dòng dưới) chứa ${key}, kế thừa căn lề + định dạng của đoạn neo. */
+    private function insertBelow(\DOMDocument $dom, string $paraText, string $nodeText, string $key): bool
+    {
+        $ns      = self::NS;
+        $targetP = $this->findParagraph($dom, $paraText, $nodeText);
+        if (! $targetP) {
+            return false;
+        }
+        $newP = $dom->createElementNS($ns, 'w:p');
+        // giữ căn lề (pPr) của đoạn neo
+        foreach ($targetP->childNodes as $c) {
+            if ($c->localName === 'pPr') {
+                $newP->appendChild($c->cloneNode(true));
+                break;
+            }
+        }
+        $run = $dom->createElementNS($ns, 'w:r');
+        // giữ định dạng chữ (rPr) của run đầu trong đoạn neo
+        foreach ($targetP->getElementsByTagNameNS($ns, 'r') as $r) {
+            foreach ($r->childNodes as $c) {
+                if ($c->localName === 'rPr') {
+                    $run->appendChild($c->cloneNode(true));
+                    break 2;
+                }
+            }
+            break;
+        }
+        $t = $dom->createElementNS($ns, 'w:t');
+        $t->setAttribute('xml:space', 'preserve');
+        $t->nodeValue = '${' . $key . '}';
+        $run->appendChild($t);
+        $newP->appendChild($run);
+
+        $targetP->parentNode->insertBefore($newP, $targetP->nextSibling);
+        return true;
+    }
+
+    /** Tìm đúng đoạn + đúng run chữ đã click rồi chèn ${key} vào giữa (cùng dòng). */
     private function insertPlaceholder(\DOMDocument $dom, string $paraText, string $nodeText, int $offset, int $occur, string $key): bool
     {
         if ($nodeText === '') {
             return false;
         }
-        $ns = self::NS;
-        $ps = $dom->getElementsByTagNameNS($ns, 'p');
-
-        // 1) đoạn khớp text (đã bỏ ${..}) — ưu tiên; nếu không có, đoạn nào chứa run == nodeText
-        $want    = $this->norm($paraText);
-        $targetP = null;
-        foreach ($ps as $p) {
-            if ($this->norm($this->strip($this->pText($p))) === $want) {
-                $targetP = $p;
-                break;
-            }
-        }
-        if (! $targetP) {
-            foreach ($ps as $p) {
-                foreach ($p->getElementsByTagNameNS($ns, 't') as $t) {
-                    if ($t->nodeValue === $nodeText) {
-                        $targetP = $p;
-                        break 2;
-                    }
-                }
-            }
-        }
+        $ns      = self::NS;
+        $targetP = $this->findParagraph($dom, $paraText, $nodeText);
         if (! $targetP) {
             return false;
         }

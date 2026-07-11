@@ -263,27 +263,54 @@ window.QFInline = (function () {
     if (btn) { btn.classList.toggle('on', ADD); const s = btn.querySelector('span'); if (s) s.textContent = ADD ? 'Đang thêm — bấm vào chỗ cần đặt ô' : 'Thêm ô nhập'; }
   }
   function toggleAdd() { ADD = !ADD; setAddUI(); if (ADD) toast('Bấm vào ngay sau đoạn chữ cần đặt ô nhập.'); }
+  // Chữ tĩnh của 1 đoạn (bỏ text trong chip ✕/🗑, ô disabled) — để khớp đoạn ở file gốc
+  function paraStaticText(pEl) {
+    let s = ''; const w = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+    while (w.nextNode()) { const c = w.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; s += c.nodeValue; }
+    return s.replace(/\s+/g, ' ').trim();
+  }
+  // Đoạn CHỮ gần nhất phía TRÊN điểm bấm (để đặt ô ở dòng dưới nó)
+  function paraAbove(x, y) {
+    const ps = ROOT.querySelectorAll('section.docx p');
+    let best = null, bestB = -1;
+    const scan = needOverlap => {
+      ps.forEach(p => {
+        const rc = p.getBoundingClientRect();
+        if (rc.height === 0 || !paraStaticText(p)) return;
+        if (rc.bottom > y + 6) return;
+        if (needOverlap && (x < rc.left - 6 || x > rc.right + 6)) return;
+        if (rc.bottom > bestB) { bestB = rc.bottom; best = p; }
+      });
+    };
+    scan(true); if (!best) scan(false);
+    return best;
+  }
   function onAddClick(e) {
     if (!ADD) return;
     if (e.target.closest('.qf-cfg')) return;         // bấm vào chip/✕/🗑 -> để nguyên
     const r = caretFromPoint(e.clientX, e.clientY);
     const node = r && r.node;
-    if (!node || node.nodeType !== 3) { toast('Hãy bấm đúng vào phần chữ có sẵn.'); return; }
-    const txt = node.nodeValue || '';
-    if (!txt.trim()) { toast('Hãy bấm vào phần chữ (không phải khoảng trắng).'); return; }
-    const pEl = node.parentElement && node.parentElement.closest('p');
-    if (!pEl) { toast('Không xác định được vị trí ở đây.'); return; }
-    let occ = 0; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
-    while (wk.nextNode()) { if (wk.currentNode === node) break; if (wk.currentNode.nodeValue === txt) occ++; }
-    // paraText = CHỮ TĨNH của đoạn, bỏ qua text bên trong chip (nút ✕/🗑, ô disabled) để khớp file gốc
-    let paraText = '';
-    const wp = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
-    while (wp.nextNode()) { const c = wp.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; paraText += c.nodeValue; }
-    paraText = paraText.replace(/\s+/g, ' ').trim();
-    e.preventDefault(); e.stopPropagation();
-    ADD = false; setAddUI();
-    toast('Đang thêm ô…');
-    if (WIRE) WIRE.addField({ paraText: paraText, nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
+    const txt = (node && node.nodeType === 3) ? (node.nodeValue || '') : '';
+
+    if (txt.trim()) {
+      // BẤM TRÚNG CHỮ -> chèn ô NGAY SAU vị trí bấm (cùng dòng)
+      const pEl = node.parentElement && node.parentElement.closest('p');
+      if (!pEl) { toast('Không xác định được vị trí ở đây.'); return; }
+      let occ = 0; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+      while (wk.nextNode()) { if (wk.currentNode === node) break; if (wk.currentNode.nodeValue === txt) occ++; }
+      e.preventDefault(); e.stopPropagation();
+      ADD = false; setAddUI(); toast('Đang thêm ô…');
+      if (WIRE) WIRE.addField({ placement: 'inline', paraText: paraStaticText(pEl), nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
+    } else {
+      // BẤM CHỖ TRỐNG -> đặt ô ở DÒNG DƯỚI dòng chữ gần nhất phía trên
+      const pEl = paraAbove(e.clientX, e.clientY);
+      if (!pEl) { toast('Chưa tìm được dòng phía trên để đặt ô xuống dưới. Hãy bấm ngay dưới một dòng chữ.'); return; }
+      let last = ''; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+      while (wk.nextNode()) { const c = wk.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; if ((c.nodeValue || '').trim()) last = c.nodeValue; }
+      e.preventDefault(); e.stopPropagation();
+      ADD = false; setAddUI(); toast('Đang thêm ô ở dòng dưới…');
+      if (WIRE) WIRE.addField({ placement: 'below', paraText: paraStaticText(pEl), nodeText: last });
+    }
   }
   function bindAddMode() {
     if (addClickBound) return; addClickBound = true;
