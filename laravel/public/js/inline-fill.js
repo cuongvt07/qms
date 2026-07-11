@@ -187,12 +187,9 @@ window.QFInline = (function () {
       ROOT.querySelectorAll('section.docx').forEach(p => { p.style.width = ''; });
       const cs = getComputedStyle(ROOT);
       const avail = ROOT.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
-      // Nội dung rộng nhất = max(tờ giấy, mọi bảng) — bảng có thể RỘNG HƠN tờ giấy (sổ 10 cột)
-      let contentW = page.offsetWidth;
-      ROOT.querySelectorAll('section.docx table').forEach(t => {
-        const w = Math.max(t.offsetWidth, t.scrollWidth);
-        if (w > contentW) contentW = w;
-      });
+      // Độ rộng THẬT của toàn bộ nội dung (gồm bảng tràn ra ngoài + padding) = scrollWidth của wrapper.
+      // Đo trực tiếp thay vì cộng dồn từng bảng (tránh sai số làm zoom hụt -> tràn ngang).
+      const contentW = Math.max(wrap.scrollWidth, page.offsetWidth);
       // Tờ giấy NỞ đủ rộng ôm trọn nội dung -> bảng tràn không thò ra nền xám
       if (contentW > page.offsetWidth) {
         ROOT.querySelectorAll('section.docx').forEach(p => { p.style.width = contentW + 'px'; });
