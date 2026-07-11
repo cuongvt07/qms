@@ -160,6 +160,9 @@ class InlineDocxService
         $i     = 0;
         $len   = mb_strlen($raw);
         while ($i < $len) {
+            if ($clean === $cleanOffset) {
+                return $i;   // đã tới đúng vị trí -> chèn ở đây, TRƯỚC cả ${..} kế tiếp
+            }
             if (mb_substr($raw, $i, 2) === '${') {
                 $close = mb_strpos($raw, '}', $i);
                 if ($close === false) {
@@ -167,9 +170,6 @@ class InlineDocxService
                 }
                 $i = $close + 1;
                 continue;
-            }
-            if ($clean === $cleanOffset) {
-                return $i;
             }
             $clean++;
             $i++;
