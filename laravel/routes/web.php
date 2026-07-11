@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Điền trực tiếp trên giao diện giống bản gốc (docx-preview render trình duyệt)
     Route::get('/forms/inline/{versionId}', \App\Livewire\InlineFill::class)->name('forms.inline');
+    Route::get('/forms/inline/{versionId}/config', \App\Livewire\InlineFill::class)->name('forms.inline-config');
     Route::get('/forms/inline/{versionId}/source', [FormSubmissionController::class, 'sourceDocx'])
         ->name('forms.inline-source');
     Route::get('/forms/inline-export/{submission}', [FormSubmissionController::class, 'inlineExport'])

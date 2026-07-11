@@ -2,6 +2,8 @@
    Giữ đúng cấu trúc vals cũ: phẳng vals[key] (+ chk true/false), bảng vals.t[tkey][i][col]. */
 window.QFInline = (function () {
   let WIRE = null, ROOT = null, dirty = false, autosaveT = null, kbBound = false;
+  let CONFIG = false;              // chế độ cấu hình ẩn ô
+  let HIDDEN = new Set();          // key placeholder bị ẩn
 
   function setStatus(html) { const el = document.getElementById('qf-status'); if (el) el.innerHTML = html; }
   function markDirty() { dirty = true; setStatus('<span style="color:#d97706">● Đang sửa…</span>'); }
@@ -169,10 +171,63 @@ window.QFInline = (function () {
         const m = p.match(/^\$\{([a-z0-9_]+)\}$/i);
         if (!m) { frag.appendChild(document.createTextNode(p)); continue; }
         if (tableCols.has(m[1])) { frag.appendChild(document.createTextNode(p)); continue; }
+        if (HIDDEN.has(m[1])) { continue; }   // ô đã cấu hình ẩn -> bỏ hẳn (để trống như bản gốc)
         frag.appendChild(mkInput(m[1], meta, vals[m[1]]));
       }
       node.parentNode.replaceChild(frag, node);
     });
+  }
+
+  /* ---- Chế độ cấu hình: mỗi ô -> chip có nút ✕ ẩn/hiện ---- */
+  function updateCfgCount() {
+    const el = document.getElementById('qf-cfg-count');
+    if (el) el.textContent = HIDDEN.size;
+  }
+  function configReplace(root, meta, tableCols) {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const hits = [];
+    while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('${') > -1) hits.push(w.currentNode);
+    hits.forEach(node => {
+      const parts = node.nodeValue.split(/(\$\{[a-z0-9_]+\})/i);
+      if (parts.length === 1) return;
+      const frag = document.createDocumentFragment();
+      for (const p of parts) {
+        const m = p.match(/^\$\{([a-z0-9_]+)\}$/i);
+        if (!m) { frag.appendChild(document.createTextNode(p)); continue; }
+        if (tableCols.has(m[1])) { frag.appendChild(document.createTextNode(p)); continue; }
+        frag.appendChild(configChip(m[1], meta));
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+    updateCfgCount();
+  }
+  function configChip(key, meta) {
+    const info = meta[key] || { type: key.startsWith('chk_') ? 'chk' : 'text', label: humanize(key) };
+    const span = document.createElement('span');
+    span.className = 'qf-cfg';
+    if (HIDDEN.has(key)) span.classList.add('qf-cfg-hidden');
+    let inp;
+    if (key.startsWith('chk_')) { inp = document.createElement('input'); inp.type = 'checkbox'; inp.className = 'qf-chk'; }
+    else {
+      inp = document.createElement('input'); inp.type = 'text'; inp.className = 'qf-in';
+      inp.placeholder = info.label || key;
+      if (isSmall(key)) inp.classList.add('qf-sm');
+    }
+    inp.disabled = true; inp.tabIndex = -1;
+    const x = document.createElement('button');
+    x.type = 'button'; x.className = 'qf-x';
+    x.textContent = HIDDEN.has(key) ? '＋' : '✕';
+    x.title = 'Bấm để ẩn/hiện ô này';
+    x.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (HIDDEN.has(key)) HIDDEN.delete(key); else HIDDEN.add(key);
+      const h = HIDDEN.has(key);
+      span.classList.toggle('qf-cfg-hidden', h);
+      x.textContent = h ? '＋' : '✕';
+      updateCfgCount();
+    });
+    span.appendChild(inp); span.appendChild(x);
+    return span;
   }
 
   /* Vừa bề ngang màn: tờ giấy khổ cố định > màn (mobile) thì thu nhỏ cho khỏi cuộn ngang */
@@ -241,6 +296,8 @@ window.QFInline = (function () {
     if (!ROOT || ROOT.dataset.qfInit) return;
     ROOT.dataset.qfInit = '1';
     WIRE = cfg.wire;
+    CONFIG = !!cfg.config;
+    HIDDEN = new Set(cfg.hidden || []);
     const { meta, tables, tableCols } = buildMeta(cfg.fields);
     const vals = cfg.vals || {};
     try {
@@ -257,9 +314,15 @@ window.QFInline = (function () {
       ]);
       ROOT.innerHTML = '';
       ROOT.appendChild(holder);
-      const unhandled = setupTables(holder, tables, vals);
-      unhandled.forEach(k => tableCols.delete(k));   // bảng bố-trí-bằng-tab -> ô nhập thường
-      walkReplace(holder, meta, tableCols, vals);
+      if (CONFIG) {
+        // Chế độ cấu hình ẩn ô: bảng render bình thường, ô phẳng/tích -> chip có nút ✕
+        setupTables(holder, tables, vals);
+        configReplace(holder, meta, tableCols);
+      } else {
+        const unhandled = setupTables(holder, tables, vals);
+        unhandled.forEach(k => tableCols.delete(k));   // bảng bố-trí-bằng-tab -> ô nhập thường
+        walkReplace(holder, meta, tableCols, vals);
+      }
       scheduleFit();   // đo lại nhiều lần vì docx-preview layout/nạp font xong sau khi append
       // Bảng lớn layout xong muộn -> đo lại khi kích thước bảng thay đổi (không loop vì không đổi width bảng)
       if (window.ResizeObserver) {
@@ -272,6 +335,7 @@ window.QFInline = (function () {
         window.addEventListener('resize', fitWidth);
         window.addEventListener('load', fitWidth);
       }
+      if (CONFIG) { return; }   // cấu hình: không gắn autosave/phím tắt
       // Tự động lưu khi gõ/tích trong tờ giấy
       ROOT.addEventListener('input', () => { markDirty(); scheduleAutosave(); });
       ROOT.addEventListener('change', () => { markDirty(); scheduleAutosave(); });
@@ -296,5 +360,9 @@ window.QFInline = (function () {
     WIRE.save(collectAll());
   }
 
-  return { init, save };
+  function saveConfig() {
+    if (WIRE) WIRE.saveConfig([...HIDDEN]);
+  }
+
+  return { init, save, saveConfig };
 })();
