@@ -162,17 +162,83 @@ class InlineFill extends Component
         session()->flash('success', 'Đã lưu cấu hình. Ẩn ' . count($hidden) . ' ô.');
     }
 
+    /**
+     * Thêm 1 ô nhập tại vị trí người dùng click ở màn giống bản gốc.
+     * $pos: paraText, nodeText, nodeOffset, nodeOccur (do JS bắt từ caret).
+     * Chèn ${extra_xx} vào .docx (qua InlineDocxService) + đăng ký field text để lưu/xuất.
+     */
+    public function addField($pos = []): void
+    {
+        if (! $this->config || ! is_array($pos) || empty($pos['nodeText'])) {
+            return;
+        }
+        $v = FormTemplateVersion::find($this->versionId);
+        if (! $v) {
+            return;
+        }
+        $sj     = $v->schema_json;
+        $fields = $sj['fields'] ?? [];
+
+        $key   = 'extra_' . substr(md5(($pos['paraText'] ?? '') . '|' . ($pos['nodeText'] ?? '') . '|' . ($pos['nodeOffset'] ?? '') . '|' . uniqid('', true)), 0, 8);
+        $label = 'Bổ sung: ' . trim(mb_substr(preg_replace('/\s+/u', ' ', (string) ($pos['paraText'] ?? '')) ?: 'ô nhập', 0, 40));
+
+        $fields[] = [
+            'key'          => $key,
+            'type'         => 'text',
+            'label'        => $label,
+            'added_inline' => [
+                'paraText'   => (string) ($pos['paraText'] ?? ''),
+                'nodeText'   => (string) ($pos['nodeText'] ?? ''),
+                'nodeOffset' => (int) ($pos['nodeOffset'] ?? 0),
+                'nodeOccur'  => (int) ($pos['nodeOccur'] ?? 0),
+            ],
+        ];
+        $sj['fields']   = $fields;
+        $v->schema_json = $sj;
+        $v->save();
+
+        $maBm = FormTemplate::find($this->templateId)?->ma_bm;
+        ActivityLogger::log('config', "Thêm 1 ô nhập ở màn giống bản gốc — biểu mẫu {$maBm}");
+        $this->dispatch('inline-changed');   // JS tải lại để render bản .docx có ô mới
+    }
+
+    /** Xoá 1 ô đã thêm inline (hoàn tác). */
+    public function removeAddedField($key): void
+    {
+        if (! $this->config) {
+            return;
+        }
+        $v = FormTemplateVersion::find($this->versionId);
+        if (! $v) {
+            return;
+        }
+        $sj = $v->schema_json;
+        $sj['fields'] = array_values(array_filter(
+            $sj['fields'] ?? [],
+            fn ($f) => ($f['key'] ?? '') !== $key || empty($f['added_inline'])
+        ));
+        // gỡ luôn khỏi danh sách ẩn nếu có
+        if (! empty($sj['inline_hidden'])) {
+            $sj['inline_hidden'] = array_values(array_diff($sj['inline_hidden'], [$key]));
+        }
+        $v->schema_json = $sj;
+        $v->save();
+        $this->dispatch('inline-changed');
+    }
+
     public function render()
     {
         $t      = FormTemplate::find($this->templateId);
         $v      = FormTemplateVersion::find($this->versionId);
         $fields = $v?->fields ?? [];
+        $added  = collect($fields)->filter(fn ($f) => ! empty($f['added_inline']))->pluck('key')->values()->all();
         return view('livewire.inline-fill', [
             'template'     => $t,
             'fields'       => $fields,
             'vals'         => $this->vals,
             'docxUrl'      => route('forms.inline-source', $this->versionId),
             'inlineHidden' => $v?->schema_json['inline_hidden'] ?? [],
+            'inlineAdded'  => $added,
         ]);
     }
 }

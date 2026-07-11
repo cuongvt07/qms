@@ -8,6 +8,7 @@ use App\Models\FormTemplateVersion;
 use App\Services\ActivityLogger;
 use App\Services\DocxExportService;
 use App\Services\HtmlFormService;
+use App\Services\InlineDocxService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -15,11 +16,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class FormSubmissionController extends Controller
 {
     /** Trả file .docx gốc của 1 version (để docx-preview render phía trình duyệt). */
-    public function sourceDocx(int $versionId): BinaryFileResponse
+    public function sourceDocx(int $versionId, InlineDocxService $inlineDocx): BinaryFileResponse
     {
         $version  = FormTemplateVersion::findOrFail($versionId);
         $template = $version->formTemplate;
-        $path     = Storage::disk('local')->path($template->file_goc_path);
+        // Bản có thêm ${..} do người dùng cấu hình (nếu có); không thì file gốc.
+        $path     = $inlineDocx->templatePathFor($version);
         abort_unless(is_file($path), 404);
 
         return response()->file($path, [

@@ -29,7 +29,8 @@
 
     @if($config)
         <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-xl px-3 py-2 mb-3">
-            <b>Cấu hình ẩn ô:</b> di chuột (PC) hoặc chạm (điện thoại) vào ô rồi bấm nút <b class="text-red-600">✕</b> ở góc trên phải để <b>ẩn</b> ô không cần điền; bấm <b class="text-green-600">＋</b> để hiện lại. Xong bấm <b>Lưu cấu hình</b>. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
+            <b>Cấu hình ẩn ô:</b> di chuột (PC) hoặc chạm (điện thoại) vào ô rồi bấm nút <b class="text-red-600">✕</b> ở góc trên phải để <b>ẩn</b> ô không cần điền; bấm <b class="text-green-600">＋</b> để hiện lại. Xong bấm <b>Lưu cấu hình</b>.<br>
+            <b>Thêm ô nhập:</b> bấm nút <b>➕ Thêm ô nhập</b> dưới đây rồi bấm vào <b>ngay sau đoạn chữ</b> cần đặt ô — hệ thống chèn ô vào đúng chỗ (hiện trên web và xuất ra .docx). Ô đã thêm có nút <b>🗑</b> để xoá. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
         </div>
     @else
         <div class="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl px-3 py-2 mb-3">
@@ -48,6 +49,11 @@
     <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 z-20" style="padding-bottom:calc(env(safe-area-inset-bottom) + .75rem);padding-top:.75rem">
         <div class="max-w-5xl mx-auto flex items-center gap-3">
             @if($config)
+                <button type="button" id="qf-add-toggle" onclick="window.QFInline && window.QFInline.toggleAdd()"
+                        class="inline-flex items-center gap-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-xl px-3 py-2.5 font-medium hover:bg-indigo-50">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Thêm ô nhập</span>
+                </button>
                 <span class="text-sm text-gray-500">Đang ẩn <b id="qf-cfg-count" class="text-red-600">{{ count($inlineHidden) }}</b> ô</span>
                 <button type="button" onclick="window.QFInline && window.QFInline.saveConfig()" wire:loading.attr="disabled" wire:target="saveConfig"
                         class="ml-auto bg-teal-600 text-white rounded-xl px-6 py-3 text-sm font-bold hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2">
@@ -76,7 +82,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=12"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=13"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}
@@ -112,6 +118,20 @@
         #qf-doc-root .qf-cfg-hidden{opacity:.45}
         #qf-doc-root .qf-cfg-hidden .qf-in,#qf-doc-root .qf-cfg-hidden .qf-chk{filter:grayscale(1);text-decoration:line-through}
         #qf-doc-root .qf-cfg-hidden .qf-x{background:#16a34a;opacity:1}
+        /* Ô do người dùng thêm: viền tím + nút xoá */
+        #qf-doc-root .qf-cfg-added .qf-in{background:rgba(199,210,254,.55);border-bottom-color:#6366f1}
+        #qf-doc-root .qf-cfg-added .qf-trash{position:absolute;bottom:-9px;right:-9px;width:17px;height:17px;line-height:15px;
+            border-radius:50%;background:#fff;border:1.5px solid #c7d2fe;font-size:10px;text-align:center;padding:0;cursor:pointer;
+            opacity:0;transition:opacity .12s;z-index:6;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+        #qf-doc-root .qf-cfg-added:hover .qf-trash{opacity:1}
+        @media(hover:none){#qf-doc-root .qf-cfg-added .qf-trash{opacity:1}}
+        /* Chế độ đang thêm ô: con trỏ chữ thập + làm nổi vùng bấm */
+        #qf-doc-root.qf-adding{cursor:crosshair}
+        #qf-doc-root.qf-adding section.docx{outline:2px dashed #6366f1;outline-offset:-2px}
+        #qf-add-toggle.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
+        #qf-toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:60;
+            background:rgba(17,24,39,.94);color:#fff;font-family:system-ui,sans-serif;font-size:13px;font-weight:600;
+            padding:9px 16px;border-radius:999px;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
     </style>
 @endassets
 
@@ -127,6 +147,7 @@
                     vals: @json($vals ?: (object)[]),
                     config: @json($config),
                     hidden: @json($inlineHidden),
+                    added: @json($inlineAdded),
                     wire: $wire,
                 });
             }

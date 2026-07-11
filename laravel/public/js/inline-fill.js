@@ -4,6 +4,9 @@ window.QFInline = (function () {
   let WIRE = null, ROOT = null, dirty = false, autosaveT = null, kbBound = false;
   let CONFIG = false;              // chế độ cấu hình ẩn ô
   let HIDDEN = new Set();          // key placeholder bị ẩn
+  let ADD = false;                 // chế độ "thêm ô" đang bật (click để đặt ô)
+  let ADDED = new Set();           // key các ô do người dùng thêm inline
+  let addClickBound = false;
 
   function setStatus(html) { const el = document.getElementById('qf-status'); if (el) el.innerHTML = html; }
   function markDirty() { dirty = true; setStatus('<span style="color:#d97706">● Đang sửa…</span>'); }
@@ -227,7 +230,59 @@ window.QFInline = (function () {
       updateCfgCount();
     });
     span.appendChild(inp); span.appendChild(x);
+    if (ADDED.has(key)) {
+      span.classList.add('qf-cfg-added');
+      const tr = document.createElement('button');
+      tr.type = 'button'; tr.className = 'qf-trash'; tr.textContent = '🗑';
+      tr.title = 'Xoá ô đã thêm này';
+      tr.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        toast('Đang xoá ô…');
+        if (WIRE) WIRE.removeAddedField(key);
+      });
+      span.appendChild(tr);
+    }
     return span;
+  }
+
+  /* ---- Chế độ "Thêm ô": click vào chỗ trống trên bản gốc để đặt 1 ô nhập ---- */
+  function caretFromPoint(x, y) {
+    if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(x, y); return r ? { node: r.startContainer, offset: r.startOffset } : null; }
+    if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); return p ? { node: p.offsetNode, offset: p.offset } : null; }
+    return null;
+  }
+  function toast(msg) {
+    let t = document.getElementById('qf-toast');
+    if (!t) { t = document.createElement('div'); t.id = 'qf-toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = '0'; }, 2400);
+  }
+  function setAddUI() {
+    if (ROOT) ROOT.classList.toggle('qf-adding', ADD);
+    const btn = document.getElementById('qf-add-toggle');
+    if (btn) { btn.classList.toggle('on', ADD); const s = btn.querySelector('span'); if (s) s.textContent = ADD ? 'Đang thêm — bấm vào chỗ cần đặt ô' : 'Thêm ô nhập'; }
+  }
+  function toggleAdd() { ADD = !ADD; setAddUI(); if (ADD) toast('Bấm vào ngay sau đoạn chữ cần đặt ô nhập.'); }
+  function onAddClick(e) {
+    if (!ADD) return;
+    if (e.target.closest('.qf-cfg')) return;         // bấm vào chip/✕/🗑 -> để nguyên
+    const r = caretFromPoint(e.clientX, e.clientY);
+    const node = r && r.node;
+    if (!node || node.nodeType !== 3) { toast('Hãy bấm đúng vào phần chữ có sẵn.'); return; }
+    const txt = node.nodeValue || '';
+    if (!txt.trim()) { toast('Hãy bấm vào phần chữ (không phải khoảng trắng).'); return; }
+    const pEl = node.parentElement && node.parentElement.closest('p');
+    if (!pEl) { toast('Không xác định được vị trí ở đây.'); return; }
+    let occ = 0; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+    while (wk.nextNode()) { if (wk.currentNode === node) break; if (wk.currentNode.nodeValue === txt) occ++; }
+    e.preventDefault(); e.stopPropagation();
+    ADD = false; setAddUI();
+    toast('Đang thêm ô…');
+    if (WIRE) WIRE.addField({ paraText: (pEl.textContent || '').replace(/\s+/g, ' ').trim(), nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
+  }
+  function bindAddMode() {
+    if (addClickBound) return; addClickBound = true;
+    ROOT.addEventListener('click', onAddClick, true);   // capture để chặn trước khi caret focus
   }
 
   /* Vừa bề ngang màn: tờ giấy khổ cố định > màn (mobile) thì thu nhỏ cho khỏi cuộn ngang */
@@ -298,6 +353,7 @@ window.QFInline = (function () {
     WIRE = cfg.wire;
     CONFIG = !!cfg.config;
     HIDDEN = new Set(cfg.hidden || []);
+    ADDED  = new Set(cfg.added || []);
     const { meta, tables, tableCols } = buildMeta(cfg.fields);
     const vals = cfg.vals || {};
     try {
@@ -315,9 +371,12 @@ window.QFInline = (function () {
       ROOT.innerHTML = '';
       ROOT.appendChild(holder);
       if (CONFIG) {
-        // Chế độ cấu hình ẩn ô: bảng render bình thường, ô phẳng/tích -> chip có nút ✕
+        // Chế độ cấu hình: bảng render bình thường, ô phẳng/tích -> chip có nút ✕; + cho phép thêm ô
         setupTables(holder, tables, vals);
         configReplace(holder, meta, tableCols);
+        bindAddMode();
+        setAddUI();
+        if (WIRE && WIRE.on) WIRE.on('inline-changed', () => window.location.reload());   // dựng lại docx có ô mới/đã xoá
       } else {
         const unhandled = setupTables(holder, tables, vals);
         unhandled.forEach(k => tableCols.delete(k));   // bảng bố-trí-bằng-tab -> ô nhập thường
@@ -364,5 +423,5 @@ window.QFInline = (function () {
     if (WIRE) WIRE.saveConfig([...HIDDEN]);
   }
 
-  return { init, save, saveConfig };
+  return { init, save, saveConfig, toggleAdd };
 })();

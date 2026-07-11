@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\FormSubmission;
+use App\Services\InlineDocxService;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
@@ -24,7 +25,8 @@ class DocxExportService
     {
         $version     = $submission->templateVersion;
         $template    = $version->formTemplate;
-        $templatePath = Storage::disk('local')->path($template->file_goc_path);
+        // Dùng bản đã chèn ${..} inline nếu version có cấu hình thêm ô; không thì file gốc.
+        $templatePath = app(InlineDocxService::class)->templatePathFor($version);
 
         if (! file_exists($templatePath)) {
             throw new RuntimeException("Không tìm thấy file template gốc: {$template->file_goc_path}");
