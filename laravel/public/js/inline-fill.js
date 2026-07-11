@@ -194,15 +194,22 @@ window.QFInline = (function () {
       if (contentW > page.offsetWidth) {
         ROOT.querySelectorAll('section.docx').forEach(p => { p.style.width = contentW + 'px'; });
       }
-      // Lấp đầy chiều ngang khung: PHÓNG TO nếu hẹp hơn khung, THU NHỎ nếu rộng hơn.
+      // Lấp đầy khung nếu vừa/gần vừa; form QUÁ RỘNG thì giữ cỡ đọc được và CHO CUỘN NGANG.
       if (contentW > 0 && avail > 0) {
-        wrap.style.zoom = Math.min(1.5, avail / contentW).toFixed(4);
-        // Bù sai số: đo overflow THẬT sau khi zoom rồi chỉnh lại theo tỉ lệ (2 vòng cho chắc).
-        for (let i = 0; i < 2; i++) {
-          const over = ROOT.scrollWidth - ROOT.clientWidth;
-          if (over <= 2) break;
-          const cur = parseFloat(wrap.style.zoom) || 1;
-          wrap.style.zoom = (cur * ROOT.clientWidth / ROOT.scrollWidth).toFixed(4);
+        const MIN = 0.7;                 // không thu nhỏ dưới mức này
+        const ideal = avail / contentW;
+        if (ideal >= MIN) {
+          // vừa/gần vừa -> fit khít khung (+ bù overflow theo đo thật)
+          wrap.style.zoom = Math.min(1.5, ideal).toFixed(4);
+          for (let i = 0; i < 2; i++) {
+            const over = ROOT.scrollWidth - ROOT.clientWidth;
+            if (over <= 2) break;
+            const cur = parseFloat(wrap.style.zoom) || 1;
+            wrap.style.zoom = (cur * ROOT.clientWidth / ROOT.scrollWidth).toFixed(4);
+          }
+        } else {
+          // quá rộng -> giữ ~70% cỡ, phần dư cuộn ngang (qf-scroll overflow-x:auto)
+          wrap.style.zoom = String(MIN);
         }
       }
     } catch (e) { /* fit chỉ là cosmetic — không bao giờ để lỗi phá form */ }
