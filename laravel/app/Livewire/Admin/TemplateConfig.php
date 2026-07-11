@@ -4,9 +4,11 @@ namespace App\Livewire\Admin;
 
 use App\Models\FormTemplate;
 use App\Models\FormTemplateVersion;
+use App\Services\ActivityLogger;
 use App\Services\TemplateService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Cấu hình các ô nhập của 1 biểu mẫu mẫu (template có placeholder ${key}).
@@ -14,10 +16,14 @@ use Livewire\Component;
  */
 class TemplateConfig extends Component
 {
+    use WithFileUploads;
+
     public int    $templateId = 0;
     public array  $fields     = [];
     public string $ghi_chu    = '';
     public array  $missingVars = [];   // placeholder trong file nhưng chưa có field
+    public array  $orphanVars  = [];   // field có key nhưng file mới không còn placeholder đó
+    public $upload = null;             // file .docx đè lên bản gốc
 
     public array $supportedTypes = [
         'text', 'textarea', 'number', 'date', 'select', 'radio', 'checkbox', 'repeatable_table',
@@ -40,6 +46,66 @@ class TemplateConfig extends Component
         } catch (\Throwable $e) {
             $this->missingVars = [];
         }
+    }
+
+    /**
+     * Đè file .docx gốc bằng file người dùng upload (đã chỉnh đúng vị trí placeholder trong Word).
+     * GIỮ NGUYÊN schema (nhãn/kiểu đã cấu hình) — chỉ cần KEY placeholder ${..} trùng là khớp lại.
+     */
+    public function replaceSource(TemplateService $templates): void
+    {
+        $this->validate(
+            ['upload' => 'required|file|max:25600'],
+            ['upload.required' => 'Chưa chọn file.', 'upload.max' => 'File tối đa 25MB.']
+        );
+        if (strtolower($this->upload->getClientOriginalExtension()) !== 'docx') {
+            $this->addError('upload', 'Chỉ nhận file .docx');
+            return;
+        }
+
+        // File phải mở được như .docx và đọc được placeholder
+        try {
+            $vars = $templates->getVariables($this->upload->getRealPath());
+        } catch (\Throwable $e) {
+            $this->addError('upload', 'File .docx không hợp lệ: ' . $e->getMessage());
+            return;
+        }
+
+        $template = FormTemplate::findOrFail($this->templateId);
+        $path     = $template->file_goc_path;
+
+        // Sao lưu bản cũ 1 lần rồi đè lên đúng đường dẫn (mọi version/xuất .docx đều dùng chỗ này)
+        if ($path && Storage::disk('local')->exists($path) && ! Storage::disk('local')->exists($path . '.bak')) {
+            Storage::disk('local')->copy($path, $path . '.bak');
+        }
+        Storage::disk('local')->put($path, file_get_contents($this->upload->getRealPath()));
+
+        // Xoá cache bản .docx phái sinh (ô thêm inline) của mọi version — nguồn đã đổi
+        $dir = Storage::disk('local')->path('inline_aug');
+        if (is_dir($dir)) {
+            foreach ($template->versions as $v) {
+                foreach (glob($dir . DIRECTORY_SEPARATOR . $v->id . '_*.docx') ?: [] as $g) {
+                    @unlink($g);
+                }
+            }
+        }
+
+        // Đối chiếu lại placeholder với schema hiện tại
+        $have = array_column($this->fields, 'key');
+        $this->missingVars = array_values(array_diff($vars, $have));
+        $this->orphanVars  = array_values(array_diff($have, $vars));
+
+        $this->upload = null;
+        ActivityLogger::log('config', "Thay file gốc .docx — biểu mẫu {$template->ma_bm}");
+
+        $msg = 'Đã thay file gốc (bản cũ lưu ở .bak). File mới có ' . count($vars) . ' placeholder.';
+        if ($this->missingVars) {
+            $msg .= ' ' . count($this->missingVars) . ' placeholder chưa có ô — bấm "+ Thêm hết".';
+        }
+        if ($this->orphanVars) {
+            $msg .= ' ' . count($this->orphanVars) . ' ô không còn trong file (sẽ để trắng khi xuất).';
+        }
+        session()->flash('success', $msg);
     }
 
     public function addMissing(TemplateService $templates): void

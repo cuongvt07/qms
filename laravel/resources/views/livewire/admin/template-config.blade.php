@@ -11,9 +11,38 @@
             <h2 class="text-lg md:text-xl font-bold text-gray-800 truncate">{{ $template?->ten_bm }}</h2>
             <p class="text-sm text-gray-400 font-mono">{{ $template?->ma_bm }}</p>
         </div>
-        <a href="{{ route('forms.export-template', $templateId) }}"
-           class="shrink-0 text-sm border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">⬇ Tải file mẫu</a>
+        <div class="shrink-0 flex flex-col items-end gap-1.5">
+            <div class="flex items-center gap-2">
+                <a href="{{ route('forms.export-template', $templateId) }}"
+                   class="text-sm border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">⬇ Tải file mẫu</a>
+                <label for="qf-upl" class="text-sm border border-indigo-300 text-indigo-700 rounded-lg px-3 py-2 hover:bg-indigo-50 cursor-pointer">⬆ Đè file .docx</label>
+                <input id="qf-upl" type="file" wire:model="upload" accept=".docx"
+                       class="hidden">
+            </div>
+            <div wire:loading wire:target="upload" class="text-xs text-gray-400">Đang tải file lên…</div>
+            @if($upload)
+                <div class="flex items-center gap-2 text-xs bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1.5">
+                    <span class="text-gray-700">Đã chọn: <b>{{ $upload->getClientOriginalName() }}</b></span>
+                    <button type="button" wire:click="replaceSource" wire:loading.attr="disabled" wire:target="replaceSource"
+                            class="bg-indigo-600 text-white rounded-md px-2.5 py-1 font-semibold hover:bg-indigo-700 disabled:opacity-50">
+                        <span wire:loading.remove wire:target="replaceSource">Xác nhận đè</span>
+                        <span wire:loading wire:target="replaceSource">Đang đè…</span>
+                    </button>
+                    <button type="button" wire:click="$set('upload', null)" class="text-gray-400 hover:text-gray-600">Huỷ</button>
+                </div>
+            @endif
+            @error('upload')<span class="text-xs text-red-600 max-w-xs text-right">{{ $message }}</span>@enderror
+        </div>
     </div>
+
+    <p class="text-xs text-gray-400 mb-3 -mt-1">Đè file: chỉnh vị trí <span class="font-mono">${...}</span> trong Word rồi upload để đè bản gốc. <b>Giữ nguyên tên placeholder</b> thì schema khớp ngay (bản cũ tự lưu <span class="font-mono">.bak</span>).</p>
+
+    @if(!empty($orphanVars))
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-4 text-xs text-gray-600">
+            {{ count($orphanVars) }} ô không còn placeholder trong file mới (sẽ để trắng khi xuất):
+            <span class="font-mono">{{ implode(', ', array_map(fn($v)=>'${'.$v.'}', array_slice($orphanVars,0,8))) }}{{ count($orphanVars)>8?'…':'' }}</span>
+        </div>
+    @endif
 
     @if(session('success'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2.5 rounded-xl mb-4 text-sm">{{ session('success') }}</div>
