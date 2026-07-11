@@ -251,6 +251,12 @@ window.QFInline = (function () {
       unhandled.forEach(k => tableCols.delete(k));   // bảng bố-trí-bằng-tab -> ô nhập thường
       walkReplace(holder, meta, tableCols, vals);
       scheduleFit();   // đo lại nhiều lần vì docx-preview layout/nạp font xong sau khi append
+      // Bảng lớn layout xong muộn -> đo lại khi kích thước bảng thay đổi (không loop vì không đổi width bảng)
+      if (window.ResizeObserver) {
+        let roT;
+        const ro = new ResizeObserver(() => { clearTimeout(roT); roT = setTimeout(fitWidth, 80); });
+        holder.querySelectorAll('section.docx table').forEach(t => ro.observe(t));
+      }
       if (!resizeBound) {
         resizeBound = true;
         window.addEventListener('resize', fitWidth);
