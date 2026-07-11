@@ -196,8 +196,14 @@ window.QFInline = (function () {
       }
       // Lấp đầy chiều ngang khung: PHÓNG TO nếu hẹp hơn khung, THU NHỎ nếu rộng hơn.
       if (contentW > 0 && avail > 0) {
-        const z = Math.min(1.5, avail / contentW);
-        wrap.style.zoom = z.toFixed(4);
+        wrap.style.zoom = Math.min(1.5, avail / contentW).toFixed(4);
+        // Bù sai số: đo overflow THẬT sau khi zoom rồi chỉnh lại theo tỉ lệ (2 vòng cho chắc).
+        for (let i = 0; i < 2; i++) {
+          const over = ROOT.scrollWidth - ROOT.clientWidth;
+          if (over <= 2) break;
+          const cur = parseFloat(wrap.style.zoom) || 1;
+          wrap.style.zoom = (cur * ROOT.clientWidth / ROOT.scrollWidth).toFixed(4);
+        }
       }
     } catch (e) { /* fit chỉ là cosmetic — không bao giờ để lỗi phá form */ }
   }
