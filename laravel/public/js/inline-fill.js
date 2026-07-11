@@ -5,6 +5,7 @@ window.QFInline = (function () {
   let CONFIG = false;              // chế độ cấu hình ẩn ô
   let HIDDEN = new Set();          // key placeholder bị ẩn
   let ADD = false;                 // chế độ "thêm ô" đang bật (click để đặt ô)
+  let PLACEMENT = 'inline';        // 'inline' = cùng dòng (sau chữ) | 'below' = dòng dưới
   let ADDED = new Set();           // key các ô do người dùng thêm inline
   let addClickBound = false;
 
@@ -259,10 +260,17 @@ window.QFInline = (function () {
   }
   function setAddUI() {
     if (ROOT) ROOT.classList.toggle('qf-adding', ADD);
-    const btn = document.getElementById('qf-add-toggle');
-    if (btn) { btn.classList.toggle('on', ADD); const s = btn.querySelector('span'); if (s) s.textContent = ADD ? 'Đang thêm — bấm vào chỗ cần đặt ô' : 'Thêm ô nhập'; }
+    const bi = document.getElementById('qf-add-inline'), bb = document.getElementById('qf-add-below');
+    if (bi) bi.classList.toggle('on', ADD && PLACEMENT === 'inline');
+    if (bb) bb.classList.toggle('on', ADD && PLACEMENT === 'below');
   }
-  function toggleAdd() { ADD = !ADD; setAddUI(); if (ADD) toast('Bấm vào ngay sau đoạn chữ cần đặt ô nhập.'); }
+  function toggleAdd(mode) {
+    mode = (mode === 'below') ? 'below' : 'inline';
+    if (ADD && PLACEMENT === mode) { ADD = false; }
+    else { ADD = true; PLACEMENT = mode; }
+    setAddUI();
+    if (ADD) toast(PLACEMENT === 'below' ? 'Bấm vào DÒNG cần đặt ô xuống dưới (vd “CHỦ NHIỆM KHOA”).' : 'Bấm vào NGAY SAU đoạn chữ cần đặt ô.');
+  }
   // Chữ tĩnh của 1 đoạn (bỏ text trong chip ✕/🗑, ô disabled) — để khớp đoạn ở file gốc
   function paraStaticText(pEl) {
     let s = ''; const w = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
@@ -285,6 +293,11 @@ window.QFInline = (function () {
     scan(true); if (!best) scan(false);
     return best;
   }
+  function lastStaticText(pEl) {
+    let last = ''; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
+    while (wk.nextNode()) { const c = wk.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; if ((c.nodeValue || '').trim()) last = c.nodeValue; }
+    return last;
+  }
   function onAddClick(e) {
     if (!ADD) return;
     if (e.target.closest('.qf-cfg')) return;         // bấm vào chip/✕/🗑 -> để nguyên
@@ -292,8 +305,17 @@ window.QFInline = (function () {
     const node = r && r.node;
     const txt = (node && node.nodeType === 3) ? (node.nodeValue || '') : '';
 
-    if (txt.trim()) {
-      // BẤM TRÚNG CHỮ -> chèn ô NGAY SAU vị trí bấm (cùng dòng)
+    if (PLACEMENT === 'below') {
+      // DÒNG DƯỚI: neo vào đoạn đã bấm (nếu trúng chữ) hoặc đoạn gần nhất phía trên
+      let pEl = (node && node.nodeType === 3 && txt.trim()) ? (node.parentElement && node.parentElement.closest('p')) : null;
+      if (!pEl) pEl = paraAbove(e.clientX, e.clientY);
+      if (!pEl) { toast('Hãy bấm vào một dòng có chữ để đặt ô xuống dưới nó.'); return; }
+      e.preventDefault(); e.stopPropagation();
+      ADD = false; setAddUI(); toast('Đang thêm ô ở dòng dưới…');
+      if (WIRE) WIRE.addField({ placement: 'below', paraText: paraStaticText(pEl), nodeText: lastStaticText(pEl) });
+    } else {
+      // CÙNG DÒNG: chèn ô NGAY SAU vị trí bấm — cần bấm trúng chữ
+      if (!txt.trim()) { toast('Hãy bấm TRÚNG đoạn chữ (chế độ cùng dòng).'); return; }
       const pEl = node.parentElement && node.parentElement.closest('p');
       if (!pEl) { toast('Không xác định được vị trí ở đây.'); return; }
       let occ = 0; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
@@ -301,15 +323,6 @@ window.QFInline = (function () {
       e.preventDefault(); e.stopPropagation();
       ADD = false; setAddUI(); toast('Đang thêm ô…');
       if (WIRE) WIRE.addField({ placement: 'inline', paraText: paraStaticText(pEl), nodeText: txt, nodeOffset: r.offset, nodeOccur: occ });
-    } else {
-      // BẤM CHỖ TRỐNG -> đặt ô ở DÒNG DƯỚI dòng chữ gần nhất phía trên
-      const pEl = paraAbove(e.clientX, e.clientY);
-      if (!pEl) { toast('Chưa tìm được dòng phía trên để đặt ô xuống dưới. Hãy bấm ngay dưới một dòng chữ.'); return; }
-      let last = ''; const wk = document.createTreeWalker(pEl, NodeFilter.SHOW_TEXT, null);
-      while (wk.nextNode()) { const c = wk.currentNode; if (c.parentElement && c.parentElement.closest('.qf-cfg')) continue; if ((c.nodeValue || '').trim()) last = c.nodeValue; }
-      e.preventDefault(); e.stopPropagation();
-      ADD = false; setAddUI(); toast('Đang thêm ô ở dòng dưới…');
-      if (WIRE) WIRE.addField({ placement: 'below', paraText: paraStaticText(pEl), nodeText: last });
     }
   }
   function bindAddMode() {

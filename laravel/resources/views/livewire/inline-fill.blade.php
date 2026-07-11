@@ -30,7 +30,7 @@
     @if($config)
         <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-xl px-3 py-2 mb-3">
             <b>Cấu hình ẩn ô:</b> di chuột (PC) hoặc chạm (điện thoại) vào ô rồi bấm nút <b class="text-red-600">✕</b> ở góc trên phải để <b>ẩn</b> ô không cần điền; bấm <b class="text-green-600">＋</b> để hiện lại. Xong bấm <b>Lưu cấu hình</b>.<br>
-            <b>Thêm ô nhập:</b> bấm nút <b>➕ Thêm ô nhập</b> dưới đây, rồi: bấm <b>trúng đoạn chữ</b> → ô nằm ngay sau chỗ bấm (cùng dòng); bấm <b>vào khoảng trống dưới một dòng</b> → ô nằm ở <b>dòng dưới</b> dòng đó (dùng cho ô tên dưới "CHỦ NHIỆM KHOA"…). Ô đã thêm có nút <b>🗑</b> để xoá. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
+            <b>Thêm ô nhập:</b> bấm <b>Ô cùng dòng</b> rồi bấm trúng đoạn chữ → ô nằm ngay sau chỗ bấm; hoặc bấm <b>Ô dòng dưới</b> rồi bấm vào một dòng (vd "CHỦ NHIỆM KHOA") → ô nằm ở <b>dòng ngay dưới</b> dòng đó (dùng cho ô tên dưới chữ ký). Ô đã thêm có nút <b>🗑</b> để xoá. Cấu hình áp dụng cho mọi người điền biểu mẫu này.
         </div>
     @else
         <div class="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-xl px-3 py-2 mb-3">
@@ -49,10 +49,15 @@
     <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 z-20" style="padding-bottom:calc(env(safe-area-inset-bottom) + .75rem);padding-top:.75rem">
         <div class="max-w-5xl mx-auto flex items-center gap-3">
             @if($config)
-                <button type="button" id="qf-add-toggle" onclick="window.QFInline && window.QFInline.toggleAdd()"
-                        class="inline-flex items-center gap-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-xl px-3 py-2.5 font-medium hover:bg-indigo-50">
+                <button type="button" id="qf-add-inline" onclick="window.QFInline && window.QFInline.toggleAdd('inline')"
+                        class="qf-addbtn inline-flex items-center gap-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-xl px-3 py-2.5 font-medium hover:bg-indigo-50" title="Thêm ô ngay sau đoạn chữ (cùng dòng)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-                    <span>Thêm ô nhập</span>
+                    <span>Ô cùng dòng</span>
+                </button>
+                <button type="button" id="qf-add-below" onclick="window.QFInline && window.QFInline.toggleAdd('below')"
+                        class="qf-addbtn inline-flex items-center gap-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-xl px-3 py-2.5 font-medium hover:bg-indigo-50" title="Thêm ô ở dòng dưới dòng chữ (vd ô tên dưới chữ ký)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    <span>Ô dòng dưới</span>
                 </button>
                 <span class="text-sm text-gray-500">Đang ẩn <b id="qf-cfg-count" class="text-red-600">{{ count($inlineHidden) }}</b> ô</span>
                 <button type="button" onclick="window.QFInline && window.QFInline.saveConfig()" wire:loading.attr="disabled" wire:target="saveConfig"
@@ -82,7 +87,7 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=15"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=16"></script>
     <style>
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}
@@ -128,7 +133,7 @@
         /* Chế độ đang thêm ô: con trỏ chữ thập + làm nổi vùng bấm */
         #qf-doc-root.qf-adding{cursor:crosshair}
         #qf-doc-root.qf-adding section.docx{outline:2px dashed #6366f1;outline-offset:-2px}
-        #qf-add-toggle.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
+        .qf-addbtn.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
         #qf-toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:60;
             background:rgba(17,24,39,.94);color:#fff;font-family:system-ui,sans-serif;font-size:13px;font-weight:600;
             padding:9px 16px;border-radius:999px;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
