@@ -190,7 +190,11 @@ window.QFInline = (function () {
         const w = Math.max(t.offsetWidth, t.scrollWidth);
         if (w > contentW) contentW = w;
       });
-      if (contentW > avail && avail > 0) wrap.style.zoom = (avail / contentW).toFixed(4);
+      // Lấp đầy chiều ngang khung: PHÓNG TO nếu tờ giấy hẹp hơn khung, THU NHỎ nếu rộng hơn.
+      if (contentW > 0 && avail > 0) {
+        const z = Math.min(1.5, avail / contentW);
+        wrap.style.zoom = z.toFixed(4);
+      }
     } catch (e) { /* fit chỉ là cosmetic — không bao giờ để lỗi phá form */ }
   }
   function scheduleFit() {
