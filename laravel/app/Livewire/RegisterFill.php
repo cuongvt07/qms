@@ -134,6 +134,9 @@ class RegisterFill extends Component
         $simple = ['text', 'number', 'date'];
         // Nhãn gốc: bỏ số thứ tự ở cuối ("Cell 2"->"Cell", "Giá cả"->"Giá cả") để gộp cùng 1 cụm.
         $base = fn ($lbl) => trim(preg_replace('/[\s_\-.]*\d+$/u', '', (string) $lbl));
+        // Nhãn rác (ô trống trong bảng injector đặt tên chung) -> đổi tên cho dễ hiểu.
+        $isJunk = fn ($b) => (bool) preg_match('/^(cell|cells|o|ô|cot|cột|col|column)$/iu', trim($b));
+        $BIG    = 12;   // nhóm > 12 ô = bảng lớn -> thu gọn, khuyến nghị Giống bản gốc
 
         $fields = $this->fields;
         $n      = count($fields);
@@ -153,7 +156,12 @@ class RegisterFill extends Component
                     $j++;
                 }
                 if (count($run) >= 2) {
-                    $out[] = ['kind' => 'group', 'label' => $b, 'items' => $run];
+                    $out[] = [
+                        'kind'  => 'group',
+                        'label' => $isJunk($b) ? 'Ô trong bảng' : $b,
+                        'items' => $run,
+                        'big'   => count($run) > $BIG,
+                    ];
                     $i = $j;
                     continue;
                 }
