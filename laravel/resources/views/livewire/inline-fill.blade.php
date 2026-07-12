@@ -93,7 +93,7 @@
     <script src="{{ asset('js/qf-date.js') }}?v=1"></script>
     <script src="{{ asset('js/inline-fill.js') }}?v=17"></script>
     <style>
-        #qf-doc-root .qf-bad{border-color:#ef4444 !important;background:#fef2f2 !important}
+        #qf-doc-root .qf-bad{border-color:#ef4444 !important;background:#fef2f2 !important;box-shadow:0 0 0 2px #fecaca !important}
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}
         .qf-scroll{overflow-x:auto;padding:22px 14px;min-height:200px}
