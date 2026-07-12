@@ -136,6 +136,7 @@
             $rp = $this->renderPlan;
             $plan = $rp['plan']; $planTables = $rp['tables'];
             $fieldMap = $this->fieldMap;
+            $hiddenKeys = array_flip($this->version->schema_json['inline_hidden'] ?? []);
             $hasGroup = collect($plan)->contains(fn($e)=>$e['kind']==='group');
             $hasBig   = collect($plan)->contains(fn($e)=>($e['kind']==='group') && !empty($e['big']));
             $hasTable = collect($plan)->contains(fn($e)=>$e['kind']==='table');
@@ -190,6 +191,8 @@
                                                 @foreach($c['segments'] as $s)
                                                     @if(isset($s['t']))
                                                         <span class="text-gray-600 text-xs">{{ $s['t'] }}</span>
+                                                    @elseif(isset($hiddenKeys[$s['k']]))
+                                                        {{-- ô đã ẩn ở bản gốc -> để trống cho đồng bộ --}}
                                                     @else
                                                         @php $ck = $s['k']; $cf = $fieldMap[$ck] ?? ['type'=>'text','label'=>$ck]; $cdk = \App\Livewire\RegisterFill::dateKind($cf); @endphp
                                                         @if(in_array($cdk, ['day','month','year']))

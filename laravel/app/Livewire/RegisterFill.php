@@ -111,6 +111,25 @@ class RegisterFill extends Component
             }
             return $p;
         };
+        // Đồng bộ với "Cấu hình ẩn ô" ở màn Giống bản gốc: ô ẩn ở bản gốc thì phiếu cũng ẩn.
+        $hiddenSet = array_flip($this->version->schema_json['inline_hidden'] ?? []);
+        $isHidden  = function ($f) use ($hiddenSet) {
+            if (! empty($f['hidden'])) {
+                return true;
+            }
+            if (isset($hiddenSet[$f['key'] ?? ''])) {
+                return true;
+            }
+            if (! empty($f['option_ph'])) {   // nhóm chọn: ẩn khi MỌI lựa chọn đều bị ẩn
+                foreach (array_values($f['option_ph']) as $ph) {
+                    if (! isset($hiddenSet[$ph])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
         $fields = array_values(array_map(function ($f) use ($clean) {
             $f['label'] = $clean($f['label'] ?? '');
             if (! empty($f['columns'])) {
@@ -120,7 +139,7 @@ class RegisterFill extends Component
                 }, $f['columns']);
             }
             return $f;
-        }, array_filter($this->version->fields, fn ($f) => empty($f['hidden']))));
+        }, array_filter($this->version->fields, fn ($f) => ! $isHidden($f))));
         usort($fields, fn ($a, $b) => $posOf($a) <=> $posOf($b));   // PHP 8 usort ổn định
         return $fields;
     }
@@ -264,7 +283,8 @@ class RegisterFill extends Component
         }
         $order = [];
         try {
-            $path = Storage::disk('local')->path($this->version->formTemplate->file_goc_path);
+            // Đọc bản đã chuẩn hoá + đã CHÈN Ô THÊM (added_inline) -> ô thêm ở bản gốc nằm ĐÚNG vị trí bên phiếu.
+            $path = app(\App\Services\InlineDocxService::class)->templatePathFor($this->version);
             $tp   = new \PhpOffice\PhpWord\TemplateProcessor($path);
             foreach (array_values($tp->getVariables()) as $i => $k) {
                 if (! isset($order[$k])) {
