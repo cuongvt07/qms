@@ -132,25 +132,28 @@ class RegisterFill extends Component
     public function getFieldGroupsProperty(): array
     {
         $simple = ['text', 'number', 'date'];
+        // Nhãn gốc: bỏ số thứ tự ở cuối ("Cell 2"->"Cell", "Giá cả"->"Giá cả") để gộp cùng 1 cụm.
+        $base = fn ($lbl) => trim(preg_replace('/[\s_\-.]*\d+$/u', '', (string) $lbl));
+
         $fields = $this->fields;
         $n      = count($fields);
         $out    = [];
         $i      = 0;
         while ($i < $n) {
             $f    = $fields[$i];
-            $lbl  = trim((string) ($f['label'] ?? ''));
             $type = $f['type'] ?? 'text';
-            if ($lbl !== '' && in_array($type, $simple, true)) {
+            $b    = $base(trim((string) ($f['label'] ?? '')));
+            if ($b !== '' && in_array($type, $simple, true)) {
                 $run = [$f];
                 $j   = $i + 1;
                 while ($j < $n
                     && in_array($fields[$j]['type'] ?? 'text', $simple, true)
-                    && trim((string) ($fields[$j]['label'] ?? '')) === $lbl) {
+                    && $base(trim((string) ($fields[$j]['label'] ?? ''))) === $b) {
                     $run[] = $fields[$j];
                     $j++;
                 }
                 if (count($run) >= 2) {
-                    $out[] = ['kind' => 'group', 'label' => $lbl, 'items' => $run];
+                    $out[] = ['kind' => 'group', 'label' => $b, 'items' => $run];
                     $i = $j;
                     continue;
                 }
