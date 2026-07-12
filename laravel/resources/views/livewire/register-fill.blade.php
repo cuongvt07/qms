@@ -163,11 +163,11 @@
                 @if($entry['kind'] === 'dateline')
                     {{-- Dòng ngày: các ô ngày/tháng/năm liền mạch trên 1 dòng --}}
                     <div data-span="6">
-                        <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
+                        <div class="flex flex-wrap items-end gap-x-6 gap-y-2">
                             @foreach($entry['items'] as $df)
                                 @php $ddk = \App\Livewire\RegisterFill::dateKind($df); $dkey = $df['key']; @endphp
                                 <div wire:key="dl-{{ $A }}-{{ $dkey }}">
-                                    <label class="block text-[13px] font-semibold text-gray-700 mb-1">{{ $df['label'] }}</label>
+                                    <label class="block text-[13px] font-semibold text-gray-700 mb-1 whitespace-nowrap">{{ $df['label'] }}</label>
                                     @if(in_array($ddk, ['day','month','year']))
                                         @php $mx = $ddk==='year'?4:2; $ph = ['day'=>'Ngày','month'=>'Tháng','year'=>'Năm'][$ddk]; @endphp
                                         <input type="text" inputmode="numeric" maxlength="{{ $mx }}" data-datekind="{{ $ddk }}" placeholder="{{ $ph }}"
