@@ -7,6 +7,7 @@ use App\Models\FormSubmissionAttachment;
 use App\Models\FormSubmissionRow;
 use App\Models\FormTemplateVersion;
 use App\Services\ActivityLogger;
+use App\Services\TableStructureService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -170,6 +171,87 @@ class RegisterFill extends Component
             $i++;
         }
         return $out;
+    }
+
+    /** key => field (nhãn đã làm sạch) để dựng ô nhập trong bảng. */
+    public function getFieldMapProperty(): array
+    {
+        $m = [];
+        foreach ($this->fields as $f) {
+            if (! empty($f['key'])) {
+                $m[$f['key']] = $f;
+            }
+        }
+        return $m;
+    }
+
+    /**
+     * Kế hoạch render Dạng phiếu theo đúng thứ tự bản gốc:
+     *  - 'table'  : bảng lưới thật (≥3 cột + có hàng tiêu đề) dựng lại từ .docx (giữ gộp cột/hàng, tiêu đề chuẩn).
+     *  - 'group'  : các ô cùng tên gộp lại (bảng làm phẳng không nhận dạng được lưới).
+     *  - 'single' : ô đơn.
+     * Trả ['plan'=>[...], 'tables'=>[...]].
+     */
+    public function getRenderPlanProperty(): array
+    {
+        $svc    = app(TableStructureService::class)->forVersion($this->version);
+        $tables = $svc['tables'];
+        $k2t    = $svc['keyToTable'];
+
+        // Chỉ dựng lại bảng LƯỚI THẬT: có ≥1 hàng tiêu đề, ≥3 cột, ≥1 hàng dữ liệu.
+        $renderable = [];
+        foreach ($tables as $ti => $T) {
+            $dataRows = count($T['rows']) - $T['headerRows'];
+            $renderable[$ti] = ($T['headerRows'] >= 1 && $T['gridW'] >= 3 && $dataRows >= 1);
+        }
+        $inTable = function ($key) use ($k2t, $renderable) {
+            return isset($k2t[$key]) && ! empty($renderable[$k2t[$key]]);
+        };
+
+        $simple = ['text', 'number', 'date'];
+        $base   = fn ($l) => trim(preg_replace('/[\s_\-.]*\d+$/u', '', (string) $l));
+        $isJunk = fn ($b) => (bool) preg_match('/^(cell|cells|o|ô|cot|cột|col|column)$/iu', trim($b));
+        $BIG    = 12;
+
+        $fields  = $this->fields;
+        $n       = count($fields);
+        $plan    = [];
+        $emitted = [];
+        $i       = 0;
+        while ($i < $n) {
+            $f   = $fields[$i];
+            $key = $f['key'] ?? '';
+            if ($inTable($key)) {
+                $ti = $k2t[$key];
+                if (empty($emitted[$ti])) {
+                    $emitted[$ti] = true;
+                    $plan[] = ['kind' => 'table', 'idx' => $ti];
+                }
+                $i++;
+                continue;
+            }
+            $type = $f['type'] ?? 'text';
+            $b    = $base(trim((string) ($f['label'] ?? '')));
+            if ($b !== '' && in_array($type, $simple, true)) {
+                $run = [$f];
+                $j   = $i + 1;
+                while ($j < $n
+                    && ! $inTable($fields[$j]['key'] ?? '')
+                    && in_array($fields[$j]['type'] ?? 'text', $simple, true)
+                    && $base(trim((string) ($fields[$j]['label'] ?? ''))) === $b) {
+                    $run[] = $fields[$j];
+                    $j++;
+                }
+                if (count($run) >= 2) {
+                    $plan[] = ['kind' => 'group', 'label' => $isJunk($b) ? 'Ô trong bảng' : $b, 'items' => $run, 'big' => count($run) > $BIG];
+                    $i = $j;
+                    continue;
+                }
+            }
+            $plan[] = ['kind' => 'single', 'field' => $f];
+            $i++;
+        }
+        return ['plan' => $plan, 'tables' => $tables];
     }
 
     /** Vị trí placeholder theo thứ tự xuất hiện trong .docx gốc (key => index). Cache theo version. */

@@ -131,12 +131,21 @@
         </div>
         @endif
 
-        {{-- Các field theo đúng thứ tự bản gốc — lưới 2 cột (ngắn 1/2, dài full) --}}
+        {{-- Các field theo đúng thứ tự bản gốc — bảng lưới dựng lại + ô đơn/nhóm --}}
         @php
-            $groups = $this->fieldGroups;
-            $hasGroup = collect($groups)->contains(fn($e)=>$e['kind']==='group');
-            $hasBig   = collect($groups)->contains(fn($e)=>($e['kind']==='group') && !empty($e['big']));
+            $rp = $this->renderPlan;
+            $plan = $rp['plan']; $planTables = $rp['tables'];
+            $fieldMap = $this->fieldMap;
+            $hasGroup = collect($plan)->contains(fn($e)=>$e['kind']==='group');
+            $hasBig   = collect($plan)->contains(fn($e)=>($e['kind']==='group') && !empty($e['big']));
+            $hasTable = collect($plan)->contains(fn($e)=>$e['kind']==='table');
         @endphp
+        @if($hasTable)
+            <div class="flex items-start gap-2 bg-teal-50 border border-teal-200 text-teal-800 text-xs rounded-xl px-3 py-2 mb-3">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="shrink-0 mt-0.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M3 14h18"/></svg>
+                <span>Bảng đã được <b>dựng lại đúng cấu trúc bản gốc</b> — giữ nguyên tiêu đề cột (kể cả cột chia nhỏ) và tiêu đề hàng. Điền trực tiếp vào từng ô của bảng.</span>
+            </div>
+        @endif
         @if($hasBig)
             <div class="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl px-3 py-2 mb-3">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="shrink-0 mt-0.5"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
@@ -149,7 +158,64 @@
             </div>
         @endif
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 items-start">
-            @foreach($groups as $entry)
+            @foreach($plan as $entry)
+                @if($entry['kind'] === 'table')
+                    @php $T = $planTables[$entry['idx']]; @endphp
+                    <div class="md:col-span-2 overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="min-w-full text-sm border-collapse">
+                            @foreach($T['rows'] as $ri => $cells)
+                                @php $isHead = $ri < $T['headerRows']; @endphp
+                                <tr>
+                                    @foreach($cells as $c)
+                                        @continue(!empty($c['skip']))
+                                        @php
+                                            $cs = $c['colspan'] > 1 ? $c['colspan'] : null;
+                                            $rs = $c['rowspan'] > 1 ? $c['rowspan'] : null;
+                                        @endphp
+                                        @if($isHead)
+                                            <th @if($cs)colspan="{{ $cs }}"@endif @if($rs)rowspan="{{ $rs }}"@endif
+                                                class="border border-gray-200 bg-gray-100 text-gray-700 font-semibold px-2 py-1.5 text-center align-middle">
+                                                @foreach($c['segments'] as $s){{ $s['t'] ?? '' }}@endforeach
+                                            </th>
+                                        @elseif(!$c['hasKey'])
+                                            {{-- ô nhãn hàng / STT --}}
+                                            <th @if($cs)colspan="{{ $cs }}"@endif @if($rs)rowspan="{{ $rs }}"@endif
+                                                class="border border-gray-200 bg-gray-50 text-gray-700 font-medium px-2 py-1.5 text-left align-middle whitespace-nowrap">
+                                                @foreach($c['segments'] as $s){{ $s['t'] ?? '' }}@endforeach
+                                            </th>
+                                        @else
+                                            <td @if($cs)colspan="{{ $cs }}"@endif @if($rs)rowspan="{{ $rs }}"@endif
+                                                class="border border-gray-200 px-1.5 py-1 align-middle">
+                                                <div class="flex flex-wrap items-center gap-1">
+                                                @foreach($c['segments'] as $s)
+                                                    @if(isset($s['t']))
+                                                        <span class="text-gray-600 text-xs">{{ $s['t'] }}</span>
+                                                    @else
+                                                        @php $ck = $s['k']; $cf = $fieldMap[$ck] ?? ['type'=>'text','label'=>$ck]; $cdk = \App\Livewire\RegisterFill::dateKind($cf); @endphp
+                                                        @if(in_array($cdk, ['day','month','year']))
+                                                            @php $mx=$cdk==='year'?4:2; $ph=['day'=>'Ngày','month'=>'Tháng','year'=>'Năm'][$cdk]; @endphp
+                                                            <input type="text" inputmode="numeric" maxlength="{{ $mx }}" data-datekind="{{ $cdk }}" placeholder="{{ $ph }}"
+                                                                   wire:model="rows.{{ $A }}.data.{{ $ck }}" style="width:64px"
+                                                                   class="border border-gray-300 rounded-md text-sm px-2 py-1.5 focus:border-teal-500 outline-none">
+                                                        @elseif($cdk === 'vndate')
+                                                            <input type="text" inputmode="numeric" maxlength="10" data-datekind="vndate" placeholder="dd/mm/yyyy"
+                                                                   wire:model="rows.{{ $A }}.data.{{ $ck }}"
+                                                                   class="w-full min-w-[100px] border border-gray-300 rounded-md text-sm px-2 py-1.5 focus:border-teal-500 outline-none">
+                                                        @else
+                                                            <x-dyn-input :model="'rows.'.$A.'.data.'.$ck" :type="$cf['type'] ?? 'text'" :options="$cf['options'] ?? []" compact />
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                                </div>
+                                            </td>
+                                        @endif
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </table>
+                    </div>
+                    @continue
+                @endif
                 @if($entry['kind'] === 'group')
                     @php $cnt = count($entry['items']); @endphp
                     @if(!empty($entry['big']))
