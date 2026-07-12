@@ -124,6 +124,43 @@ class RegisterFill extends Component
         return $fields;
     }
 
+    /**
+     * Gộp các ô ĐƠN GIẢN (text/number/date) LIÊN TIẾP TRÙNG NHÃN thành 1 nhóm.
+     * Bảng chấm điểm bị làm phẳng (Giá cả ×4, Tiến độ ×4…) sẽ hiện gọn: nhãn 1 lần + các ô xếp ngang có đánh số.
+     * Trả về list: ['kind'=>'group','label'=>..,'items'=>[field,...]] hoặc ['kind'=>'single','field'=>field].
+     */
+    public function getFieldGroupsProperty(): array
+    {
+        $simple = ['text', 'number', 'date'];
+        $fields = $this->fields;
+        $n      = count($fields);
+        $out    = [];
+        $i      = 0;
+        while ($i < $n) {
+            $f    = $fields[$i];
+            $lbl  = trim((string) ($f['label'] ?? ''));
+            $type = $f['type'] ?? 'text';
+            if ($lbl !== '' && in_array($type, $simple, true)) {
+                $run = [$f];
+                $j   = $i + 1;
+                while ($j < $n
+                    && in_array($fields[$j]['type'] ?? 'text', $simple, true)
+                    && trim((string) ($fields[$j]['label'] ?? '')) === $lbl) {
+                    $run[] = $fields[$j];
+                    $j++;
+                }
+                if (count($run) >= 2) {
+                    $out[] = ['kind' => 'group', 'label' => $lbl, 'items' => $run];
+                    $i = $j;
+                    continue;
+                }
+            }
+            $out[] = ['kind' => 'single', 'field' => $f];
+            $i++;
+        }
+        return $out;
+    }
+
     /** Vị trí placeholder theo thứ tự xuất hiện trong .docx gốc (key => index). Cache theo version. */
     private function placeholderOrder(): array
     {

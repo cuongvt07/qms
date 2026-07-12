@@ -132,9 +132,37 @@
         @endif
 
         {{-- Các field theo đúng thứ tự bản gốc — lưới 2 cột (ngắn 1/2, dài full) --}}
+        @php $groups = $this->fieldGroups; $hasGroup = collect($groups)->contains(fn($e)=>$e['kind']==='group'); @endphp
+        @if($hasGroup)
+            <div class="flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-xl px-3 py-2 mb-3">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="shrink-0 mt-0.5"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+                <span>Các ô <b>cùng tên</b> được gộp thành 1 nhóm, xếp ngang & đánh số theo cột trong bảng gốc. Muốn thấy đúng tiêu đề cột (vd 0 / 5 / 10 / Ghi chú) thì bấm <b>“Giống bản gốc”</b> ở trên.</span>
+            </div>
+        @endif
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 items-start">
-            @foreach($fields as $field)
+            @foreach($groups as $entry)
+                @if($entry['kind'] === 'group')
+                    <div class="md:col-span-2 border border-gray-100 rounded-xl p-3 bg-gray-50/40">
+                        <label class="block text-[13px] font-semibold text-gray-700 mb-2">
+                            {{ $entry['label'] }}
+                            <span class="ml-1 text-xs font-normal text-gray-400">· {{ count($entry['items']) }} ô (theo cột bản gốc)</span>
+                        </label>
+                        <div class="flex flex-wrap gap-2.5">
+                            @foreach($entry['items'] as $n => $gf)
+                                <div class="flex-1 min-w-[130px]" wire:key="grp-{{ $A }}-{{ $gf['key'] }}">
+                                    <div class="flex items-center gap-1.5 text-[11px] text-gray-400 mb-1">
+                                        <span class="inline-grid place-items-center w-4 h-4 rounded-full bg-teal-100 text-teal-700 font-bold">{{ $n+1 }}</span>
+                                        <span>Ô {{ $n+1 }}</span>
+                                    </div>
+                                    <x-dyn-input :model="'rows.'.$A.'.data.'.$gf['key']" :type="$gf['type']" :placeholder="'Ô '.($n+1)" />
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @continue
+                @endif
                 @php
+                    $field = $entry['field'];
                     $key = $field['key']; $val = data_get($row, 'data.'.$key);
                     // Full chiều rộng: đoạn văn, bảng, và chọn 1 nhiều lựa chọn (>4)
                     $full = in_array($field['type'], ['textarea','repeatable_table'])
