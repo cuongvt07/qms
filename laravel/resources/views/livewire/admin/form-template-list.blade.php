@@ -67,7 +67,7 @@
                                             @if($ver)
                                                 <a href="{{ route('forms.register', $ver->id) }}"
                                                    class="inline-flex items-center gap-1 text-xs bg-teal-600 text-white rounded-lg px-3 py-1.5 font-semibold hover:bg-teal-700" title="Sang tab nhập liệu">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
                                                     Nhập
                                                 </a>
                                             @else
