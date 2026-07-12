@@ -21,21 +21,21 @@ class InlineDocxService
      */
     public function templatePathFor(FormTemplateVersion $version): string
     {
-        $orig  = Storage::disk('local')->path($version->formTemplate->file_goc_path);
-        $added = $this->addedFields($version);
-        if (empty($added) || ! is_file($orig)) {
+        $orig = Storage::disk('local')->path($version->formTemplate->file_goc_path);
+        if (! is_file($orig)) {
             return $orig;
         }
+        $added = $this->addedFields($version);
 
         $dir = Storage::disk('local')->path('inline_aug');
         if (! is_dir($dir)) {
             @mkdir($dir, 0775, true);
         }
-        $hash  = substr(md5(json_encode($added)), 0, 12);
+        // hash gồm cả mtime file gốc -> đè file mới => cache tự làm lại. 'n2' = phiên bản chuẩn hoá macro.
+        $hash  = substr(md5(json_encode($added) . '|' . @filemtime($orig) . '|n2'), 0, 12);
         $cache = $dir . DIRECTORY_SEPARATOR . $version->id . '_' . $hash . '.docx';
 
         if (! is_file($cache)) {
-            // dọn bản cache cũ của version này
             foreach (glob($dir . DIRECTORY_SEPARATOR . $version->id . '_*.docx') ?: [] as $old) {
                 @unlink($old);
             }
@@ -54,7 +54,10 @@ class InlineDocxService
         ));
     }
 
-    /** Copy file gốc rồi chèn tất cả placeholder vào document.xml, ghi ra $dest. */
+    /**
+     * Copy file gốc, CHUẨN HOÁ macro bị Word cắt rời ở mọi part (document/header/footer),
+     * rồi chèn các placeholder người dùng thêm vào document.xml. Ghi ra $dest.
+     */
     private function augment(string $src, array $added, string $dest): void
     {
         if (! @copy($src, $dest)) {
@@ -64,35 +67,61 @@ class InlineDocxService
         if ($zip->open($dest) !== true) {
             return;
         }
-        $xml = $zip->getFromName('word/document.xml');
-        if ($xml === false) {
-            $zip->close();
-            return;
-        }
 
-        $dom = new \DOMDocument();
-        $dom->preserveWhiteSpace = true;
-        $dom->formatOutput       = false;
-        $dom->loadXML($xml, LIBXML_PARSEHUGE);
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (! preg_match('#^word/(document|header\d*|footer\d*)\.xml$#', $name)) {
+                continue;
+            }
+            $xml = $zip->getFromName($name);
+            if ($xml === false) {
+                continue;
+            }
+            $fixed = $this->fixBrokenMacros($xml);   // gộp ${..} bị cắt + bỏ khoảng trắng thừa trong macro
 
-        foreach ($added as $f) {
-            $a = $f['added_inline'];
-            if (($a['placement'] ?? 'inline') === 'below') {
-                $this->insertBelow($dom, (string) ($a['paraText'] ?? ''), (string) ($a['nodeText'] ?? ''), (string) $f['key']);
-            } else {
-                $this->insertPlaceholder(
-                    $dom,
-                    (string) ($a['paraText'] ?? ''),
-                    (string) ($a['nodeText'] ?? ''),
-                    (int) ($a['nodeOffset'] ?? 0),
-                    (int) ($a['nodeOccur'] ?? 0),
-                    (string) $f['key']
-                );
+            // Chỉ document.xml mới chèn ô người dùng thêm
+            if ($name === 'word/document.xml' && ! empty($added)) {
+                $dom = new \DOMDocument();
+                $dom->preserveWhiteSpace = true;
+                $dom->formatOutput       = false;
+                $dom->loadXML($fixed, LIBXML_PARSEHUGE);
+                foreach ($added as $f) {
+                    $a = $f['added_inline'];
+                    if (($a['placement'] ?? 'inline') === 'below') {
+                        $this->insertBelow($dom, (string) ($a['paraText'] ?? ''), (string) ($a['nodeText'] ?? ''), (string) $f['key']);
+                    } else {
+                        $this->insertPlaceholder(
+                            $dom,
+                            (string) ($a['paraText'] ?? ''),
+                            (string) ($a['nodeText'] ?? ''),
+                            (int) ($a['nodeOffset'] ?? 0),
+                            (int) ($a['nodeOccur'] ?? 0),
+                            (string) $f['key']
+                        );
+                    }
+                }
+                $fixed = $dom->saveXML();
+            }
+
+            if ($fixed !== $xml) {
+                $zip->addFromString($name, $fixed);
             }
         }
 
-        $zip->addFromString('word/document.xml', $dom->saveXML());
         $zip->close();
+    }
+
+    /**
+     * Gộp macro ${..} bị Word cắt rời qua nhiều run (có tag XML xen giữa) về 1 chuỗi liền,
+     * và bỏ mọi khoảng trắng bên trong ${...} (key placeholder không có dấu cách).
+     * Macro liền mạch sẵn -> giữ nguyên. Không đụng vào text thường (chỉ khớp đúng dạng ${...}).
+     */
+    private function fixBrokenMacros(string $xml): string
+    {
+        return preg_replace_callback('/\$(?:<[^>]+>|\s)*\{[^}]*\}/u', function ($m) {
+            $inner = strip_tags($m[0]);                 // bỏ các tag </w:t></w:r><w:r><w:t> xen giữa
+            return preg_replace('/\s+/u', '', $inner);  // bỏ khoảng trắng thừa: "${chu_nhiem_khoa }" -> "${chu_nhiem_khoa}"
+        }, $xml) ?? $xml;
     }
 
     /** Tìm đoạn theo text (đã bỏ ${..}); fallback đoạn chứa run có text == nodeText. */
