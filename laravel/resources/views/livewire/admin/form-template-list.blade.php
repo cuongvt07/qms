@@ -32,52 +32,59 @@
         @endif
     </div>
 
-    <p class="text-xs text-gray-400 mb-2">{{ $templates->total() }} biểu mẫu</p>
+    <p class="text-xs text-gray-400 mb-2">{{ $total }} biểu mẫu · {{ $grouped->count() }} mục TL</p>
 
-    {{-- Bảng --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mã BM</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên biểu mẫu</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mục TL</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ver</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-                        <th class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse($templates as $template)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $template->ma_bm }}</td>
-                            <td class="px-4 py-3 font-medium text-gray-800">{{ $template->ten_bm }}</td>
-                            <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $template->documentCategory->ten_muc ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-600">
-                                @if($template->versions->first())v{{ $template->versions->first()->version }}
-                                @else<span class="text-gray-400">—</span>@endif
-                            </td>
-                            <td class="px-4 py-3">
-                                @switch($template->trang_thai)
-                                    @case('active')<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">Active</span>@break
-                                    @case('draft')<span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">Draft</span>@break
-                                    @case('archived')<span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">Archived</span>@break
-                                @endswitch
-                            </td>
-                            <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                                <a href="{{ route('admin.form-templates.review', $template) }}" class="text-xs text-teal-600 hover:text-teal-800">Đối chiếu</a>
-                                <a href="{{ route('admin.form-templates.edit', $template) }}" class="text-xs text-gray-500 hover:text-gray-700">Sửa</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">Không có biểu mẫu nào khớp bộ lọc.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 py-3 border-t border-gray-100">
-            {{ $templates->links() }}
-        </div>
+    {{-- Nhóm theo Mục TL --}}
+    <div class="space-y-4">
+        @forelse($grouped as $catName => $items)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                {{-- Tiêu đề mục --}}
+                <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                    <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9A2.25 2.25 0 0019.5 6.75h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                    <h2 class="text-sm font-bold text-gray-700">{{ $catName === '~ Chưa phân mục' ? 'Chưa phân mục' : $catName }}</h2>
+                    <span class="text-xs text-gray-400">({{ $items->count() }})</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($items as $template)
+                                @php $ver = $template->versions->first(); @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap align-middle">{{ $template->ma_bm }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-800 align-middle">
+                                        {{ $template->ten_bm }}
+                                        @if($ver)<span class="ml-1 text-xs text-gray-400">v{{ $ver->version }}</span>@endif
+                                    </td>
+                                    <td class="px-4 py-3 align-middle">
+                                        @switch($template->trang_thai)
+                                            @case('active')<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">Active</span>@break
+                                            @case('draft')<span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">Draft</span>@break
+                                            @case('archived')<span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">Archived</span>@break
+                                        @endswitch
+                                    </td>
+                                    <td class="px-4 py-3 text-right whitespace-nowrap align-middle">
+                                        <div class="inline-flex items-center gap-2">
+                                            @if($ver)
+                                                <a href="{{ route('forms.register', $ver->id) }}"
+                                                   class="inline-flex items-center gap-1 text-xs bg-teal-600 text-white rounded-lg px-3 py-1.5 font-semibold hover:bg-teal-700" title="Sang tab nhập liệu">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+                                                    Nhập
+                                                </a>
+                                            @else
+                                                <span class="text-xs text-gray-300" title="Chưa có phiên bản để nhập">Nhập</span>
+                                            @endif
+                                            <a href="{{ route('admin.form-templates.review', $template) }}" class="text-xs text-teal-600 hover:text-teal-800">Đối chiếu</a>
+                                            <a href="{{ route('admin.form-templates.edit', $template) }}" class="text-xs text-gray-500 hover:text-gray-700">Sửa</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-10 text-center text-gray-400">Không có biểu mẫu nào khớp bộ lọc.</div>
+        @endforelse
     </div>
 </div>

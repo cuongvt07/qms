@@ -37,7 +37,7 @@ class FormTemplateList extends Component
 
     public function render()
     {
-        $templates = FormTemplate::with(['documentCategory', 'versions'])
+        $all = FormTemplate::with(['documentCategory', 'versions'])
             ->when($this->catId !== '', fn ($q) => $q->where('document_category_id', $this->catId))
             ->when($this->status !== '', fn ($q) => $q->where('trang_thai', $this->status))
             ->when(trim($this->q) !== '', function ($q) {
@@ -45,10 +45,14 @@ class FormTemplateList extends Component
                 $q->where(fn ($w) => $w->where('ma_bm', 'like', $kw)->orWhere('ten_bm', 'like', $kw));
             })
             ->orderBy('ma_bm')
-            ->paginate(20);
+            ->get();
+
+        // Nhóm theo Mục TL cho dễ tìm; nhóm chưa phân mục xuống cuối.
+        $grouped = $all->groupBy(fn ($t) => $t->documentCategory->ten_muc ?? '~ Chưa phân mục')->sortKeys();
 
         return view('livewire.admin.form-template-list', [
-            'templates'  => $templates,
+            'grouped'    => $grouped,
+            'total'      => $all->count(),
             'categories' => $this->categories,
         ])->layout('components.layouts.app');
     }
