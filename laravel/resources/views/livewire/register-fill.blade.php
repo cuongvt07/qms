@@ -158,11 +158,35 @@
                 <span>Các ô <b>cùng tên</b> được gộp thành 1 nhóm, xếp ngang & đánh số theo cột trong bảng gốc. Muốn thấy đúng tiêu đề cột (vd 0 / 5 / 10 / Ghi chú) thì bấm <b>“Giống bản gốc”</b> ở trên.</span>
             </div>
         @endif
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 items-start">
+        <div class="qf-grid6">
             @foreach($plan as $entry)
+                @if($entry['kind'] === 'dateline')
+                    {{-- Dòng ngày: các ô ngày/tháng/năm liền mạch trên 1 dòng --}}
+                    <div data-span="6">
+                        <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
+                            @foreach($entry['items'] as $df)
+                                @php $ddk = \App\Livewire\RegisterFill::dateKind($df); $dkey = $df['key']; @endphp
+                                <div wire:key="dl-{{ $A }}-{{ $dkey }}">
+                                    <label class="block text-[13px] font-semibold text-gray-700 mb-1">{{ $df['label'] }}</label>
+                                    @if(in_array($ddk, ['day','month','year']))
+                                        @php $mx = $ddk==='year'?4:2; $ph = ['day'=>'Ngày','month'=>'Tháng','year'=>'Năm'][$ddk]; @endphp
+                                        <input type="text" inputmode="numeric" maxlength="{{ $mx }}" data-datekind="{{ $ddk }}" placeholder="{{ $ph }}"
+                                               wire:model="rows.{{ $A }}.data.{{ $dkey }}" style="width:{{ $ddk==='year'?86:70 }}px"
+                                               class="border border-gray-300 rounded-xl text-[15px] px-3 py-2.5 focus:border-teal-500 outline-none">
+                                    @else
+                                        <input type="text" inputmode="numeric" maxlength="10" data-datekind="vndate" placeholder="dd/mm/yyyy"
+                                               wire:model="rows.{{ $A }}.data.{{ $dkey }}" style="width:150px"
+                                               class="border border-gray-300 rounded-xl text-[15px] px-3 py-2.5 focus:border-teal-500 outline-none">
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @continue
+                @endif
                 @if($entry['kind'] === 'table')
                     @php $T = $planTables[$entry['idx']]; @endphp
-                    <div class="md:col-span-2 overflow-x-auto rounded-xl border border-gray-200">
+                    <div data-span="6" class="overflow-x-auto rounded-xl border border-gray-200">
                         <table class="min-w-full text-sm border-collapse">
                             @foreach($T['rows'] as $ri => $cells)
                                 @php $isHead = $ri < $T['headerRows']; @endphp
@@ -223,7 +247,7 @@
                     @php $cnt = count($entry['items']); @endphp
                     @if(!empty($entry['big']))
                         {{-- Nhóm LỚN (bảng): thu gọn, khuyến nghị Giống bản gốc, có thể mở để nhập tại đây --}}
-                        <div class="md:col-span-2 border border-amber-200 rounded-xl p-3 bg-amber-50/40" x-data="{ open: false }">
+                        <div data-span="6" class="border border-amber-200 rounded-xl p-3 bg-amber-50/40" x-data="{ open: false }">
                             <div class="flex flex-wrap items-center gap-2">
                                 <label class="text-[13px] font-semibold text-gray-700">{{ $entry['label'] }}
                                     <span class="ml-1 text-xs font-normal text-amber-600">· {{ $cnt }} ô — bảng lớn</span></label>
@@ -246,7 +270,7 @@
                         </div>
                     @else
                         {{-- Nhóm nhỏ: xếp ngang, đánh số --}}
-                        <div class="md:col-span-2 border border-gray-100 rounded-xl p-3 bg-gray-50/40">
+                        <div data-span="6" class="border border-gray-100 rounded-xl p-3 bg-gray-50/40">
                             <label class="block text-[13px] font-semibold text-gray-700 mb-2">
                                 {{ $entry['label'] }}
                                 <span class="ml-1 text-xs font-normal text-gray-400">· {{ $cnt }} ô (theo cột bản gốc)</span>
@@ -274,9 +298,9 @@
                             || (in_array($field['type'],['select','radio']) && count($field['options'] ?? []) > 4);
                 @endphp
 
-                @php $dk = \App\Livewire\RegisterFill::dateKind($field); @endphp
+                @php $dk = \App\Livewire\RegisterFill::dateKind($field); $span = \App\Livewire\RegisterFill::fieldSpan($field); @endphp
                 @if($field['type'] !== 'repeatable_table')
-                    <div class="{{ $full ? 'md:col-span-2' : '' }}">
+                    <div data-span="{{ $span }}">
                         <label class="block text-[13px] font-semibold text-gray-700 mb-2">
                             {{ $field['label'] }}@if($field['required'] ?? false)<span class="text-red-500 ml-0.5">*</span>@endif
                         </label>
@@ -328,7 +352,7 @@
                     {{-- Bảng nhiều dòng (full width) --}}
                     @php $cols = $field['columns'] ?? []; $trows = data_get($row, 'tables.'.$key, []);
                           $hasStt = collect($cols)->contains(fn($c)=>\App\Livewire\RegisterFill::isSttCol($c)); @endphp
-                    <div class="md:col-span-2">
+                    <div data-span="6">
                         <div class="flex items-center justify-between mb-2">
                             <label class="text-[13px] font-semibold text-gray-700">{{ $field['label'] }}
                                 <span class="text-gray-400 font-normal">({{ count($trows) }} dòng)</span></label>
@@ -423,7 +447,21 @@
 
     @assets
         <script src="{{ asset('js/qf-date.js') }}?v=1"></script>
-        <style>.qf-bad{border-color:#ef4444 !important;background:#fef2f2 !important;box-shadow:0 0 0 2px #fecaca !important}</style>
+        <style>
+            .qf-bad{border-color:#ef4444 !important;background:#fef2f2 !important;box-shadow:0 0 0 2px #fecaca !important}
+            /* Lưới 6 khối/dòng — 1 dòng = 6 cột; mỗi ô rộng theo data-span (1..6) */
+            .qf-grid6>*{margin-bottom:1rem}
+            @media(min-width:768px){
+                .qf-grid6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));column-gap:1.25rem;row-gap:1rem;align-items:start}
+                .qf-grid6>*{margin-bottom:0}
+                .qf-grid6>[data-span="1"]{grid-column:span 1}
+                .qf-grid6>[data-span="2"]{grid-column:span 2}
+                .qf-grid6>[data-span="3"]{grid-column:span 3}
+                .qf-grid6>[data-span="4"]{grid-column:span 4}
+                .qf-grid6>[data-span="5"]{grid-column:span 5}
+                .qf-grid6>[data-span="6"]{grid-column:span 6}
+            }
+        </style>
     @endassets
 
     {{-- ── Thanh lưu ── --}}

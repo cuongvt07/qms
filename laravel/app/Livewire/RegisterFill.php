@@ -249,6 +249,20 @@ class RegisterFill extends Component
                 $i++;
                 continue;
             }
+            // Gom các ô NGÀY/THÁNG/NĂM (kể cả ngày đầy đủ) LIÊN TIẾP -> 1 "dòng ngày" hiển thị liền mạch.
+            if (self::dateKind($f) !== null) {
+                $run = [$f];
+                $j   = $i + 1;
+                while ($j < $n && ! $inTable($fields[$j]['key'] ?? '') && self::dateKind($fields[$j]) !== null) {
+                    $run[] = $fields[$j];
+                    $j++;
+                }
+                if (count($run) >= 2) {
+                    $plan[] = ['kind' => 'dateline', 'items' => $run];
+                    $i = $j;
+                    continue;
+                }
+            }
             $type = $f['type'] ?? 'text';
             $b    = $base(trim((string) ($f['label'] ?? '')));
             if ($b !== '' && in_array($type, $simple, true)) {
@@ -341,6 +355,32 @@ class RegisterFill extends Component
             return (bool) preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $v, $m) && checkdate((int) $m[2], (int) $m[1], (int) $m[3]);
         }
         return true;
+    }
+
+    /** Độ rộng ô theo hệ 6 khối/dòng (1..6). Ô to → 6 (nguyên dòng), ô thường → 3 (nửa dòng), ô nhỏ → 1-2. */
+    public static function fieldSpan(array $f): int
+    {
+        $type = $f['type'] ?? 'text';
+        if (in_array($type, ['textarea', 'repeatable_table'], true)) {
+            return 6;
+        }
+        if (in_array($type, ['select', 'radio'], true) && count($f['options'] ?? []) > 4) {
+            return 6;
+        }
+        $dk = self::dateKind($f);
+        if (in_array($dk, ['day', 'month', 'year'], true)) {
+            return 2;
+        }
+        if ($dk === 'vndate') {
+            return 3;
+        }
+        if ($type === 'number') {
+            return 2;
+        }
+        if ($type === 'checkbox') {
+            return 2;
+        }
+        return 3;   // chữ ngắn = nửa dòng
     }
 
     /** Rà tất cả ô ngày/tháng/năm trong mọi ngày; trả nhãn ô sai (để chặn lưu). */
