@@ -14,7 +14,8 @@
         <input type="number" inputmode="decimal" wire:model="{{ $model }}" class="{{ $base }}" placeholder="{{ $placeholder }}">
         @break
     @case('date')
-        <input type="date" wire:model="{{ $model }}" class="{{ $base }}">
+        <input type="text" inputmode="numeric" maxlength="10" data-datekind="vndate" wire:model="{{ $model }}"
+               class="{{ $base }}" placeholder="dd/mm/yyyy">
         @break
     @case('select')
         <select wire:model="{{ $model }}" class="{{ $base }} bg-white">

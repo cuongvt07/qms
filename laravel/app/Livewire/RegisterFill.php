@@ -200,6 +200,69 @@ class RegisterFill extends Component
         return array_values(array_filter($this->version->fields, fn ($f) => ($f['type'] ?? '') === 'repeatable_table'));
     }
 
+    /** Loại ô ngày tháng năm (điền tay): 'day'|'month'|'year'|'vndate'|null. Theo NHÃN (đuôi ngày/tháng/năm) rồi tới type=date. */
+    public static function dateKind(array $f): ?string
+    {
+        $lbl = mb_strtolower(trim(preg_replace('/\$\{[^}]*\}/', '', (string) ($f['label'] ?? ''))), 'UTF-8');
+        if (preg_match('/ngày$/u', $lbl)) {
+            return 'day';
+        }
+        if (preg_match('/tháng$/u', $lbl)) {
+            return 'month';
+        }
+        if (preg_match('/năm$/u', $lbl)) {
+            return 'year';
+        }
+        if (($f['type'] ?? '') === 'date') {
+            return 'vndate';
+        }
+        return null;
+    }
+
+    /** Kiểm giá trị ngày/tháng/năm gõ tay (khớp qf-date.js). Trống = hợp lệ. */
+    public static function dateValueValid(?string $kind, string $v): bool
+    {
+        $v = trim($v);
+        if ($kind === null || $v === '') {
+            return true;
+        }
+        if ($kind === 'day') {
+            return ctype_digit($v) && (int) $v >= 1 && (int) $v <= 31;
+        }
+        if ($kind === 'month') {
+            return ctype_digit($v) && (int) $v >= 1 && (int) $v <= 12;
+        }
+        if ($kind === 'year') {
+            return (bool) preg_match('/^\d{4}$/', $v) && (int) $v >= 1900 && (int) $v <= 2100;
+        }
+        if ($kind === 'vndate') {
+            return (bool) preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $v, $m) && checkdate((int) $m[2], (int) $m[1], (int) $m[3]);
+        }
+        return true;
+    }
+
+    /** Rà tất cả ô ngày/tháng/năm trong mọi ngày; trả nhãn ô sai (để chặn lưu). */
+    private function invalidDateLabels(): array
+    {
+        $kinds = [];
+        foreach ($this->fields as $f) {
+            $k = self::dateKind($f);
+            if ($k) {
+                $kinds[$f['key']] = ['kind' => $k, 'label' => $f['label'] ?? $f['key']];
+            }
+        }
+        $bad = [];
+        foreach ($this->rows as $row) {
+            foreach ($kinds as $key => $meta) {
+                $v = (string) ($row['data'][$key] ?? '');
+                if (! self::dateValueValid($meta['kind'], $v)) {
+                    $bad[$meta['label']] = true;
+                }
+            }
+        }
+        return array_keys($bad);
+    }
+
     /** Cột STT/số thứ tự → tự đánh số theo dòng, không nhập tay. */
     public static function isSttCol(array $col): bool
     {
@@ -495,6 +558,13 @@ class RegisterFill extends Component
         $dates = array_column($this->rows, 'ngay');
         if (count($dates) !== count(array_unique($dates))) {
             $this->addError('rows', 'Có ngày bị trùng — mỗi ngày chỉ một bản ghi.');
+            return;
+        }
+
+        // Chặn lưu nếu ô ngày/tháng/năm gõ tay sai định dạng
+        if ($badDates = $this->invalidDateLabels()) {
+            $this->addError('rows', 'Ngày/tháng/năm nhập sai, sửa lại rồi lưu: ' . implode(', ', $badDates)
+                . ' (Ngày 1–31, Tháng 1–12, Năm 4 chữ số, ngày đầy đủ dạng dd/mm/yyyy).');
             return;
         }
 

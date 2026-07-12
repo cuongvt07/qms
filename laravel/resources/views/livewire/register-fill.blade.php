@@ -205,11 +205,18 @@
                             || (in_array($field['type'],['select','radio']) && count($field['options'] ?? []) > 4);
                 @endphp
 
+                @php $dk = \App\Livewire\RegisterFill::dateKind($field); @endphp
                 @if($field['type'] !== 'repeatable_table')
                     <div class="{{ $full ? 'md:col-span-2' : '' }}">
                         <label class="block text-[13px] font-semibold text-gray-700 mb-2">
                             {{ $field['label'] }}@if($field['required'] ?? false)<span class="text-red-500 ml-0.5">*</span>@endif
                         </label>
+                        @if(in_array($dk, ['day','month','year']))
+                            @php $mx = $dk==='year'?4:2; $ph = ['day'=>'Ngày','month'=>'Tháng','year'=>'Năm'][$dk]; @endphp
+                            <input type="text" inputmode="numeric" maxlength="{{ $mx }}" data-datekind="{{ $dk }}" placeholder="{{ $ph }}"
+                                   wire:model="rows.{{ $A }}.data.{{ $key }}"
+                                   class="w-full max-w-[130px] border border-gray-300 rounded-xl text-[15px] px-3.5 py-2.5 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none">
+                        @else
                         @switch($field['type'])
                             @case('select')
                             @case('radio')
@@ -246,6 +253,7 @@
                             @default
                                 <x-dyn-input :model="'rows.'.$A.'.data.'.$key" :type="$field['type']" :placeholder="$field['label']" />
                         @endswitch
+                        @endif
                     </div>
                 @else
                     {{-- Bảng nhiều dòng (full width) --}}
@@ -343,6 +351,11 @@
         </div>
     </div>
     @endif
+
+    @assets
+        <script src="{{ asset('js/qf-date.js') }}?v=1"></script>
+        <style>.qf-bad{border-color:#f87171 !important;background:#fef2f2 !important}</style>
+    @endassets
 
     {{-- ── Thanh lưu ── --}}
     <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 z-20" style="padding-bottom:calc(env(safe-area-inset-bottom) + .75rem);padding-top:.75rem">

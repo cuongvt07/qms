@@ -79,6 +79,22 @@ class InlineFill extends Component
         $vals   = is_array($clientVals) ? $clientVals : $this->vals;
         $fields = FormTemplateVersion::find($this->versionId)?->fields ?? [];
 
+        // Chặn lưu (khi bấm Lưu, không phải autosave) nếu ngày/tháng/năm gõ tay sai
+        if (! $silent) {
+            $badDates = [];
+            foreach ($fields as $f) {
+                $kind = RegisterFill::dateKind($f);
+                if ($kind && ! RegisterFill::dateValueValid($kind, (string) ($vals[$f['key']] ?? ''))) {
+                    $badDates[$f['label'] ?? $f['key']] = true;
+                }
+            }
+            if ($badDates) {
+                session()->flash('error', 'Ngày/tháng/năm nhập sai, sửa lại rồi lưu: ' . implode(', ', array_keys($badDates))
+                    . ' (Ngày 1–31, Tháng 1–12, Năm 4 chữ số, ngày đầy đủ dd/mm/yyyy).');
+                return;
+            }
+        }
+
         $phOfGroup    = [];   // chk_ph thuộc nhóm option -> loại khỏi data_json (thay bằng field_key)
         $optionFields = [];   // field_key -> [opt => ph]
         $tableFields  = [];   // field_key -> columns

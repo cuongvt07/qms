@@ -26,6 +26,9 @@
     @if(session('success'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2.5 rounded-xl mb-3 text-sm">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-xl mb-3 text-sm">{{ session('error') }}</div>
+    @endif
 
     @if($config)
         <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-xl px-3 py-2 mb-3">
@@ -87,8 +90,10 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/inline-fill.js') }}?v=16"></script>
+    <script src="{{ asset('js/qf-date.js') }}?v=1"></script>
+    <script src="{{ asset('js/inline-fill.js') }}?v=17"></script>
     <style>
+        #qf-doc-root .qf-bad{border-color:#ef4444 !important;background:#fef2f2 !important}
         /* Nền xám + tờ giấy do docx-preview dựng (section.docx) */
         .qf-doc{background:#54565a}
         .qf-scroll{overflow-x:auto;padding:22px 14px;min-height:200px}

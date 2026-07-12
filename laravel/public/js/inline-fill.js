@@ -28,6 +28,18 @@ window.QFInline = (function () {
   const cleanLabel = s => String(s || '').replace(/\$\{[a-z0-9_]+\}/ig, '').trim();
   const humanize   = k => String(k || '').replace(/[_-]+/g, ' ').trim();
   const isSmall    = k => /^(stt|tt|so_?tt|sott)$/i.test(k) || /(^|_)(ngay|thang|nam)$/i.test(k);
+  // Loại ô ngày/tháng/năm (điền tay): theo NHÃN (đuôi ngày/tháng/năm) rồi type=date, cuối cùng theo key.
+  function dateKind(key, info) {
+    const l = String((info && info.label) || '').toLowerCase().trim();
+    if (/ngày$/.test(l)) return 'day';
+    if (/tháng$/.test(l)) return 'month';
+    if (/năm$/.test(l)) return 'year';
+    if (info && info.type === 'date') return 'vndate';
+    if (/(^|_)ngay$/i.test(key)) return 'day';
+    if (/(^|_)thang$/i.test(key)) return 'month';
+    if (/(^|_)nam$/i.test(key)) return 'year';
+    return null;
+  }
   const autosize   = el => { el.style.width = Math.max(2.4, (el.value || '').length + 0.6) + 'ch'; };
   const isStt = col => {
     const k = (col.key || '').toLowerCase(), l = (col.label || '').toLowerCase();
@@ -63,9 +75,18 @@ window.QFInline = (function () {
     }
     const i = document.createElement('input');
     i.type = 'text'; i.className = 'qf-in'; i.dataset.path = key; i.title = info.label || key;
-    if (isSmall(key)) { i.classList.add('qf-sm'); i.addEventListener('input', () => autosize(i)); }
-    else if (info.type === 'date') { i.type = 'date'; i.classList.add('qf-date'); }
-    else if (info.type === 'number') { i.type = 'number'; i.inputMode = 'decimal'; }
+    const dk = dateKind(key, info);
+    if (dk) {
+      // Ngày/tháng/năm gõ tay (không dùng date-picker) + đánh dấu để qf-date.js kiểm
+      i.setAttribute('data-datekind', dk);
+      i.inputMode = 'numeric';
+      if (dk === 'vndate') { i.classList.add('qf-date'); i.placeholder = 'dd/mm/yyyy'; i.maxLength = 10; }
+      else { i.classList.add('qf-sm'); i.maxLength = (dk === 'year' ? 4 : 2); i.addEventListener('input', () => autosize(i)); }
+    } else if (isSmall(key)) {
+      i.classList.add('qf-sm'); i.addEventListener('input', () => autosize(i));
+    } else if (info.type === 'number') {
+      i.type = 'number'; i.inputMode = 'decimal';
+    }
     if (val != null && val !== '') i.value = val;
     if (i.classList.contains('qf-sm')) autosize(i);
     return i;
@@ -461,6 +482,11 @@ window.QFInline = (function () {
 
   function save() {
     if (!WIRE) return;
+    if (window.QFDate && ROOT && window.QFDate.anyBad(ROOT)) {
+      window.QFDate.passAll(ROOT);
+      toast('Còn ô ngày/tháng/năm nhập sai (viền đỏ) — sửa lại rồi lưu.');
+      return;
+    }
     WIRE.save(collectAll());
   }
 
