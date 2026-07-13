@@ -50,7 +50,8 @@
             </button>
         </div>
     @else
-        {{-- TRONG Ổ: toolbar + lưới thư mục/file, kéo-thả upload --}}
+        {{-- TRONG Ổ: toolbar + lưới thư mục/file, kéo-thả upload chunk --}}
+        <div x-data="driveUploader(@js($categoryId), @js($folderId), @js(csrf_token()), @js(route('admin.drive.chunk')), @js(route('admin.drive.finalize')))">
         <div class="flex flex-wrap items-center gap-2 mb-3">
             <button type="button" @click="let n=prompt('Tên thư mục mới:'); if(n) $wire.createFolder(n)"
                     class="inline-flex items-center gap-1.5 text-sm border border-gray-300 text-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50">
@@ -62,16 +63,28 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 0l-4 4m4-4l4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
                 Tải lên
             </button>
-            <span wire:loading wire:target="uploads" class="text-xs text-teal-600">Đang tải lên…</span>
-            <span class="ml-auto text-xs text-gray-400">Kéo-thả tệp vào vùng dưới để tải lên</span>
+            <span x-show="busy" x-cloak class="text-xs text-teal-600">Đang tải lên…</span>
+            <span class="ml-auto text-xs text-gray-400">Kéo-thả tệp vào vùng dưới để tải lên (hỗ trợ file lớn, chia mảnh)</span>
         </div>
 
-        <div x-data="{ over:false }"
-             @dragover.prevent="over=true" @dragleave.prevent="over=false"
-             @drop.prevent="over=false; if($event.dataTransfer.files.length){ $refs.up.files=$event.dataTransfer.files; $refs.up.dispatchEvent(new Event('change',{bubbles:true})); }"
+        {{-- Thanh tiến độ từng tệp (upload chunk) --}}
+        <div x-show="items.length" x-cloak class="mb-3 space-y-1.5">
+            <template x-for="(it, idx) in items" :key="idx">
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="truncate" style="max-width:45%" :class="it.err && 'text-red-600'" x-text="it.name"></span>
+                    <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all" :class="it.err ? 'bg-red-400' : 'bg-teal-500'" :style="'width:'+(it.err?100:it.pct)+'%'"></div>
+                    </div>
+                    <span class="w-16 text-right text-gray-500" x-text="it.err ? 'Lỗi' : it.pct+'%'"></span>
+                </div>
+            </template>
+        </div>
+
+        <div @dragover.prevent="over=true" @dragleave.prevent="over=false"
+             @drop.prevent="over=false; add($event.dataTransfer.files)"
              :class="over ? 'ring-2 ring-teal-400 bg-teal-50/40' : ''"
              class="min-h-[300px] rounded-2xl border border-gray-200 bg-white p-3 transition">
-            <input x-ref="up" type="file" wire:model="uploads" multiple class="hidden">
+            <input x-ref="up" type="file" @change="add($event.target.files); $event.target.value=''" multiple class="hidden">
 
             @if($this->items->isEmpty())
                 <div class="grid place-items-center py-20 text-center text-gray-400">
@@ -118,5 +131,10 @@
                 </div>
             @endif
         </div>
+        </div>{{-- /driveUploader --}}
     @endif
 </div>
+
+@assets
+    <script src="{{ asset('js/drive-upload.js') }}?v=1"></script>
+@endassets

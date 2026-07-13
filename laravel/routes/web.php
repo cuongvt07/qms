@@ -68,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
         // Ổ tài liệu (document drive)
         Route::get('tai-lieu', \App\Livewire\Admin\DocumentDrive::class)->name('drive');
         Route::get('tai-lieu/file/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'file'])->name('drive.file');
+        Route::post('tai-lieu/chunk', [\App\Http\Controllers\Admin\DocumentController::class, 'chunk'])->name('drive.chunk');
+        Route::post('tai-lieu/finalize', [\App\Http\Controllers\Admin\DocumentController::class, 'chunkFinalize'])->name('drive.finalize');
 
         // Mục tài liệu (CRUD danh mục)
         Route::resource('document-categories', DocumentCategoryController::class);
