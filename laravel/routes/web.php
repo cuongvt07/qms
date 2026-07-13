@@ -65,7 +65,11 @@ Route::middleware(['auth'])->group(function () {
         // Nhật ký hoạt động (audit log)
         Route::get('nhat-ky-hoat-dong', \App\Livewire\Admin\AuditLog::class)->name('audit-log');
 
-        // Mục tài liệu
+        // Ổ tài liệu (document drive)
+        Route::get('tai-lieu', \App\Livewire\Admin\DocumentDrive::class)->name('drive');
+        Route::get('tai-lieu/file/{document}', [\App\Http\Controllers\Admin\DocumentController::class, 'file'])->name('drive.file');
+
+        // Mục tài liệu (CRUD danh mục)
         Route::resource('document-categories', DocumentCategoryController::class);
 
         // Biểu mẫu (danh sách có lọc theo TL / trạng thái + tìm kiếm)

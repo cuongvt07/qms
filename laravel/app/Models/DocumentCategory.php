@@ -21,6 +21,11 @@ class DocumentCategory extends Model
         return $this->hasMany(FormTemplate::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
     public function activeFormTemplates(): HasMany
     {
         return $this->hasMany(FormTemplate::class)->where('trang_thai', 'active');

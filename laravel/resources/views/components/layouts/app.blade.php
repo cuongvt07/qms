@@ -38,7 +38,7 @@
             ['route' => 'admin.operations',                 'label' => 'Điều hành', 'icon' => 'chart'],
             ['route' => 'admin.form-templates.index',       'label' => 'Biểu mẫu',  'icon' => 'doc'],
             ['route' => 'admin.audit-log',                  'label' => 'Nhật ký',   'icon' => 'log'],
-            ['route' => 'admin.document-categories.index',  'label' => 'Mục TL',    'icon' => 'folder'],
+            ['route' => 'admin.drive',                      'label' => 'Tài liệu',  'icon' => 'folder'],
         ];
         $icon = function ($name, $cls = 'w-5 h-5') {
             $paths = [
