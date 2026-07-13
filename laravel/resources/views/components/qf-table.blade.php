@@ -34,6 +34,9 @@
                                     @php $ck = $s['k']; @endphp
                                     @if(isset($hiddenKeys[$ck]))
                                         {{-- ô đã ẩn ở bản gốc -> để trống --}}
+                                    @elseif(preg_match('/^(stt|tt|so_?tt|sott|so_thu_tu)$/i', $ck))
+                                        {{-- STT tự đánh số theo hàng dữ liệu --}}
+                                        <span class="text-gray-600 font-medium">{{ $ri - $table['headerRows'] + 1 }}</span>
                                     @elseif(\Illuminate\Support\Str::startsWith($ck, 'chk_'))
                                         <input type="checkbox" wire:model="rows.{{ $a }}.data.{{ $ck }}"
                                                class="w-5 h-5 rounded text-teal-600 border-gray-300">

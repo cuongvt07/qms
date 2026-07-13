@@ -242,6 +242,12 @@ class RegisterFill extends Component
         while ($i < $n) {
             $f   = $fields[$i];
             $key = $f['key'] ?? '';
+            // Bảng LẶP (repeatable_table) LUÔN dùng cơ chế lặp (+Thêm dòng, STT tự động) — KHÔNG để bảng dựng lại chiếm chỗ.
+            if (($f['type'] ?? '') === 'repeatable_table') {
+                $plan[] = ['kind' => 'single', 'field' => $f];
+                $i++;
+                continue;
+            }
             if ($inTable($key)) {
                 $ti = $k2t[$key];
                 if (empty($emitted[$ti])) {
