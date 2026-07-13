@@ -217,11 +217,13 @@ class RegisterFill extends Component
         $tables = $svc['tables'];
         $k2t    = $svc['keyToTable'];
 
-        // Chỉ dựng lại bảng LƯỚI THẬT: có ≥1 hàng tiêu đề, ≥3 cột, ≥1 hàng dữ liệu.
+        // Dựng lại bảng LƯỚI THẬT: ≥3 cột, VÀ (có hàng tiêu đề  HOẶC  bảng nhiều dòng/nhiều ô).
+        // -> bắt cả bảng không có hàng tiêu đề riêng (logbook lớn), loại các bảng 1 dòng dùng để dàn trang.
         $renderable = [];
         foreach ($tables as $ti => $T) {
             $dataRows = count($T['rows']) - $T['headerRows'];
-            $renderable[$ti] = ($T['headerRows'] >= 1 && $T['gridW'] >= 3 && $dataRows >= 1);
+            $renderable[$ti] = $T['gridW'] >= 3
+                && ($T['headerRows'] >= 1 || $dataRows >= 3 || count($T['keys']) >= 6);
         }
         $inTable = function ($key) use ($k2t, $renderable) {
             return isset($k2t[$key]) && ! empty($renderable[$k2t[$key]]);
