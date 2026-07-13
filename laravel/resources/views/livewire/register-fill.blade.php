@@ -296,8 +296,8 @@
                         @endif
                     </div>
                 @else
-                    {{-- Bảng nhiều dòng (full width) --}}
-                    @php $cols = $field['columns'] ?? []; $trows = data_get($row, 'tables.'.$key, []);
+                    {{-- Bảng nhiều dòng (full width) — luôn sẵn tối thiểu 1 dòng để nhập ngay --}}
+                    @php $cols = $field['columns'] ?? []; $trows = data_get($row, 'tables.'.$key, []) ?: [[]];
                           $hasStt = collect($cols)->contains(fn($c)=>\App\Livewire\RegisterFill::isSttCol($c)); @endphp
                     <div data-span="6">
                         <div class="flex items-center justify-between mb-2">
