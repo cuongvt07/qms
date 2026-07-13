@@ -1,4 +1,7 @@
-<div class="max-w-6xl mx-auto" x-data>
+<div class="max-w-6xl mx-auto"
+     x-data="driveApp(@js($categoryId), @js($folderId), @js(csrf_token()), @js(route('admin.drive.chunk')), @js(route('admin.drive.finalize')))"
+     @keydown.escape.window="closeMenu(); dlg.show=false; conf.show=false"
+     @scroll.window="closeMenu()">
     @php
         $kindMeta = [
             'folder' => ['#f59e0b', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
@@ -29,31 +32,32 @@
     @if(session('drive_msg'))
         <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2.5 rounded-xl mb-3 text-sm">{{ session('drive_msg') }}</div>
     @endif
-    @error('uploads.*')<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-xl mb-3 text-sm">{{ $message }}</div>@enderror
 
     @if(! $this->category)
-        {{-- ROOT: danh sách ổ (mỗi Mục TL = 1 ổ) --}}
-        <p class="text-sm text-gray-500 mb-3">Mỗi <b>Mục tài liệu</b> là một ổ chứa. Bấm để mở.</p>
+        {{-- ROOT: danh sách ổ --}}
+        <p class="text-sm text-gray-500 mb-3">Mỗi <b>Mục tài liệu</b> là một ổ chứa. Bấm để mở, chuột phải để đổi tên/xoá.</p>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             @foreach($this->drives as $d)
+                @php $ditem = ['id'=>$d->id, 'name'=>$d->ten_muc, 'type'=>'drive', 'isFolder'=>true]; @endphp
                 <button type="button" wire:click="openCategory({{ $d->id }})" wire:key="drive-{{ $d->id }}"
+                        @contextmenu="openMenu($event, 'drive', @js($ditem))"
+                        @touchstart.passive="lpStart($event, 'drive', @js($ditem))" @touchend="lpCancel()" @touchmove="lpCancel()"
                         class="group flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-2xl hover:border-teal-400 hover:shadow-sm text-center">
                     <svg class="w-12 h-12 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <span class="text-sm font-medium text-gray-700 line-clamp-2">{{ $d->ten_muc }}</span>
                     <span class="text-[11px] text-gray-400">{{ $d->file_count }} tệp</span>
                 </button>
             @endforeach
-            <button type="button" @click="let n=prompt('Tên ổ tài liệu mới:'); if(n) $wire.createDrive(n)"
+            <button type="button" @click="openDialog('drive', {title:'Ổ tài liệu mới', value:''})"
                     class="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 hover:border-teal-400 hover:text-teal-600">
                 <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 <span class="text-sm font-medium">Ổ mới</span>
             </button>
         </div>
     @else
-        {{-- TRONG Ổ: toolbar + lưới thư mục/file, kéo-thả upload chunk --}}
-        <div x-data="driveUploader(@js($categoryId), @js($folderId), @js(csrf_token()), @js(route('admin.drive.chunk')), @js(route('admin.drive.finalize')))">
+        {{-- TRONG Ổ --}}
         <div class="flex flex-wrap items-center gap-2 mb-3">
-            <button type="button" @click="let n=prompt('Tên thư mục mới:'); if(n) $wire.createFolder(n)"
+            <button type="button" @click="openDialog('folder', {title:'Thư mục mới', value:'Thư mục mới'})"
                     class="inline-flex items-center gap-1.5 text-sm border border-gray-300 text-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6M9 13h6"/></svg>
                 Thư mục mới
@@ -64,10 +68,10 @@
                 Tải lên
             </button>
             <span x-show="busy" x-cloak class="text-xs text-teal-600">Đang tải lên…</span>
-            <span class="ml-auto text-xs text-gray-400">Kéo-thả tệp vào vùng dưới để tải lên (hỗ trợ file lớn, chia mảnh)</span>
+            <span class="ml-auto text-xs text-gray-400">Kéo-thả tệp vào vùng dưới · chuột phải để có thêm tuỳ chọn</span>
         </div>
 
-        {{-- Thanh tiến độ từng tệp (upload chunk) --}}
+        {{-- Thanh tiến độ từng tệp --}}
         <div x-show="items.length" x-cloak class="mb-3 space-y-1.5">
             <template x-for="(it, idx) in items" :key="idx">
                 <div class="flex items-center gap-2 text-xs">
@@ -82,20 +86,27 @@
 
         <div @dragover.prevent="over=true" @dragleave.prevent="over=false"
              @drop.prevent="over=false; add($event.dataTransfer.files)"
+             @contextmenu="if($event.target===$el || $event.target.dataset.blank!==undefined) openMenu($event, 'blank', null)"
              :class="over ? 'ring-2 ring-teal-400 bg-teal-50/40' : ''"
-             class="min-h-[300px] rounded-2xl border border-gray-200 bg-white p-3 transition">
+             class="min-h-[320px] rounded-2xl border border-gray-200 bg-white p-3 transition">
             <input x-ref="up" type="file" @change="add($event.target.files); $event.target.value=''" multiple class="hidden">
 
             @if($this->items->isEmpty())
-                <div class="grid place-items-center py-20 text-center text-gray-400">
+                <div data-blank class="grid place-items-center py-20 text-center text-gray-400" @contextmenu="openMenu($event, 'blank', null)">
                     <svg class="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                    <p class="text-sm">Thư mục trống. Kéo-thả tệp vào đây hoặc bấm <b>Tải lên</b>.</p>
+                    <p class="text-sm">Thư mục trống. Kéo-thả tệp vào đây, bấm <b>Tải lên</b>, hoặc chuột phải.</p>
                 </div>
             @else
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
                     @foreach($this->items as $it)
-                        @php [$col,$d] = $kindMeta[$it->kind()] ?? $kindMeta['file']; @endphp
-                        <div wire:key="doc-{{ $it->id }}" x-data="{ menu:false }" class="relative group border border-gray-100 rounded-xl p-3 hover:border-teal-300 hover:bg-gray-50">
+                        @php
+                            [$col,$d] = $kindMeta[$it->kind()] ?? $kindMeta['file'];
+                            $item = ['id'=>$it->id, 'name'=>$it->name, 'isFolder'=>$it->isFolder(), 'type'=>$it->type, 'url'=>route('admin.drive.file', $it->id)];
+                        @endphp
+                        <div wire:key="doc-{{ $it->id }}"
+                             @contextmenu="openMenu($event, 'item', @js($item))"
+                             @touchstart.passive="lpStart($event, 'item', @js($item))" @touchend="lpCancel()" @touchmove="lpCancel()"
+                             class="relative group border border-gray-100 rounded-xl p-3 hover:border-teal-300 hover:bg-gray-50">
                             @if($it->isFolder())
                                 <button type="button" wire:click="openFolder({{ $it->id }})" class="w-full flex flex-col items-center gap-2 text-center">
                                     <svg class="w-11 h-11" fill="{{ $col }}" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -112,29 +123,69 @@
                                     <span class="text-[10px] text-gray-400">{{ $it->humanSize() }}</span>
                                 </a>
                             @endif
-
-                            {{-- Menu ⋮ --}}
-                            <div class="absolute top-1 right-1">
-                                <button type="button" @click="menu=!menu" class="w-6 h-6 grid place-items-center rounded-full text-gray-400 hover:bg-gray-200 opacity-0 group-hover:opacity-100 md:opacity-0" :class="menu&&'opacity-100'">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
-                                </button>
-                                <div x-show="menu" x-cloak @click.outside="menu=false" class="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20 text-sm">
-                                    @unless($it->isFolder())
-                                        <a href="{{ route('admin.drive.file', $it->id) }}?dl=1" class="block px-3 py-1.5 hover:bg-gray-50 text-gray-700">Tải xuống</a>
-                                    @endunless
-                                    <button type="button" @click="menu=false; let n=prompt('Đổi tên:', @js($it->name)); if(n) $wire.renameNode({{ $it->id }}, n)" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700">Đổi tên</button>
-                                    <button type="button" @click="menu=false" wire:click="deleteNode({{ $it->id }})" wire:confirm="Xoá &quot;{{ $it->name }}&quot;?{{ $it->isFolder() ? ' (Xoá cả bên trong)' : '' }}" class="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Xoá</button>
-                                </div>
-                            </div>
+                            <button type="button" @click.stop.prevent="openMenu($event, 'item', @js($item))"
+                                    class="absolute top-1 right-1 w-6 h-6 grid place-items-center rounded-full text-gray-400 hover:bg-gray-200 opacity-0 group-hover:opacity-100" :class="menu.show && menu.item && menu.item.id==={{ $it->id }} ? 'opacity-100' : ''">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+                            </button>
                         </div>
                     @endforeach
                 </div>
             @endif
         </div>
-        </div>{{-- /driveUploader --}}
     @endif
+
+    {{-- ===== Menu chuột phải ===== --}}
+    <div x-ref="menu" x-show="menu.show" x-cloak @click.outside="closeMenu()"
+         :style="'position:fixed;left:'+menu.x+'px;top:'+menu.y+'px'"
+         class="z-50 w-44 bg-white border border-gray-200 rounded-lg shadow-xl py-1 text-sm">
+        <template x-if="menu.type==='drive'">
+            <div>
+                <button type="button" @click="mOpen()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Mở</button>
+            </div>
+        </template>
+        <template x-if="menu.type==='blank'">
+            <div>
+                <button type="button" @click="mNewFolder()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Thư mục mới</button>
+                <button type="button" @click="mUpload()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Tải tệp lên</button>
+            </div>
+        </template>
+        <template x-if="menu.type==='item'">
+            <div>
+                <button type="button" @click="mOpen()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50" x-text="menu.item && menu.item.isFolder ? 'Mở' : 'Xem'"></button>
+                <button type="button" x-show="menu.item && !menu.item.isFolder" @click="mDownload()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Tải xuống</button>
+                <button type="button" @click="mRename()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Đổi tên</button>
+                <div class="border-t border-gray-100 my-1"></div>
+                <button type="button" @click="askDelete(menu.item)" class="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Xoá</button>
+            </div>
+        </template>
+    </div>
+
+    {{-- ===== Dialog tạo/đổi tên ===== --}}
+    <div x-show="dlg.show" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" @click.self="dlg.show=false">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-5">
+            <h3 class="text-base font-bold text-gray-800 mb-3" x-text="dlg.title"></h3>
+            <input x-ref="dlgInput" type="text" x-model="dlg.value" @keydown.enter="submitDialog()"
+                   class="w-full border border-gray-300 rounded-xl text-sm px-3 py-2.5 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none" placeholder="Nhập tên…">
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" @click="dlg.show=false" class="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100">Huỷ</button>
+                <button type="button" @click="submitDialog()" class="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">Xong</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Xác nhận xoá ===== --}}
+    <div x-show="conf.show" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" @click.self="conf.show=false">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-5">
+            <h3 class="text-base font-bold text-gray-800 mb-1.5">Xoá</h3>
+            <p class="text-sm text-gray-600 mb-4">Xoá <b x-text="conf.item && conf.item.name"></b><span x-show="conf.item && conf.item.isFolder"> và toàn bộ bên trong</span>? Không thể hoàn tác.</p>
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="conf.show=false" class="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100">Huỷ</button>
+                <button type="button" @click="doDelete()" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg font-medium hover:bg-red-700">Xoá</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @assets
-    <script src="{{ asset('js/drive-upload.js') }}?v=1"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=2"></script>
 @endassets
