@@ -139,8 +139,15 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
         // Excel / CSV -> SheetJS (bảng, nhiều sheet)
         if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) {
           if (window.XLSX) {
-            const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
-            this.renderExcel(body, window.XLSX.read(buf, { type: 'array' })); return;
+            let wb;
+            if (ext === 'csv') {   // CSV: đọc text UTF-8 (tránh lỗi dấu tiếng Việt)
+              const txt = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+              wb = window.XLSX.read(txt, { type: 'string' });
+            } else {
+              const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
+              wb = window.XLSX.read(buf, { type: 'array' });
+            }
+            this.renderExcel(body, wb); return;
           }
           if (pdfUrl) { asPdf(pdfUrl); return; }
         }

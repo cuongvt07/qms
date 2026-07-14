@@ -301,7 +301,7 @@
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
     <script src="{{ asset('vendor/xlsx.full.min.js') }}"></script>
-    <script src="{{ asset('js/drive-upload.js') }}?v=7"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=8"></script>
     <style>
         .qf-pv{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;flex-direction:column}
         .qf-pv-body{flex:1 1 0%;min-height:0;overflow:auto;background:#f3f4f6;margin:0 .5rem .5rem;border-radius:.5rem}
