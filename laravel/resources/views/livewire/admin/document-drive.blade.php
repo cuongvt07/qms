@@ -142,7 +142,7 @@
              class="min-h-[320px] rounded-2xl border border-gray-200 bg-white p-3 transition">
             <input x-ref="up" type="file" @change="add($event.target.files); $event.target.value=''" multiple class="hidden">
 
-            @php $showForms = ! $folderId && $this->forms->count() > 0; @endphp
+            @php $showForms = ! $folderId; @endphp{{-- Thư mục "Biểu mẫu" luôn có sẵn ở gốc mọi ổ --}}
             @if(! $showForms && $this->items->isEmpty())
                 <div data-blank class="grid place-items-center py-20 text-center text-gray-400" @contextmenu="openMenu($event, 'blank', null)">
                     <svg width="56" height="56" class="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
