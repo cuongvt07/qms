@@ -15,7 +15,7 @@
 
     {{-- Header + breadcrumb --}}
     <div class="flex flex-wrap items-center gap-2 mb-4">
-        <svg class="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9A2.25 2.25 0 0 0 19.5 6.75h-5.379a1.5 1.5 0 0 1-1.06-.44z"/></svg>
+        <svg width="24" height="24" class="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9A2.25 2.25 0 0 0 19.5 6.75h-5.379a1.5 1.5 0 0 1-1.06-.44z"/></svg>
         <nav class="flex items-center gap-1 text-lg font-bold text-gray-800 flex-wrap">
             <button type="button" wire:click="exitDrive" class="hover:text-teal-600">Ổ tài liệu</button>
             @if($this->category)
@@ -51,14 +51,14 @@
                         @contextmenu="openMenu($event, 'drive', @js($ditem))"
                         @touchstart.passive="lpStart($event, 'drive', @js($ditem))" @touchend="lpCancel()" @touchmove="lpCancel()"
                         class="group flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-2xl hover:border-teal-400 hover:shadow-sm text-center">
-                    <svg class="w-12 h-12 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    <svg width="48" height="48" class="w-12 h-12 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <span class="text-sm font-medium text-gray-700 line-clamp-2">{{ $d->ten_muc }}</span>
                     <span class="text-[11px] text-gray-400">{{ $d->file_count }} tệp</span>
                 </button>
             @endforeach
             <button type="button" @click="openDialog('drive', {title:'Ổ tài liệu mới', value:''})"
                     class="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 hover:border-teal-400 hover:text-teal-600">
-                <svg class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                <svg width="36" height="36" class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 <span class="text-sm font-medium">Ổ mới</span>
             </button>
         </div>
@@ -74,7 +74,7 @@
                         @foreach($this->forms as $t)
                             <button type="button" wire:click="openForm({{ $t->id }})" wire:key="ft-{{ $t->id }}"
                                     class="flex flex-col items-center gap-1.5 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
-                                <svg class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                <svg width="44" height="44" class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                                 <span class="text-[11px] font-mono text-gray-400">{{ $t->ma_bm }}</span>
                                 <span class="text-xs font-medium text-gray-700 line-clamp-2">{{ $t->ten_bm }}</span>
                             </button>
@@ -95,9 +95,9 @@
                             <a href="{{ $f['url'] }}" target="_blank" wire:key="ff-{{ $loop->index }}"
                                class="flex flex-col items-center gap-2 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
                                 @if($f['image'])
-                                    <img src="{{ $f['url'] }}" class="w-11 h-11 object-cover rounded" alt="">
+                                    <img src="{{ $f['url'] }}" width="44" height="44" class="w-11 h-11 object-cover rounded" alt="">
                                 @else
-                                    <svg class="w-11 h-11" fill="none" stroke="{{ $fcol }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $fpath }}"/></svg>
+                                    <svg width="44" height="44" class="w-11 h-11" fill="none" stroke="{{ $fcol }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $fpath }}"/></svg>
                                 @endif
                                 <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $f['name'] }}</span>
                             </a>
@@ -145,7 +145,7 @@
             @php $showForms = ! $folderId && $this->forms->count() > 0; @endphp
             @if(! $showForms && $this->items->isEmpty())
                 <div data-blank class="grid place-items-center py-20 text-center text-gray-400" @contextmenu="openMenu($event, 'blank', null)">
-                    <svg class="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    <svg width="56" height="56" class="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <p class="text-sm">Thư mục trống. Kéo-thả tệp vào đây, bấm <b>Tải lên</b>, hoặc chuột phải.</p>
                 </div>
             @else
@@ -153,7 +153,7 @@
                     @if($showForms)
                         <button type="button" wire:click="openForms"
                                 class="flex flex-col items-center gap-1.5 p-3 border border-teal-200 bg-teal-50/50 rounded-xl hover:border-teal-400 text-center">
-                            <svg class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            <svg width="44" height="44" class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                             <span class="text-xs font-semibold text-teal-700">Biểu mẫu</span>
                             <span class="text-[10px] text-gray-400">{{ $this->forms->count() }} biểu mẫu</span>
                         </button>
@@ -169,15 +169,15 @@
                              class="relative group border border-gray-100 rounded-xl p-3 hover:border-teal-300 hover:bg-gray-50">
                             @if($it->isFolder())
                                 <button type="button" wire:click="openFolder({{ $it->id }})" class="w-full flex flex-col items-center gap-2 text-center">
-                                    <svg class="w-11 h-11" fill="{{ $col }}" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                    <svg width="44" height="44" class="w-11 h-11" fill="{{ $col }}" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                                     <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $it->name }}</span>
                                 </button>
                             @else
                                 <a href="{{ route('admin.drive.file', $it->id) }}" target="_blank" class="w-full flex flex-col items-center gap-2 text-center">
                                     @if($it->isImage())
-                                        <img src="{{ route('admin.drive.file', $it->id) }}" class="w-11 h-11 object-cover rounded" alt="">
+                                        <img src="{{ route('admin.drive.file', $it->id) }}" width="44" height="44" class="w-11 h-11 object-cover rounded" alt="">
                                     @else
-                                        <svg class="w-11 h-11" fill="none" stroke="{{ $col }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $d }}"/></svg>
+                                        <svg width="44" height="44" class="w-11 h-11" fill="none" stroke="{{ $col }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $d }}"/></svg>
                                     @endif
                                     <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $it->name }}</span>
                                     <span class="text-[10px] text-gray-400">{{ $it->humanSize() }}</span>
