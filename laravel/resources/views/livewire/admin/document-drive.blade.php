@@ -59,6 +59,9 @@
                 <button type="button" wire:click="openCategory({{ $d->id }})" wire:key="drive-{{ $d->id }}"
                         @contextmenu="openMenu($event, 'drive', @js($ditem))"
                         @touchstart.passive="lpStart($event, 'drive', @js($ditem))" @touchend="lpCancel()" @touchmove="lpCancel()"
+                        @dragover.prevent="$el.classList.add('qf-drop-hi')"
+                        @dragleave.prevent="$el.classList.remove('qf-drop-hi')"
+                        @drop.prevent.stop="$el.classList.remove('qf-drop-hi'); add($event.dataTransfer.files, {categoryId: {{ $d->id }}, folderId: null})"
                         class="group flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-2xl hover:border-teal-400 hover:shadow-sm text-center">
                     <svg width="48" height="48" class="w-12 h-12" fill="#f59e0b" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <span class="text-sm font-medium text-gray-700 line-clamp-2">{{ $d->ten_muc }}</span>
@@ -131,19 +134,7 @@
             <span class="ml-auto text-xs text-gray-400">Kéo-thả tệp vào vùng dưới · chuột phải để có thêm tuỳ chọn</span>
         </div>
 
-        {{-- Thanh tiến độ từng tệp --}}
-        <div x-show="items.length" x-cloak class="mb-3 space-y-1.5">
-            <template x-for="(it, idx) in items" :key="idx">
-                <div class="flex items-center gap-2 text-xs">
-                    <span class="truncate" style="max-width:45%" :class="it.err && 'text-red-600'" x-text="it.name"></span>
-                    <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all" :class="it.err ? 'bg-red-400' : 'bg-teal-500'" :style="'width:'+(it.err?100:it.pct)+'%'"></div>
-                    </div>
-                    <span class="w-16 text-right text-gray-500" x-text="it.err ? 'Lỗi' : it.pct+'%'"></span>
-                </div>
-            </template>
-        </div>
-
+        {{-- (Tiến độ upload hiển thị ở widget nổi góc dưới phải) --}}
         <div @dragover.prevent="over=true" @dragleave.prevent="over=false"
              @drop.prevent="over=false; add($event.dataTransfer.files)"
              @contextmenu="if($event.target===$el || $event.target.dataset.blank!==undefined) openMenu($event, 'blank', null)"
@@ -175,6 +166,11 @@
                         <div wire:key="doc-{{ $it->id }}"
                              @contextmenu="openMenu($event, 'item', @js($item))"
                              @touchstart.passive="lpStart($event, 'item', @js($item))" @touchend="lpCancel()" @touchmove="lpCancel()"
+                             @if($it->isFolder())
+                                 @dragover.prevent="$el.classList.add('qf-drop-hi')"
+                                 @dragleave.prevent="$el.classList.remove('qf-drop-hi')"
+                                 @drop.prevent.stop="$el.classList.remove('qf-drop-hi'); add($event.dataTransfer.files, {folderId: {{ $it->id }}})"
+                             @endif
                              class="relative group border border-gray-100 rounded-xl p-3 hover:border-teal-300 hover:bg-gray-50">
                             @if($it->isFolder())
                                 <button type="button" wire:click="openFolder({{ $it->id }})" class="w-full flex flex-col items-center gap-2 text-center">
@@ -259,11 +255,34 @@
             </div>
         </div>
     </div>
+    {{-- ===== Widget tiến trình upload (nổi góc dưới phải) ===== --}}
+    <div x-show="items.length" x-cloak
+         class="fixed bottom-4 right-4 z-50 w-80 max-w-[92vw] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="px-3.5 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-sm font-semibold text-gray-700" x-text="uploadTitle()"></span>
+            <button type="button" @click="items = items.filter(x => x.err)" class="text-gray-400 hover:text-gray-600 w-6 h-6 grid place-items-center rounded-full hover:bg-gray-200">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+        <div class="max-h-64 overflow-y-auto divide-y divide-gray-50">
+            <template x-for="(it, idx) in items" :key="idx">
+                <div class="px-3.5 py-2">
+                    <div class="flex items-center gap-2 text-xs mb-1">
+                        <span class="truncate flex-1 text-gray-700" :class="it.err && 'text-red-600'" x-text="it.name"></span>
+                        <span class="shrink-0 text-gray-400" x-text="it.err ? 'Lỗi' : it.pct + '%'"></span>
+                    </div>
+                    <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all" :class="it.err ? 'bg-red-400' : 'bg-teal-500'" :style="'width:' + (it.err ? 100 : it.pct) + '%'"></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
 </div>{{-- /driveApp --}}
 </div>{{-- /root --}}
 
 @assets
-    <script src="{{ asset('js/drive-upload.js') }}?v=4"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=5"></script>
     <style>
         .qf-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
         @media(min-width:640px){.qf-dgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -280,5 +299,7 @@
         /* Nút ⋮: mobile luôn hiện, desktop chỉ khi rê chuột */
         .qf-kebab{opacity:1}
         @media(min-width:768px){.qf-kebab{opacity:0}.group:hover .qf-kebab{opacity:1}}
+        /* Highlight thư mục/ổ khi kéo file vào */
+        .qf-drop-hi{outline:2px solid #14b8a6 !important;outline-offset:-2px;background:#f0fdfa !important}
     </style>
 @endassets

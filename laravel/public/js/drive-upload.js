@@ -45,10 +45,12 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
   return {
     // ---- Upload ----
     over: false, items: [], busy: false,
-    async add(fileList) {
+    // opts: {folderId, categoryId} — để kéo-thả vào 1 thư mục/ổ cụ thể; không có thì dùng vị trí hiện tại.
+    async add(fileList, opts) {
+      opts = opts || {};
       const files = [...(fileList || [])];
-      const categoryId = this.$wire.get('categoryId');
-      const folderId = this.$wire.get('folderId');
+      const categoryId = (opts.categoryId != null) ? opts.categoryId : this.$wire.get('categoryId');
+      const folderId = ('folderId' in opts) ? opts.folderId : this.$wire.get('folderId');
       if (!files.length || !categoryId) return;
       const ctx = { categoryId, folderId, csrf, chunkUrl, finalizeUrl };
       const rows = files.map(f => ({ name: f.name, pct: 0, err: false }));
@@ -59,7 +61,12 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
       }
       this.busy = false;
       if (this.$wire) this.$wire.$refresh();
-      setTimeout(() => { this.items = this.items.filter(x => x.err); }, 1500);
+      setTimeout(() => { this.items = this.items.filter(x => x.err); }, 2500);
+    },
+    uploadTitle() {
+      const total = this.items.length;
+      const done = this.items.filter(x => x.pct >= 100 || x.err).length;
+      return done >= total ? ('Đã xong ' + total + ' tệp') : ('Đang tải ' + done + '/' + total + ' tệp…');
     },
 
     // ---- Menu chuột phải ----
