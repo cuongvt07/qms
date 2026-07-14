@@ -25,6 +25,14 @@
                     <span class="text-gray-300">/</span>
                     <button type="button" wire:click="goTo({{ $c['id'] }})" class="hover:text-teal-600 font-semibold">{{ $c['name'] }}</button>
                 @endforeach
+                @if($specialForms)
+                    <span class="text-gray-300">/</span>
+                    <button type="button" wire:click="openForms" class="hover:text-teal-600 font-semibold">Biểu mẫu</button>
+                    @if($this->formTemplate)
+                        <span class="text-gray-300">/</span>
+                        <span class="text-gray-600 font-semibold">{{ $this->formTemplate->ma_bm }}</span>
+                    @endif
+                @endif
             @endif
         </nav>
     </div>
@@ -55,7 +63,50 @@
             </button>
         </div>
     @else
-        {{-- TRONG Ổ --}}
+        @if($specialForms && ! $formTemplateId)
+            {{-- Thư mục ảo BIỂU MẪU: danh sách biểu mẫu của ổ --}}
+            <p class="text-sm text-gray-500 mb-3">File mẫu và tệp đính kèm của các biểu mẫu trong ổ này (chỉ xem/tải).</p>
+            <div class="rounded-2xl border border-gray-200 bg-white p-3 min-h-[220px]">
+                @if($this->forms->isEmpty())
+                    <div class="grid place-items-center py-16 text-gray-400 text-sm">Ổ này chưa gắn biểu mẫu nào.</div>
+                @else
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                        @foreach($this->forms as $t)
+                            <button type="button" wire:click="openForm({{ $t->id }})" wire:key="ft-{{ $t->id }}"
+                                    class="flex flex-col items-center gap-1.5 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
+                                <svg class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                <span class="text-[11px] font-mono text-gray-400">{{ $t->ma_bm }}</span>
+                                <span class="text-xs font-medium text-gray-700 line-clamp-2">{{ $t->ten_bm }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @elseif($specialForms && $this->formTemplateId)
+            {{-- File của 1 biểu mẫu: file mẫu + tệp đính kèm --}}
+            @php $ff = $this->formFiles; @endphp
+            <div class="rounded-2xl border border-gray-200 bg-white p-3 min-h-[220px]">
+                @if(empty($ff))
+                    <div class="grid place-items-center py-16 text-gray-400 text-sm">Chưa có file mẫu hay tệp đính kèm.</div>
+                @else
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                        @foreach($ff as $f)
+                            @php [$fcol,$fpath] = $kindMeta[$f['kind']] ?? $kindMeta['file']; @endphp
+                            <a href="{{ $f['url'] }}" target="_blank" wire:key="ff-{{ $loop->index }}"
+                               class="flex flex-col items-center gap-2 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
+                                @if($f['image'])
+                                    <img src="{{ $f['url'] }}" class="w-11 h-11 object-cover rounded" alt="">
+                                @else
+                                    <svg class="w-11 h-11" fill="none" stroke="{{ $fcol }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $fpath }}"/></svg>
+                                @endif
+                                <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $f['name'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @else
+        {{-- TRONG Ổ (bình thường) --}}
         <div class="flex flex-wrap items-center gap-2 mb-3">
             <button type="button" @click="openDialog('folder', {title:'Thư mục mới', value:'Thư mục mới'})"
                     class="inline-flex items-center gap-1.5 text-sm border border-gray-300 text-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50">
@@ -91,13 +142,22 @@
              class="min-h-[320px] rounded-2xl border border-gray-200 bg-white p-3 transition">
             <input x-ref="up" type="file" @change="add($event.target.files); $event.target.value=''" multiple class="hidden">
 
-            @if($this->items->isEmpty())
+            @php $showForms = ! $folderId && $this->forms->count() > 0; @endphp
+            @if(! $showForms && $this->items->isEmpty())
                 <div data-blank class="grid place-items-center py-20 text-center text-gray-400" @contextmenu="openMenu($event, 'blank', null)">
                     <svg class="w-14 h-14 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <p class="text-sm">Thư mục trống. Kéo-thả tệp vào đây, bấm <b>Tải lên</b>, hoặc chuột phải.</p>
                 </div>
             @else
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                    @if($showForms)
+                        <button type="button" wire:click="openForms"
+                                class="flex flex-col items-center gap-1.5 p-3 border border-teal-200 bg-teal-50/50 rounded-xl hover:border-teal-400 text-center">
+                            <svg class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            <span class="text-xs font-semibold text-teal-700">Biểu mẫu</span>
+                            <span class="text-[10px] text-gray-400">{{ $this->forms->count() }} biểu mẫu</span>
+                        </button>
+                    @endif
                     @foreach($this->items as $it)
                         @php
                             [$col,$d] = $kindMeta[$it->kind()] ?? $kindMeta['file'];
@@ -132,6 +192,7 @@
                 </div>
             @endif
         </div>
+        @endif{{-- /nhánh thư mục ảo Biểu mẫu --}}
     @endif
 
     {{-- ===== Menu chuột phải ===== --}}

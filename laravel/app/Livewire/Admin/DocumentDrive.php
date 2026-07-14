@@ -4,6 +4,9 @@ namespace App\Livewire\Admin;
 
 use App\Models\Document;
 use App\Models\DocumentCategory;
+use App\Models\FormSubmissionAttachment;
+use App\Models\FormTemplate;
+use App\Models\FormTemplateVersion;
 use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -21,6 +24,10 @@ class DocumentDrive extends Component
     public ?int $categoryId = null;
     public ?int $folderId   = null;
     public $uploads = [];
+
+    // Thư mục ảo "Biểu mẫu" (gom file mẫu + đính kèm của biểu mẫu trong ổ). Chỉ xem/tải.
+    public bool $specialForms   = false;
+    public ?int $formTemplateId = null;
 
     public function getCategoryProperty(): ?DocumentCategory
     {
@@ -64,23 +71,82 @@ class DocumentDrive extends Component
     {
         $this->categoryId = $id;
         $this->folderId   = null;
+        $this->resetSpecial();
     }
 
     public function openFolder(int $id): void
     {
         $this->folderId = $id;
+        $this->resetSpecial();
     }
 
     /** Nhảy tới 1 thư mục trong breadcrumb (null = gốc ổ). */
     public function goTo($id = null): void
     {
         $this->folderId = $id ? (int) $id : null;
+        $this->resetSpecial();
     }
 
     public function exitDrive(): void
     {
         $this->categoryId = null;
         $this->folderId   = null;
+        $this->resetSpecial();
+    }
+
+    private function resetSpecial(): void
+    {
+        $this->specialForms   = false;
+        $this->formTemplateId = null;
+    }
+
+    /** Mở thư mục ảo "Biểu mẫu" (danh sách biểu mẫu của ổ). */
+    public function openForms(): void
+    {
+        $this->specialForms   = true;
+        $this->formTemplateId = null;
+        $this->folderId       = null;
+    }
+
+    /** Mở 1 biểu mẫu -> xem file mẫu + tệp đính kèm các bản ghi. */
+    public function openForm(int $id): void
+    {
+        $this->specialForms   = true;
+        $this->formTemplateId = $id;
+    }
+
+    /** Danh sách biểu mẫu của ổ (cho thư mục ảo Biểu mẫu). */
+    public function getFormsProperty()
+    {
+        return $this->categoryId
+            ? FormTemplate::where('document_category_id', $this->categoryId)->orderBy('ma_bm')->get()
+            : collect();
+    }
+
+    public function getFormTemplateProperty(): ?FormTemplate
+    {
+        return $this->formTemplateId ? FormTemplate::find($this->formTemplateId) : null;
+    }
+
+    /** File của 1 biểu mẫu: file mẫu (.docx) + tệp đính kèm của mọi bản ghi. Chỉ xem/tải. */
+    public function getFormFilesProperty(): array
+    {
+        $t = $this->formTemplate;
+        if (! $t) {
+            return [];
+        }
+        $out = [];
+        if ($t->file_goc_path) {
+            $out[] = ['name' => $t->ma_bm . '.docx', 'url' => route('forms.export-template', $t->id), 'kind' => 'word', 'image' => false, 'size' => null];
+        }
+        $vids = FormTemplateVersion::where('form_template_id', $t->id)->pluck('id');
+        $atts = FormSubmissionAttachment::whereHas('submission', fn ($q) => $q->whereIn('form_template_version_id', $vids))
+            ->latest('id')->get();
+        foreach ($atts as $a) {
+            $isImg = str_starts_with((string) $a->mime, 'image/');
+            $out[] = ['name' => $a->original_name, 'url' => route('forms.attachment', $a->id), 'kind' => $isImg ? 'image' : 'file', 'image' => $isImg, 'size' => $a->size];
+        }
+        return $out;
     }
 
     /** Tạo ổ mới (= 1 Mục tài liệu). */
