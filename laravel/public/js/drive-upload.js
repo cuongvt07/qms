@@ -39,13 +39,16 @@ window.QFDrive = (function () {
   return { uploadOne };
 })();
 
-/* Alpine: quản lý upload + menu chuột phải + dialog cho cả trang ổ tài liệu. */
-window.driveApp = function (categoryId, folderId, csrf, chunkUrl, finalizeUrl) {
+/* Alpine: quản lý upload + menu chuột phải + dialog cho cả trang ổ tài liệu.
+   Đọc categoryId/folderId từ $wire (luôn mới sau khi điều hướng thư mục). */
+window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
   return {
     // ---- Upload ----
     over: false, items: [], busy: false,
     async add(fileList) {
       const files = [...(fileList || [])];
+      const categoryId = this.$wire.get('categoryId');
+      const folderId = this.$wire.get('folderId');
       if (!files.length || !categoryId) return;
       const ctx = { categoryId, folderId, csrf, chunkUrl, finalizeUrl };
       const rows = files.map(f => ({ name: f.name, pct: 0, err: false }));

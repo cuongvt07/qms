@@ -1,5 +1,5 @@
-<div class="max-w-6xl mx-auto"
-     x-data="driveApp(@js($categoryId), @js($folderId), @js(csrf_token()), @js(route('admin.drive.chunk')), @js(route('admin.drive.finalize')))"
+<div class="max-w-6xl mx-auto">
+<div x-data="driveApp(@js(csrf_token()), @js(route('admin.drive.chunk')), @js(route('admin.drive.finalize')))"
      @keydown.escape.window="closeMenu(); dlg.show=false; conf.show=false"
      @scroll.window="closeMenu()">
     @php
@@ -184,8 +184,9 @@
             </div>
         </div>
     </div>
-</div>
+</div>{{-- /driveApp --}}
+</div>{{-- /root --}}
 
 @assets
-    <script src="{{ asset('js/drive-upload.js') }}?v=2"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=3"></script>
 @endassets
