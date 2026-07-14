@@ -162,7 +162,7 @@
                     @foreach($this->items as $it)
                         @php
                             [$col,$d] = $kindMeta[$it->kind()] ?? $kindMeta['file'];
-                            $item = ['id'=>$it->id, 'name'=>$it->name, 'isFolder'=>$it->isFolder(), 'type'=>$it->type, 'url'=>route('admin.drive.file', $it->id), 'kind'=>$it->kind(), 'mime'=>$it->mime];
+                            $item = ['id'=>$it->id, 'name'=>$it->name, 'isFolder'=>$it->isFolder(), 'type'=>$it->type, 'url'=>route('admin.drive.file', $it->id), 'kind'=>$it->kind(), 'mime'=>$it->mime, 'pdfUrl'=>route('admin.drive.pdf', $it->id)];
                         @endphp
                         <div wire:key="doc-{{ $it->id }}"
                              @contextmenu="openMenu($event, 'item', @js($item))"
@@ -300,12 +300,20 @@
 @assets
     <script src="{{ asset('vendor/jszip.min.js') }}"></script>
     <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
-    <script src="{{ asset('js/drive-upload.js') }}?v=6"></script>
+    <script src="{{ asset('vendor/xlsx.full.min.js') }}"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=7"></script>
     <style>
         .qf-pv{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;flex-direction:column}
         .qf-pv-body{flex:1 1 0%;min-height:0;overflow:auto;background:#f3f4f6;margin:0 .5rem .5rem;border-radius:.5rem}
         .qf-pv .docx-wrapper{background:transparent;padding:12px 0}
         .qf-pv section.docx{margin:0 auto 14px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+        .qf-xls{background:#fff;min-height:100%}
+        .qf-xls-tabs{display:flex;gap:2px;padding:6px 6px 0;background:#f3f4f6;position:sticky;top:0;overflow-x:auto}
+        .qf-xls-tab{padding:.35rem .8rem;font-size:13px;border:1px solid #e5e7eb;border-bottom:0;border-radius:.4rem .4rem 0 0;background:#fff;color:#374151;cursor:pointer;white-space:nowrap}
+        .qf-xls-tab.on{background:#0d9488;color:#fff;border-color:#0d9488}
+        .qf-xls-sheet{padding:10px;overflow:auto}
+        .qf-xls-sheet table{border-collapse:collapse;font-size:13px}
+        .qf-xls-sheet td,.qf-xls-sheet th{border:1px solid #d1d5db;padding:3px 8px;white-space:nowrap}
         .qf-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
         @media(min-width:640px){.qf-dgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
         @media(min-width:768px){.qf-dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}

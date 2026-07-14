@@ -100,6 +100,36 @@ class DocumentController extends Controller
         return response()->json(['ok' => true, 'id' => $doc->id]);
     }
 
+    /** Chuyển file office (.doc/.docx/.xls/.xlsx/.ppt/.pptx) sang PDF để xem online. Cache theo mtime. */
+    public function pdf(Document $document): BinaryFileResponse
+    {
+        abort_if($document->type !== 'file' || ! $document->path, 404);
+        $src = Storage::disk('local')->path($document->path);
+        abort_unless(is_file($src), 404);
+
+        $dir = storage_path('app/pdf_cache');
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $cache = $dir . '/' . $document->id . '_' . filemtime($src) . '.pdf';
+
+        if (! is_file($cache)) {
+            \Illuminate\Support\Facades\Process::timeout(90)->run([
+                'soffice', '--headless', '--convert-to', 'pdf', '--outdir', $dir, $src,
+            ]);
+            $made = $dir . '/' . pathinfo($src, PATHINFO_FILENAME) . '.pdf';
+            if (is_file($made)) {
+                @rename($made, $cache);
+            }
+            abort_unless(is_file($cache), 422, 'Không chuyển được tệp sang PDF để xem.');
+        }
+
+        return response()->file($cache, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . addslashes(pathinfo($document->name, PATHINFO_FILENAME)) . '.pdf"',
+        ]);
+    }
+
     /** Xem/tải file trong ổ tài liệu. ?dl=1 để tải xuống. */
     public function file(Request $request, Document $document): BinaryFileResponse
     {

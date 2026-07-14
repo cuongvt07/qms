@@ -123,34 +123,65 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
     closePreview() { this.preview.show = false; if (this.$refs.pvbody) this.$refs.pvbody.innerHTML = ''; },
     async renderPreview() {
       const body = this.$refs.pvbody; if (!body) return;
-      const { url, name, mime } = this.preview;
+      const { url, name, mime, pdfUrl } = this.preview;
       const ext = (String(name).split('.').pop() || '').toLowerCase();
       body.innerHTML = '<div style="padding:2rem;text-align:center;color:#9ca3af">Đang tải…</div>';
+      const dl = '<a href="' + url + '?dl=1" style="color:#0d9488;text-decoration:underline">Tải xuống</a>';
+      const asPdf = (u) => { body.innerHTML = '<iframe src="' + u + '" style="width:100%;height:100%;border:0;background:#fff"></iframe>'; };
       try {
+        // Ảnh
         if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext) || (mime && mime.startsWith('image/'))) {
           body.innerHTML = ''; const img = new Image(); img.src = url;
           img.style = 'display:block;margin:auto;max-width:100%;height:auto'; body.appendChild(img); return;
         }
-        if (ext === 'pdf' || (mime && mime.includes('pdf'))) {
-          body.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:0;background:#fff"></iframe>'; return;
+        // PDF
+        if (ext === 'pdf' || (mime && mime.includes('pdf'))) { asPdf(url); return; }
+        // Excel / CSV -> SheetJS (bảng, nhiều sheet)
+        if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) {
+          if (window.XLSX) {
+            const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
+            this.renderExcel(body, window.XLSX.read(buf, { type: 'array' })); return;
+          }
+          if (pdfUrl) { asPdf(pdfUrl); return; }
         }
-        if (ext === 'docx' || ext === 'doc') {
-          if (!window.docx) { throw new Error('Chưa nạp trình xem Word'); }
-          const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
-          body.innerHTML = '<div class="qf-pv-doc" style="background:#fff;padding:16px"></div>';
-          await window.docx.renderAsync(buf, body.querySelector('.qf-pv-doc'), null, { inWrapper: true, className: 'docx', breakPages: true, ignoreWidth: false });
-          return;
+        // Word .docx -> docx-preview; lỗi thì thử PDF (nếu là file trong ổ)
+        if (ext === 'docx') {
+          try {
+            if (!window.docx) throw new Error('no-docx');
+            const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
+            body.innerHTML = '<div class="qf-pv-doc" style="background:#fff;padding:16px"></div>';
+            await window.docx.renderAsync(buf, body.querySelector('.qf-pv-doc'), null, { inWrapper: true, className: 'docx', breakPages: true, ignoreWidth: false });
+            return;
+          } catch (e) { if (pdfUrl) { asPdf(pdfUrl); return; } throw e; }
         }
-        if (['txt', 'csv', 'log', 'md', 'json', 'xml'].includes(ext)) {
+        // .doc / PowerPoint -> PDF (LibreOffice, chỉ file trong ổ)
+        if (['doc', 'ppt', 'pptx', 'odt', 'odp'].includes(ext)) {
+          if (pdfUrl) { asPdf(pdfUrl); return; }
+          body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#6b7280">Xem trực tiếp cần chuyển đổi (chỉ hỗ trợ tệp trong ổ).<br>' + dl + '</div>'; return;
+        }
+        // Text
+        if (['txt', 'log', 'md', 'json', 'xml'].includes(ext)) {
           const t = await fetch(url, { credentials: 'same-origin' }).then(r => r.text());
           const pre = document.createElement('pre');
           pre.style = 'padding:1rem;white-space:pre-wrap;word-break:break-word;font-size:13px;background:#fff;margin:0;min-height:100%';
           pre.textContent = t; body.innerHTML = ''; body.appendChild(pre); return;
         }
-        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#6b7280">Không xem trực tiếp được loại tệp này.<br><a href="' + url + '?dl=1" style="color:#0d9488;text-decoration:underline">Tải xuống</a></div>';
+        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#6b7280">Không xem trực tiếp được loại tệp này.<br>' + dl + '</div>';
       } catch (e) {
-        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#ef4444">Không mở được tệp (' + ((e && e.message) || e) + ').<br><a href="' + url + '?dl=1" style="color:#0d9488;text-decoration:underline">Tải xuống</a></div>';
+        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#ef4444">Không mở được tệp (' + ((e && e.message) || e) + ').<br>' + dl + '</div>';
       }
+    },
+    renderExcel(body, wb) {
+      const names = wb.SheetNames || [];
+      const tabs = names.map((n, i) => '<button type="button" class="qf-xls-tab' + (i === 0 ? ' on' : '') + '" data-sh="' + i + '">' + n + '</button>').join('');
+      body.innerHTML = '<div class="qf-xls"><div class="qf-xls-tabs">' + tabs + '</div><div class="qf-xls-sheet"></div></div>';
+      const sheet = body.querySelector('.qf-xls-sheet');
+      const show = (i) => { sheet.innerHTML = window.XLSX.utils.sheet_to_html(wb.Sheets[names[i]]); };
+      show(0);
+      body.querySelectorAll('.qf-xls-tab').forEach(t => t.addEventListener('click', () => {
+        body.querySelectorAll('.qf-xls-tab').forEach(x => x.classList.remove('on'));
+        t.classList.add('on'); show(+t.getAttribute('data-sh'));
+      }));
     },
     mDownload() { const it = this.menu.item; this.closeMenu(); window.open(it.url + '?dl=1', '_blank'); },
     mRename() { const it = this.menu.item; this.closeMenu(); this.openDialog('rename', { title: 'Đổi tên', value: it.name, id: it.id }); },
