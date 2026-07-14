@@ -37,6 +37,13 @@
                 @endif
             @endif
         </nav>
+        @if(! $this->category)
+            <button type="button" @click="openDialog('drive', {title:'Ổ tài liệu mới', value:''})"
+                    class="ml-auto inline-flex items-center gap-1.5 text-sm bg-teal-600 text-white rounded-lg px-3 py-2 font-medium hover:bg-teal-700 shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                Ổ mới
+            </button>
+        @endif
     </div>
 
     @if(session('drive_msg'))
