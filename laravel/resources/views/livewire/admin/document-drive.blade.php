@@ -44,7 +44,7 @@
     @if(! $this->category)
         {{-- ROOT: danh sách ổ --}}
         <p class="text-sm text-gray-500 mb-3">Mỗi <b>Mục tài liệu</b> là một ổ chứa. Bấm để mở, chuột phải để đổi tên/xoá.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div class="qf-dgrid">
             @foreach($this->drives as $d)
                 @php $ditem = ['id'=>$d->id, 'name'=>$d->ten_muc, 'type'=>'drive', 'isFolder'=>true]; @endphp
                 <button type="button" wire:click="openCategory({{ $d->id }})" wire:key="drive-{{ $d->id }}"
@@ -70,7 +70,7 @@
                 @if($this->forms->isEmpty())
                     <div class="grid place-items-center py-16 text-gray-400 text-sm">Ổ này chưa gắn biểu mẫu nào.</div>
                 @else
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                    <div class="qf-dgrid">
                         @foreach($this->forms as $t)
                             <button type="button" wire:click="openForm({{ $t->id }})" wire:key="ft-{{ $t->id }}"
                                     class="flex flex-col items-center gap-1.5 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
@@ -89,7 +89,7 @@
                 @if(empty($ff))
                     <div class="grid place-items-center py-16 text-gray-400 text-sm">Chưa có file mẫu hay tệp đính kèm.</div>
                 @else
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                    <div class="qf-dgrid">
                         @foreach($ff as $f)
                             @php [$fcol,$fpath] = $kindMeta[$f['kind']] ?? $kindMeta['file']; @endphp
                             <a href="{{ $f['url'] }}" target="_blank" wire:key="ff-{{ $loop->index }}"
@@ -149,7 +149,7 @@
                     <p class="text-sm">Thư mục trống. Kéo-thả tệp vào đây, bấm <b>Tải lên</b>, hoặc chuột phải.</p>
                 </div>
             @else
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                <div class="qf-dgrid">
                     @if($showForms)
                         <button type="button" wire:click="openForms"
                                 class="flex flex-col items-center gap-1.5 p-3 border border-teal-200 bg-teal-50/50 rounded-xl hover:border-teal-400 text-center">
@@ -250,4 +250,10 @@
 
 @assets
     <script src="{{ asset('js/drive-upload.js') }}?v=3"></script>
+    <style>
+        .qf-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
+        @media(min-width:640px){.qf-dgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+        @media(min-width:768px){.qf-dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+        @media(min-width:1024px){.qf-dgrid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+    </style>
 @endassets
