@@ -257,14 +257,14 @@
     </div>
     {{-- ===== Widget tiến trình upload (nổi góc dưới phải) ===== --}}
     <div x-show="items.length" x-cloak
-         class="fixed bottom-4 right-4 z-50 w-80 max-w-[92vw] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
+         class="qf-uploads bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
         <div class="px-3.5 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
             <span class="text-sm font-semibold text-gray-700" x-text="uploadTitle()"></span>
             <button type="button" @click="items = items.filter(x => x.err)" class="text-gray-400 hover:text-gray-600 w-6 h-6 grid place-items-center rounded-full hover:bg-gray-200">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
         </div>
-        <div class="max-h-64 overflow-y-auto divide-y divide-gray-50">
+        <div style="max-height:16rem" class="overflow-y-auto divide-y divide-gray-50">
             <template x-for="(it, idx) in items" :key="idx">
                 <div class="px-3.5 py-2">
                     <div class="flex items-center gap-2 text-xs mb-1">
@@ -301,5 +301,7 @@
         @media(min-width:768px){.qf-kebab{opacity:0}.group:hover .qf-kebab{opacity:1}}
         /* Highlight thư mục/ổ khi kéo file vào */
         .qf-drop-hi{outline:2px solid #14b8a6 !important;outline-offset:-2px;background:#f0fdfa !important}
+        /* Widget tiến trình upload nổi góc dưới phải */
+        .qf-uploads{position:fixed;bottom:1rem;right:1rem;z-index:50;width:20rem;max-width:92vw}
     </style>
 @endassets
