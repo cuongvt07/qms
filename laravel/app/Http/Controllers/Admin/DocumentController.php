@@ -114,14 +114,18 @@ class DocumentController extends Controller
         $cache = $dir . '/' . $document->id . '_' . filemtime($src) . '.pdf';
 
         if (! is_file($cache)) {
-            \Illuminate\Support\Facades\Process::timeout(90)->run([
-                'soffice', '--headless', '--convert-to', 'pdf', '--outdir', $dir, $src,
-            ]);
+            $profile = $dir . '/.loprofile';   // soffice cần thư mục profile ghi được (chạy dưới www-data)
+            $res = \Illuminate\Support\Facades\Process::timeout(120)
+                ->env(['HOME' => $dir])
+                ->run([
+                    'soffice', '--headless', '-env:UserInstallation=file://' . $profile,
+                    '--convert-to', 'pdf', '--outdir', $dir, $src,
+                ]);
             $made = $dir . '/' . pathinfo($src, PATHINFO_FILENAME) . '.pdf';
             if (is_file($made)) {
                 @rename($made, $cache);
             }
-            abort_unless(is_file($cache), 422, 'Không chuyển được tệp sang PDF để xem.');
+            abort_unless(is_file($cache), 422, 'Không chuyển được sang PDF: ' . substr(trim($res->errorOutput() . ' ' . $res->output()), 0, 300));
         }
 
         return response()->file($cache, [
