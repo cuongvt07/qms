@@ -155,7 +155,7 @@
                                 class="flex flex-col items-center gap-1.5 p-3 border border-teal-200 bg-teal-50/50 rounded-xl hover:border-teal-400 text-center">
                             <svg width="44" height="44" class="w-11 h-11 text-teal-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                             <span class="text-xs font-semibold text-teal-700">Biểu mẫu</span>
-                            <span class="text-[10px] text-gray-400">{{ $this->forms->count() }} biểu mẫu</span>
+                            <span class="text-[10px] text-gray-400">{{ $this->forms->count() ? $this->forms->count().' biểu mẫu' : 'File mẫu & đính kèm' }}</span>
                         </button>
                     @endif
                     @foreach($this->items as $it)
