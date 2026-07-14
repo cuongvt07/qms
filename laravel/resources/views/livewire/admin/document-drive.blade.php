@@ -104,15 +104,16 @@
                     <div class="qf-dgrid">
                         @foreach($ff as $f)
                             @php [$fcol,$fpath] = $kindMeta[$f['kind']] ?? $kindMeta['file']; @endphp
-                            <a href="{{ $f['url'] }}" target="_blank" wire:key="ff-{{ $loop->index }}"
-                               class="flex flex-col items-center gap-2 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
+                            <button type="button" wire:key="ff-{{ $loop->index }}"
+                                    @click="openPreview({name: @js($f['name']), url: @js($f['url']), kind: @js($f['kind']), mime: ''})"
+                                    class="flex flex-col items-center gap-2 p-3 border border-gray-100 rounded-xl hover:border-teal-300 hover:bg-gray-50 text-center">
                                 @if($f['image'])
                                     <img src="{{ $f['url'] }}" width="44" height="44" class="w-11 h-11 object-cover rounded" alt="">
                                 @else
                                     <svg width="44" height="44" class="w-11 h-11" fill="none" stroke="{{ $fcol }}" stroke-width="1.5" viewBox="0 0 24 24"><path d="{{ $fpath }}"/></svg>
                                 @endif
                                 <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $f['name'] }}</span>
-                            </a>
+                            </button>
                         @endforeach
                     </div>
                 @endif
@@ -161,7 +162,7 @@
                     @foreach($this->items as $it)
                         @php
                             [$col,$d] = $kindMeta[$it->kind()] ?? $kindMeta['file'];
-                            $item = ['id'=>$it->id, 'name'=>$it->name, 'isFolder'=>$it->isFolder(), 'type'=>$it->type, 'url'=>route('admin.drive.file', $it->id)];
+                            $item = ['id'=>$it->id, 'name'=>$it->name, 'isFolder'=>$it->isFolder(), 'type'=>$it->type, 'url'=>route('admin.drive.file', $it->id), 'kind'=>$it->kind(), 'mime'=>$it->mime];
                         @endphp
                         <div wire:key="doc-{{ $it->id }}"
                              @contextmenu="openMenu($event, 'item', @js($item))"
@@ -178,7 +179,7 @@
                                     <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $it->name }}</span>
                                 </button>
                             @else
-                                <a href="{{ route('admin.drive.file', $it->id) }}" target="_blank" class="w-full flex flex-col items-center gap-2 text-center">
+                                <button type="button" @click="openPreview(@js($item))" class="w-full flex flex-col items-center gap-2 text-center">
                                     @if($it->isImage())
                                         <img src="{{ route('admin.drive.file', $it->id) }}" width="44" height="44" class="w-11 h-11 object-cover rounded" alt="">
                                     @else
@@ -186,7 +187,7 @@
                                     @endif
                                     <span class="text-xs font-medium text-gray-700 line-clamp-2 break-words">{{ $it->name }}</span>
                                     <span class="text-[10px] text-gray-400">{{ $it->humanSize() }}</span>
-                                </a>
+                                </button>
                             @endif
                             <button type="button" @click.stop.prevent="openMenu($event, 'item', @js($item))"
                                     class="qf-kebab absolute top-1 right-1 w-7 h-7 grid place-items-center rounded-full text-gray-400 hover:bg-gray-200">
@@ -278,12 +279,32 @@
             </template>
         </div>
     </div>
+    {{-- ===== Trình xem file online ===== --}}
+    <div x-show="preview.show" x-cloak class="qf-pv" @keydown.escape.window="closePreview()">
+        <div class="flex items-center gap-2 px-4 py-2.5 text-white shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            <span class="flex-1 truncate font-medium text-sm" x-text="preview.name"></span>
+            <a :href="preview.url + '?dl=1'" class="inline-flex items-center gap-1 text-sm text-white/90 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                Tải xuống
+            </a>
+            <button type="button" @click="closePreview()" class="w-8 h-8 grid place-items-center rounded-full text-white/90 hover:text-white hover:bg-white/10">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+        <div x-ref="pvbody" class="flex-1 overflow-auto bg-gray-100 mx-2 mb-2 rounded-lg"></div>
+    </div>
 </div>{{-- /driveApp --}}
 </div>{{-- /root --}}
 
 @assets
-    <script src="{{ asset('js/drive-upload.js') }}?v=5"></script>
+    <script src="{{ asset('vendor/jszip.min.js') }}"></script>
+    <script src="{{ asset('vendor/docx-preview.min.js') }}"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=6"></script>
     <style>
+        .qf-pv{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;flex-direction:column}
+        .qf-pv .docx-wrapper{background:transparent;padding:0}
+        .qf-pv section.docx{margin:12px auto;box-shadow:0 2px 12px rgba(0,0,0,.25)}
         .qf-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
         @media(min-width:640px){.qf-dgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
         @media(min-width:768px){.qf-dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}

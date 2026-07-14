@@ -112,7 +112,46 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
     doDelete() { if (this.conf.item) this.$wire.deleteNode(this.conf.item.id); this.conf.show = false; },
 
     // ---- Hành động từ menu ----
-    mOpen() { const it = this.menu.item; this.closeMenu(); if (it.type === 'drive') this.$wire.openCategory(it.id); else if (it.isFolder) this.$wire.openFolder(it.id); else window.open(it.url, '_blank'); },
+    mOpen() { const it = this.menu.item; this.closeMenu(); if (it.type === 'drive') this.$wire.openCategory(it.id); else if (it.isFolder) this.$wire.openFolder(it.id); else this.openPreview(it); },
+
+    // ---- Xem file online (như Google Drive) ----
+    preview: { show: false, name: '', url: '', kind: '', mime: '' },
+    openPreview(f) {
+      this.preview = { show: true, name: f.name || '', url: f.url || '', kind: f.kind || '', mime: f.mime || '' };
+      this.$nextTick(() => this.renderPreview());
+    },
+    closePreview() { this.preview.show = false; if (this.$refs.pvbody) this.$refs.pvbody.innerHTML = ''; },
+    async renderPreview() {
+      const body = this.$refs.pvbody; if (!body) return;
+      const { url, name, mime } = this.preview;
+      const ext = (String(name).split('.').pop() || '').toLowerCase();
+      body.innerHTML = '<div style="padding:2rem;text-align:center;color:#9ca3af">Đang tải…</div>';
+      try {
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext) || (mime && mime.startsWith('image/'))) {
+          body.innerHTML = ''; const img = new Image(); img.src = url;
+          img.style = 'display:block;margin:auto;max-width:100%;height:auto'; body.appendChild(img); return;
+        }
+        if (ext === 'pdf' || (mime && mime.includes('pdf'))) {
+          body.innerHTML = '<iframe src="' + url + '" style="width:100%;height:100%;border:0;background:#fff"></iframe>'; return;
+        }
+        if (ext === 'docx' || ext === 'doc') {
+          if (!window.docx) { throw new Error('Chưa nạp trình xem Word'); }
+          const buf = await fetch(url, { credentials: 'same-origin' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); });
+          body.innerHTML = '<div class="qf-pv-doc" style="background:#fff;padding:16px"></div>';
+          await window.docx.renderAsync(buf, body.querySelector('.qf-pv-doc'), null, { inWrapper: true, className: 'docx', breakPages: true, ignoreWidth: false });
+          return;
+        }
+        if (['txt', 'csv', 'log', 'md', 'json', 'xml'].includes(ext)) {
+          const t = await fetch(url, { credentials: 'same-origin' }).then(r => r.text());
+          const pre = document.createElement('pre');
+          pre.style = 'padding:1rem;white-space:pre-wrap;word-break:break-word;font-size:13px;background:#fff;margin:0;min-height:100%';
+          pre.textContent = t; body.innerHTML = ''; body.appendChild(pre); return;
+        }
+        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#6b7280">Không xem trực tiếp được loại tệp này.<br><a href="' + url + '?dl=1" style="color:#0d9488;text-decoration:underline">Tải xuống</a></div>';
+      } catch (e) {
+        body.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#ef4444">Không mở được tệp (' + ((e && e.message) || e) + ').<br><a href="' + url + '?dl=1" style="color:#0d9488;text-decoration:underline">Tải xuống</a></div>';
+      }
+    },
     mDownload() { const it = this.menu.item; this.closeMenu(); window.open(it.url + '?dl=1', '_blank'); },
     mRename() { const it = this.menu.item; this.closeMenu(); this.openDialog('rename', { title: 'Đổi tên', value: it.name, id: it.id }); },
     mNewFolder() { this.closeMenu(); this.openDialog('folder', { title: 'Thư mục mới', value: 'Thư mục mới' }); },
