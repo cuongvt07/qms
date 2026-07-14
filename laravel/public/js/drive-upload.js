@@ -63,10 +63,12 @@ window.driveApp = function (csrf, chunkUrl, finalizeUrl) {
     },
 
     // ---- Menu chuột phải ----
-    menu: { show: false, x: 0, y: 0, type: 'blank', item: null },
+    menu: { show: false, x: 0, y: 0, type: 'blank', item: null, mobile: false },
     openMenu(e, type, item) { if (e && e.preventDefault) e.preventDefault(); this.openMenuAt((e && e.clientX) || 40, (e && e.clientY) || 40, type, item); },
     openMenuAt(x, y, type, item) {
-      this.menu = { show: true, x: 0, y: 0, type, item };
+      const mobile = window.innerWidth < 640;
+      this.menu = { show: true, x: 0, y: 0, type, item, mobile };
+      if (mobile) return;   // điện thoại: bottom-sheet, khỏi định vị theo con trỏ
       this.$nextTick(() => {
         const el = this.$refs.menu; if (!el) return;
         this.menu.x = Math.min(x, window.innerWidth - el.offsetWidth - 8);

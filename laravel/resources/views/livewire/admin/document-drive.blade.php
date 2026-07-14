@@ -184,7 +184,7 @@
                                 </a>
                             @endif
                             <button type="button" @click.stop.prevent="openMenu($event, 'item', @js($item))"
-                                    class="absolute top-1 right-1 w-6 h-6 grid place-items-center rounded-full text-gray-400 hover:bg-gray-200 opacity-0 group-hover:opacity-100" :class="menu.show && menu.item && menu.item.id==={{ $it->id }} ? 'opacity-100' : ''">
+                                    class="qf-kebab absolute top-1 right-1 w-7 h-7 grid place-items-center rounded-full text-gray-400 hover:bg-gray-200">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
                             </button>
                         </div>
@@ -195,28 +195,33 @@
         @endif{{-- /nhánh thư mục ảo Biểu mẫu --}}
     @endif
 
-    {{-- ===== Menu chuột phải ===== --}}
+    {{-- Nền mờ cho bottom-sheet (mobile) --}}
+    <div x-show="menu.show && menu.mobile" x-cloak @click="closeMenu()" class="fixed inset-0 bg-black/30 z-40"></div>
+
+    {{-- ===== Menu chuột phải / bottom-sheet ===== --}}
     <div x-ref="menu" x-show="menu.show" x-cloak @click.outside="closeMenu()"
-         :style="'position:fixed;left:'+menu.x+'px;top:'+menu.y+'px'"
-         class="z-50 w-44 bg-white border border-gray-200 rounded-lg shadow-xl py-1 text-sm">
+         :class="menu.mobile ? 'qf-ctx-sheet' : 'qf-ctx-pop'"
+         :style="menu.mobile ? '' : ('position:fixed;left:'+menu.x+'px;top:'+menu.y+'px')"
+         class="z-50 bg-white text-sm">
+        <div x-show="menu.mobile" class="px-4 pt-3 pb-2 border-b border-gray-100">
+            <p class="text-xs text-gray-400 truncate" x-text="menu.type==='blank' ? 'Thư mục hiện tại' : (menu.item && menu.item.name)"></p>
+        </div>
         <template x-if="menu.type==='drive'">
-            <div>
-                <button type="button" @click="mOpen()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Mở</button>
-            </div>
+            <div><button type="button" @click="mOpen()" class="qf-mi">Mở</button></div>
         </template>
         <template x-if="menu.type==='blank'">
             <div>
-                <button type="button" @click="mNewFolder()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Thư mục mới</button>
-                <button type="button" @click="mUpload()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Tải tệp lên</button>
+                <button type="button" @click="mNewFolder()" class="qf-mi">Thư mục mới</button>
+                <button type="button" @click="mUpload()" class="qf-mi">Tải tệp lên</button>
             </div>
         </template>
         <template x-if="menu.type==='item'">
             <div>
-                <button type="button" @click="mOpen()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50" x-text="menu.item && menu.item.isFolder ? 'Mở' : 'Xem'"></button>
-                <button type="button" x-show="menu.item && !menu.item.isFolder" @click="mDownload()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Tải xuống</button>
-                <button type="button" @click="mRename()" class="block w-full text-left px-3 py-1.5 hover:bg-gray-50">Đổi tên</button>
+                <button type="button" @click="mOpen()" class="qf-mi" x-text="menu.item && menu.item.isFolder ? 'Mở' : 'Xem'"></button>
+                <button type="button" x-show="menu.item && !menu.item.isFolder" @click="mDownload()" class="qf-mi">Tải xuống</button>
+                <button type="button" @click="mRename()" class="qf-mi">Đổi tên</button>
                 <div class="border-t border-gray-100 my-1"></div>
-                <button type="button" @click="askDelete(menu.item)" class="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Xoá</button>
+                <button type="button" @click="askDelete(menu.item)" class="qf-mi qf-mi-danger">Xoá</button>
             </div>
         </template>
     </div>
@@ -249,11 +254,22 @@
 </div>{{-- /root --}}
 
 @assets
-    <script src="{{ asset('js/drive-upload.js') }}?v=3"></script>
+    <script src="{{ asset('js/drive-upload.js') }}?v=4"></script>
     <style>
         .qf-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
         @media(min-width:640px){.qf-dgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
         @media(min-width:768px){.qf-dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
         @media(min-width:1024px){.qf-dgrid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+        /* Menu ngữ cảnh: popup (desktop) / bottom-sheet (mobile) */
+        .qf-ctx-pop{position:fixed;width:11rem;border:1px solid #e5e7eb;border-radius:.6rem;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:.25rem 0}
+        .qf-ctx-sheet{position:fixed;left:0;right:0;bottom:0;width:100%;border-top-left-radius:1.1rem;border-top-right-radius:1.1rem;box-shadow:0 -6px 24px rgba(0,0,0,.18);padding:.35rem 0 calc(env(safe-area-inset-bottom) + .5rem)}
+        .qf-mi{display:block;width:100%;text-align:left;padding:.5rem .9rem;color:#374151;background:none;border:0;cursor:pointer}
+        .qf-mi:hover{background:#f9fafb}
+        .qf-mi-danger{color:#dc2626}
+        .qf-mi-danger:hover{background:#fef2f2}
+        .qf-ctx-sheet .qf-mi{padding:.95rem 1.25rem;font-size:1rem}
+        /* Nút ⋮: mobile luôn hiện, desktop chỉ khi rê chuột */
+        .qf-kebab{opacity:1}
+        @media(min-width:768px){.qf-kebab{opacity:0}.group:hover .qf-kebab{opacity:1}}
     </style>
 @endassets
