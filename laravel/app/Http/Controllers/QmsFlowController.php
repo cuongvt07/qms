@@ -6,6 +6,7 @@ use App\Models\DeviceEvent;
 use App\Models\EnvRecord;
 use App\Models\QmsFlowStep;
 use App\Models\QmsOption;
+use App\Models\QmsPreset;
 use App\Models\WasteRow;
 use Illuminate\Http\JsonResponse;
 
@@ -54,6 +55,7 @@ class QmsFlowController extends Controller
                     'label'  => $s->label ?: (self::ACTIONS[$s->module][$s->action] ?? $s->action),
                     'url'    => route(self::ROUTES[$s->module] ?? 'env.page'),
                     'done'   => $this->doneToday($s->module),
+                    'preset' => QmsPreset::where('module', $s->module)->where('preset_key', $s->action)->exists(),
                 ];
             })->values()->all();
 

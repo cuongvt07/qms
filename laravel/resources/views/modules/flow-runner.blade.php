@@ -32,6 +32,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 "Segoe UI",sy
 .step.done{color:#12705f}
 .step.done .n{background:#d7f5ec;color:#0d6b58}
 .step .mod{font-weight:600;color:#8a9db0;font-size:10.5px}
+.qr-star{color:#d99b1c;font-size:11px}
 .frame{flex:1 1 0%;min-height:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
  display:flex;flex-direction:column;position:relative}
 .frame iframe{flex:1 1 0%;width:100%;border:0;min-height:0}
@@ -91,7 +92,7 @@ function renderSteps(){
     const cls=s.done?"done":(cur&&s.id===cur.id?"on":"");
     return `<button class="step ${cls}" onclick="openStep(FLOW.steps[${i}],true)">
       <span class="n">${s.done?"✓":i+1}</span>
-      <span>${esc(s.label)}<br><span class="mod">${esc(MODNAME[s.module]||s.module)}</span></span></button>`;
+      <span>${esc(s.label)}${s.preset?' <b class="qr-star" title="Có bản mẫu mặc định — sẽ tự điền sẵn">★</b>':''}<br><span class="mod">${esc(MODNAME[s.module]||s.module)}</span></span></button>`;
   }).join("");
 }
 
@@ -101,7 +102,7 @@ function openStep(step,manual){
   cur=step;
   document.getElementById("frame").querySelector("iframe").src=
     step.url+"?flow=1&embed=1&step="+step.id+(manual?"&r="+Date.now():"");
-  document.getElementById("who").textContent="Đang nhập: "+step.label+" — "+(MODNAME[step.module]||step.module);
+  document.getElementById("who").textContent="Đang nhập: "+step.label+" — "+(MODNAME[step.module]||step.module)+(step.preset?" · đã điền sẵn theo bản mẫu":"");
   document.getElementById("btnSkip").disabled=false;
   renderSteps();
 }

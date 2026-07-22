@@ -284,6 +284,7 @@ function openForm(id="",prefill={}){
  const old=id?state.events.find(x=>x.id===id):null;
  const e=old||{date:prefill.date||today(),deviceId:prefill.deviceId||"",activityType:prefill.activityType||"decontamination",reason:prefill.reason||"",condition:prefill.condition||"normal",conditionText:prefill.conditionText||"Hoạt động bình thường",note:prefill.note||"",performedBy:prefill.performedBy||""};
  openModal(old?"Cập nhật sự kiện":"Thêm sự kiện khử nhiễm","Thông tin thiết bị tự lấy từ danh mục, không cần nhập lại tên, mã, seri và vị trí.",`
+  <div class="qp-host"></div>
   <form class="form-grid" id="eventForm">
    <div class="field"><label>Ngày thực hiện *</label><input name="date" type="date" required value="${e.date}"></div>
    <div class="field"><label>Thiết bị *</label><select name="deviceId" id="formDevice" required><option value="">Chọn thiết bị</option>${state.devices.map(d=>`<option value="${d.id}" ${d.id===e.deviceId?"selected":""}>${esc(d.code)} — ${esc(d.name)}</option>`).join("")}</select></div>
@@ -300,7 +301,8 @@ function openForm(id="",prefill={}){
    if(old){Object.assign(old,x,{updatedAt:new Date().toISOString(),version:(old.version||1)+1});addHistory(old,"UPDATE","Cập nhật thông tin sự kiện.")}
    else{const n={id:"evt-"+Date.now(),...x,createdBy:state.currentUserId,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),version:1,history:[]};addHistory(n,"CREATE","Tạo sự kiện mới.");state.events.unshift(n)}
    save(old?"Đã cập nhật sự kiện":"Đã thêm sự kiện");closeModal();render();if(!old)QMSFlow.done()
- })
+ });
+ QMSPreset.attach("event",{host:"#modalBody .qp-host",collect:collect_event,apply:apply_event,skip:!!id});
 }
 function syncConditionText(){
  const c=document.getElementById("formCondition").value,input=document.getElementById("formConditionText");
@@ -436,6 +438,18 @@ function applyDupDays(src,dates,opt){
  ui.selected.clear();
  save(`Đã nhân bản ${them} sự kiện sang ${dates.length} ngày`);
  closeModal();render();
+}
+
+/* ==== bản mẫu mặc định cho form thêm sự kiện ==== */
+function collect_event(){
+ const f=document.getElementById("eventForm"),g=n=>f.elements[n]?f.elements[n].value:"";
+ return {deviceId:g("deviceId"),activityType:g("activityType"),performedBy:g("performedBy"),
+  reason:g("reason"),condition:g("condition"),conditionText:g("conditionText"),note:g("note")};
+}
+function apply_event(p){
+ const f=document.getElementById("eventForm");if(!f)return;
+ Object.entries(p||{}).forEach(([k,v])=>{if(f.elements[k]&&v!==null&&v!==undefined)f.elements[k].value=v});
+ QMSSelect.refresh();
 }
 </script>
 </body>

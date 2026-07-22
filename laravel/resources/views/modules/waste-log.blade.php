@@ -197,11 +197,12 @@ function copyBatch(id){const rows=state.rows.filter(r=>r.batchId===id).map(r=>({
 
 function openSingleForm(id="",prefill={}){
  const old=id?state.rows.find(x=>x.id===id):null,r=old||{date:prefill.date||today(),time:prefill.time||new Date().toTimeString().slice(0,5),wasteType:prefill.wasteType||"",treatment:prefill.treatment||"",location:prefill.location||"",performerId:prefill.performerId||"",note:prefill.note||""};
- openModal(old?"Sửa dòng nhật ký":"Thêm một dòng","Một dòng có toàn bộ thông tin riêng.",`<form class="form-grid" id="singleForm"><div class="field"><label>Ngày *</label><input name="date" type="date" value="${r.date}"></div><div class="field"><label>Giờ *</label><input name="time" type="time" value="${r.time}"></div><div class="field full"><label>Loại rác *</label><select name="wasteType">${options(state.catalogs.wasteTypes,r.wasteType,"Chọn loại rác")}</select></div><div class="field full"><label>Xử lý *</label><select name="treatment">${options(state.catalogs.treatments,r.treatment,"Chọn xử lý")}</select></div><div class="field"><label>Vị trí *</label><select name="location">${options(state.catalogs.locations,r.location,"Chọn vị trí")}</select></div><div class="field"><label>Người thực hiện *</label><select name="performerId">${userOptions(r.performerId)}</select></div><div class="field full"><label>Ghi chú</label><textarea name="note">${esc(r.note)}</textarea></div></form>`,old?"Lưu thay đổi":"Thêm dòng",()=>{
+ openModal(old?"Sửa dòng nhật ký":"Thêm một dòng","Một dòng có toàn bộ thông tin riêng.",`<div class="qp-host"></div><form class="form-grid" id="singleForm"><div class="field"><label>Ngày *</label><input name="date" type="date" value="${r.date}"></div><div class="field"><label>Giờ *</label><input name="time" type="time" value="${r.time}"></div><div class="field full"><label>Loại rác *</label><select name="wasteType">${options(state.catalogs.wasteTypes,r.wasteType,"Chọn loại rác")}</select></div><div class="field full"><label>Xử lý *</label><select name="treatment">${options(state.catalogs.treatments,r.treatment,"Chọn xử lý")}</select></div><div class="field"><label>Vị trí *</label><select name="location">${options(state.catalogs.locations,r.location,"Chọn vị trí")}</select></div><div class="field"><label>Người thực hiện *</label><select name="performerId">${userOptions(r.performerId)}</select></div><div class="field full"><label>Ghi chú</label><textarea name="note">${esc(r.note)}</textarea></div></form>`,old?"Lưu thay đổi":"Thêm dòng",()=>{
   const x=Object.fromEntries(new FormData(document.getElementById("singleForm")).entries());if(!x.date||!x.time||!x.wasteType||!x.treatment||!x.location||!x.performerId){toast("Vui lòng nhập đủ trường bắt buộc","error");return}
   const now=new Date().toISOString();if(old)Object.assign(old,x,{updatedAt:now,version:(old.version||1)+1});else{const batchId=`batch-${Date.now()}`;state.batches.unshift({id:batchId,department:state.form.department,note:"Tạo từ một dòng",createdBy:state.currentUserId,createdAt:now,updatedAt:now});state.rows.unshift({id:`row-${Date.now()}`,batchId,...x,createdAt:now,updatedAt:now,version:1,history:[]})}
   save(old?"Đã cập nhật dòng":"Đã thêm dòng");closeModal();render();if(!old)QMSFlow.done()
- })
+ });
+ QMSPreset.attach("single",{host:"#modalBody .qp-host",collect:collect_single,apply:apply_single,skip:!!id});
 }
 
 function openDetail(id){
@@ -274,6 +275,18 @@ function applyDupDays(src,dates,opt){
  ui.selected.clear();
  save(`Đã nhân bản ${them} dòng sang ${dates.length} ngày`);
  closeModal();render();
+}
+
+/* ==== bản mẫu mặc định cho form thêm một dòng ==== */
+function collect_single(){
+ const f=document.getElementById("singleForm"),g=n=>f.elements[n]?f.elements[n].value:"";
+ return {time:g("time"),wasteType:g("wasteType"),treatment:g("treatment"),
+  location:g("location"),performerId:g("performerId"),note:g("note")};
+}
+function apply_single(p){
+ const f=document.getElementById("singleForm");if(!f)return;
+ Object.entries(p||{}).forEach(([k,v])=>{if(f.elements[k]&&v!==null&&v!==undefined)f.elements[k].value=v});
+ QMSSelect.refresh();
 }
 </script>
 </body>

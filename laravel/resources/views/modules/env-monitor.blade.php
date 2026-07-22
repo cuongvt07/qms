@@ -310,6 +310,7 @@ function openForm(id="",prefill={}){
  const r=old||{date:prefill.date||today(),inspectorId:prefill.inspectorId||state.currentUserId,temperature1:prefill.temperature1??null,temperature2:prefill.temperature2??null,humidity1:prefill.humidity1??null,humidity2:prefill.humidity2??null,cleaning:prefill.cleaning||"yes",remedy:prefill.remedy||""};
  const s=state.settings;
  openModal(old?"Cập nhật bản ghi":"Thêm bản ghi môi trường","Hai lần đo được lưu trong cùng một bản ghi ngày để tránh nhập thành nhiều dòng rời.",`
+  <div class="qp-host"></div>
   <form class="form-grid" id="recordForm">
    <div class="field"><label>Ngày kiểm tra *</label><input name="date" type="date" required value="${r.date}"></div>
    <div class="field"><label>Người kiểm tra *</label><select name="inspectorId">${state.users.filter(u=>u.id!=="u-admin").map(u=>`<option value="${u.id}" ${u.id===r.inspectorId?"selected":""}>${esc(u.name)}</option>`).join("")}</select></div>
@@ -337,7 +338,8 @@ function openForm(id="",prefill={}){
    if(old){Object.assign(old,x,{updatedAt:new Date().toISOString(),version:(old.version||1)+1});addHistory(old,"UPDATE","Cập nhật thông số môi trường.")}
    else{const n={id:"env-"+Date.now(),...x,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),version:1,history:[]};addHistory(n,"CREATE","Tạo bản ghi mới.");state.records.unshift(n)}
    save(old?"Đã cập nhật bản ghi":"Đã thêm bản ghi");closeModal();render();if(!old)QMSFlow.done()
- })
+ });
+ QMSPreset.attach("daily",{host:"#modalBody .qp-host",collect:collect_daily,apply:apply_daily,skip:!!id});
 }
 function openLatestCopy(){
  const latest=[...state.records].sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -468,6 +470,18 @@ function applyDupDays(src,dates,opt){
  ui.selected.clear();
  save(`Đã nhân bản: ${them} bản ghi mới${de?", ghi đè "+de:""}${bo?", bỏ qua "+bo+" ngày đã có":""}`);
  closeModal();render();
+}
+
+/* ==== bản mẫu mặc định cho form bản ghi hằng ngày ==== */
+function collect_daily(){
+ const f=document.getElementById("recordForm"),g=n=>f.elements[n]?f.elements[n].value:"";
+ return {inspectorId:g("inspectorId"),temperature1:g("temperature1"),temperature2:g("temperature2"),
+  humidity1:g("humidity1"),humidity2:g("humidity2"),cleaning:g("cleaning"),remedy:g("remedy")};
+}
+function apply_daily(p){
+ const f=document.getElementById("recordForm");if(!f)return;
+ Object.entries(p||{}).forEach(([k,v])=>{if(f.elements[k]&&v!==null&&v!==undefined)f.elements[k].value=v});
+ QMSSelect.refresh();
 }
 </script>
 </body>
