@@ -85,7 +85,7 @@ let FLOW=null, cur=null, skipped=[];
 function toast(m,t=""){const e=document.createElement("div");e.className="toast "+t;e.textContent=m;
   document.getElementById("toastWrap").appendChild(e);setTimeout(()=>e.remove(),2800)}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-const MODNAME={env:"Nhiệt độ, độ ẩm",device:"Trang thiết bị",waste:"Xử lý rác thải"};
+const MODNAME={env:"Nhiệt độ, độ ẩm",device:"Trang thiết bị",waste:"Xử lý rác thải",usage:"Sử dụng thiết bị"};
 
 function renderSteps(){
   document.getElementById("steps").innerHTML=(FLOW.steps||[]).map((s,i)=>{

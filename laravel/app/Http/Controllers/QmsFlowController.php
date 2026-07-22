@@ -21,9 +21,10 @@ class QmsFlowController extends Controller
         'env'    => ['daily' => 'Thêm bản ghi hôm nay', 'month' => 'Nhập nhanh theo tháng'],
         'device' => ['event' => 'Thêm sự kiện', 'batch' => 'Nhập nhiều thiết bị'],
         'waste'  => ['batch' => 'Nhập nhiều dòng', 'single' => 'Thêm một dòng'],
+        'usage'  => ['month' => 'Tạo sổ tháng thiết bị', 'confirm' => 'Xác nhận nhanh ngày chờ'],
     ];
 
-    private const ROUTES = ['env' => 'env.page', 'device' => 'dev.page', 'waste' => 'waste.page'];
+    private const ROUTES = ['env' => 'env.page', 'device' => 'dev.page', 'waste' => 'waste.page', 'usage' => 'usage.page'];
 
     public function page()
     {
@@ -39,6 +40,8 @@ class QmsFlowController extends Controller
             'env'    => EnvRecord::whereDate('date', $today)->exists(),
             'device' => DeviceEvent::whereDate('date', $today)->exists(),
             'waste'  => WasteRow::whereDate('date', $today)->exists(),
+            'usage'  => \App\Models\DeviceUsageLog::whereDate('date', $today)
+                            ->where('status', '!=', 'pending')->exists(),
             default  => false,
         };
     }

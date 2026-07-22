@@ -37,6 +37,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/cau-hinh/du-lieu', [\App\Http\Controllers\QmsConfigController::class, 'state'])->name('config.state');
     Route::post('/qms/cau-hinh/du-lieu', [\App\Http\Controllers\QmsConfigController::class, 'save'])->name('config.save');
 
+    Route::get('/qms/su-dung-thiet-bi', [\App\Http\Controllers\DeviceUsageController::class, 'page'])->name('usage.page');
+    Route::get('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'state'])->name('usage.state');
+    Route::post('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'save'])->name('usage.save');
+
     // Mẫu mặc định cho các form nhập nhiều
     Route::get('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'index'])->name('preset.index');
     Route::post('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'store'])->name('preset.store');

@@ -23,6 +23,9 @@
         <a class="qs-item{{ $nav('dev.page') }}" href="{{ route('dev.page') }}">
             <span class="qs-ic">🛠</span> Khử nhiễm trang thiết bị
         </a>
+        <a class="qs-item{{ $nav('usage.page') }}" href="{{ route('usage.page') }}">
+            <span class="qs-ic">🕐</span> Nhật ký sử dụng thiết bị
+        </a>
         <a class="qs-item{{ $nav('waste.page') }}" href="{{ route('waste.page') }}">
             <span class="qs-ic">🗑</span> Nhật ký xử lý rác thải
         </a>

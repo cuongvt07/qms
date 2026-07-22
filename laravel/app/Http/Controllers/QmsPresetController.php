@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 /** Lưu / lấy mẫu mặc định cho các form nhập nhiều (dùng chung mọi module). */
 class QmsPresetController extends Controller
 {
-    private const MODULES = ['env', 'device', 'waste'];
+    private const MODULES = ['env', 'device', 'waste', 'usage'];
 
     public function index(string $module): JsonResponse
     {

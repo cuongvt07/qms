@@ -252,7 +252,7 @@ function renderWaste(){
   catBox("wasteTypes","lsWaste");catBox("treatments","lsTreat");catBox("locations","lsLoc");
 }
 
-const MODNAME={env:"Nhiệt độ, độ ẩm & vệ sinh",device:"Khử nhiễm trang thiết bị",waste:"Nhật ký xử lý rác thải"};
+const MODNAME={env:"Nhiệt độ, độ ẩm & vệ sinh",device:"Khử nhiễm trang thiết bị",waste:"Nhật ký xử lý rác thải",usage:"Nhật ký sử dụng thiết bị"};
 function actionOptions(module,sel){const a=(S.flow.actions||{})[module]||{};
   return Object.entries(a).map(([k,v])=>`<option value="${k}" ${k===sel?"selected":""}>${esc(v)}</option>`).join("")}
 function moduleOptions(sel){return Object.entries(MODNAME).map(([k,v])=>
