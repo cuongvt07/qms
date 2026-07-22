@@ -347,7 +347,8 @@ function openQuickMonthForm(){
   deviceField.onchange=()=>{
     const selectedDevice=devices.find(x=>x.id===deviceField.value);
     if(selectedDevice)hoursField.value=selectedDevice.defaultHours
-  }
+  };
+  QMSPreset.attach("month",{host:"#modalBody .qp-host",collect:collect_month,apply:apply_month});
 }
 function saveQuickMonth(){
   const form=document.getElementById("quickMonthForm");
