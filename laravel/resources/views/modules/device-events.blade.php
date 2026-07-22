@@ -51,16 +51,15 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 @media(max-width:580px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.field-inline{width:100%}.field-inline input,.field-inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.quick-head{flex-direction:column;align-items:stretch}.quick-head .push{margin-left:0}}
 </style>
 <script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=1">
 </head>
 <body>
+@include('modules._sidebar')
 <div class="shell"><main class="module">
   <div class="breadcrumb"><span>Quản lý trang thiết bị</span><span>›</span><b>Theo dõi khử nhiễm</b></div>
   <section class="page-head">
     <div><h1>Theo dõi khử nhiễm trang thiết bị</h1><p>Quản lý các sự kiện khử nhiễm, vệ sinh, bảo dưỡng, sửa chữa và tình trạng thiết bị sau xử lý trong một danh sách dùng chung.</p></div>
     <div class="actions">
-      <a class="btn" href="{{ route('waste.page') }}">🗑 Rác thải</a>
-      <a class="btn" href="{{ route('env.page') }}">🌡 Nhiệt độ / độ ẩm</a>
-      <a class="btn" href="/dashboard">↩ Hệ thống cũ</a>
       <div class="userbox"><span>Người thao tác</span><select id="currentUser"></select></div>
       <button class="btn" onclick="exportCsv()">⇩ Xuất dữ liệu</button>
       <button class="btn" onclick="openBatch()">▦ Nhập nhiều thiết bị</button>

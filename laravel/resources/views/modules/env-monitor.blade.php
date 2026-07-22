@@ -57,8 +57,10 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
 @media(max-width:620px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.measure-group{grid-template-columns:1fr}.context{align-items:flex-start}.context .push{flex-direction:column}.month-grid{grid-template-columns:1fr 1fr}}
 </style>
 <script>window.QMS_ENV={state:"{{ route('env.state') }}",save:"{{ route('env.save') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=1">
 </head>
 <body>
+@include('modules._sidebar')
 <div class="shell"><main class="module">
   <div class="breadcrumb"><span>Quản lý môi trường phòng xét nghiệm</span><span>›</span><b>Nhiệt độ, độ ẩm và vệ sinh</b></div>
 
@@ -68,9 +70,6 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
       <p>Nhập hai lần đo mỗi ngày, theo dõi vệ sinh và ghi nhận biện pháp khắc phục khi thông số không đạt ngưỡng cấu hình.</p>
     </div>
     <div class="head-actions">
-      <a class="btn" href="{{ route('waste.page') }}">🗑 Rác thải</a>
-      <a class="btn" href="{{ route('dev.page') }}">🛠 Trang thiết bị</a>
-      <a class="btn" href="/dashboard">↩ Hệ thống cũ</a>
       <div class="userbox"><span>Người thao tác</span><select id="currentUser"></select></div>
       <button class="btn" onclick="openSettings()">⚙ Cấu hình ngưỡng</button>
       <button class="btn" onclick="exportCsv()">⇩ Xuất dữ liệu</button>

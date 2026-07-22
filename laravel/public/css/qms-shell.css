@@ -1,0 +1,56 @@
+/* Khung sidebar dùng chung cho các module QMS (giữ nguyên giao diện bên trong mỗi module). */
+:root { --qs-w: 236px; }
+
+body { padding-left: var(--qs-w); }
+
+.qs-side {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--qs-w); z-index: 60;
+  background: #0e2436; color: #cfe0ec; display: flex; flex-direction: column;
+  font-family: inherit; border-right: 1px solid #0a1c2b;
+}
+.qs-brand { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; border-bottom: 1px solid #17364d; }
+.qs-logo {
+  width: 36px; height: 36px; border-radius: 10px; background: #14b8a6; color: #04222c;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex: none;
+}
+.qs-brand b { display: block; color: #fff; font-size: 13px; letter-spacing: .2px; }
+.qs-brand span { display: block; color: #7f9db5; font-size: 10px; margin-top: 2px; }
+
+.qs-nav { flex: 1 1 0%; min-height: 0; overflow-y: auto; padding: 12px 10px 16px; }
+.qs-group { color: #6f8ea8; font-size: 9.5px; font-weight: 800; letter-spacing: .8px;
+  text-transform: uppercase; padding: 12px 8px 6px; }
+.qs-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 2px;
+  border-radius: 9px; color: #cfe0ec; text-decoration: none; font-size: 12px; font-weight: 600;
+  line-height: 1.35; transition: background .15s, color .15s;
+}
+.qs-item:hover { background: #16344a; color: #fff; }
+.qs-item.on { background: #14b8a6; color: #04222c; font-weight: 800; }
+.qs-ic { width: 18px; text-align: center; font-size: 13px; flex: none; }
+
+.qs-foot { border-top: 1px solid #17364d; padding: 12px 14px 14px; }
+.qs-user { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+.qs-ava { width: 30px; height: 30px; border-radius: 50%; background: #1d4763; color: #d7e9f5;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex: none; }
+.qs-user b { color: #fff; font-size: 11.5px; display: block; max-width: 130px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.qs-user span { color: #7f9db5; font-size: 9.5px; }
+.qs-out { width: 100%; border: 1px solid #23506e; background: transparent; color: #9dbdd4;
+  border-radius: 8px; height: 30px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.qs-out:hover { background: #16344a; color: #fff; }
+
+/* Nút mở menu trên mobile */
+.qs-burger { display: none; position: fixed; top: 10px; left: 10px; z-index: 62; width: 38px; height: 38px;
+  border-radius: 10px; border: 1px solid #d8e2ea; background: #fff; color: #0e2436; font-size: 17px;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(15,36,54,.12); }
+.qs-mask { display: none; position: fixed; inset: 0; background: rgba(9,24,37,.45); z-index: 59; }
+
+@media (max-width: 980px) {
+  body { padding-left: 0; }
+  .qs-side { transform: translateX(-100%); transition: transform .22s ease; box-shadow: 0 0 24px rgba(0,0,0,.3); }
+  .qs-burger { display: block; }
+  body.qs-open .qs-side { transform: none; }
+  body.qs-open .qs-mask { display: block; }
+  /* chừa chỗ cho nút menu */
+  .shell > .module > .breadcrumb, .shell > .module > .page-head { padding-left: 44px; }
+}

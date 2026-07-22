@@ -29,8 +29,10 @@
 @media(max-width:650px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid,.detail-grid,.catalog-grid,.session-head{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.notice{flex-direction:column}.notice .push{margin-left:0}}
 </style>
 <script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=1">
 </head>
 <body>
+@include('modules._sidebar')
 <div class="shell"><main class="module">
   <div class="breadcrumb"><span>Quản lý chất thải</span><span>›</span><b>Nhật ký xử lý rác thải</b></div>
 
@@ -40,9 +42,6 @@
       <p>Mỗi dòng là một phát sinh độc lập. Trong cùng một phiên, ngày, giờ, loại rác, cách xử lý, vị trí và người thực hiện đều có thể khác nhau.</p>
     </div>
     <div class="actions">
-      <a class="btn" href="{{ route('env.page') }}">🌡 Nhiệt độ / độ ẩm</a>
-      <a class="btn" href="{{ route('dev.page') }}">🛠 Trang thiết bị</a>
-      <a class="btn" href="/dashboard">↩ Hệ thống cũ</a>
       <div class="userbox"><span>Người thao tác</span><select id="currentUser"></select></div>
       <button class="btn" onclick="openCatalogs()">⚙ Danh mục</button>
       <button class="btn" onclick="exportCsv()">⇩ Xuất dữ liệu</button>
