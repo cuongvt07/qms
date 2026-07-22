@@ -51,6 +51,7 @@ body { padding-left: var(--qs-w); }
   .qs-burger { display: block; }
   body.qs-open .qs-side { transform: none; }
   body.qs-open .qs-mask { display: block; }
+  body.qs-open .qs-burger { display: none; }
   /* chừa chỗ cho nút menu */
   .shell > .module > .breadcrumb, .shell > .module > .page-head { padding-left: 44px; }
 }
