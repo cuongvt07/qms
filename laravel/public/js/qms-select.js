@@ -33,7 +33,7 @@
                     '<div class="qs2-list"></div>';
     wrap.appendChild(btn);
     wrap.appendChild(pop);
-    if (sel.options.length < 6) pop.classList.add('nosearch');   // ít lựa chọn thì ẩn ô tìm
+    if (sel.options.length < 3) pop.classList.add('nosearch');   // chỉ 2 lựa chọn thì khỏi cần tìm
 
     const search = pop.querySelector('.qs2-search');
     const list = pop.querySelector('.qs2-list');

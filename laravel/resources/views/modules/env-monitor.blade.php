@@ -61,7 +61,7 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
-<script src="{{ asset('js/qms-select.js') }}?v=2"></script>
+<script src="{{ asset('js/qms-select.js') }}?v=3"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))

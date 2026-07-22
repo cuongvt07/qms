@@ -58,7 +58,7 @@ label.f span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;m
 <link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
 <script>window.QMS_CFG={state:"{{ route('config.state') }}",save:"{{ route('config.save') }}",csrf:"{{ csrf_token() }}"};</script>
 
-<script src="{{ asset('js/qms-select.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-select.js') }}?v=3"></script>
 </head>
 <body>
 @include('modules._sidebar')
