@@ -148,7 +148,12 @@ window.addEventListener("message",async e=>{
   if(d.qmsFlow==="toast"){toast(d.message);return}
   if(d.qmsFlow==="saved"){
     toast("Đã lưu — chuyển sang bước tiếp theo");
-    await reloadFlow(true);
+    const id=cur&&cur.id;
+    for(let i=0;i<4;i++){                       // chờ CSDL ghi xong rồi mới đọc lại trạng thái
+      await reloadFlow(true);
+      if((FLOW.steps||[]).some(s=>s.id===id&&s.done))break;
+      await new Promise(r=>setTimeout(r,800));
+    }
     const n=nextPending();
     if(n&&(!cur||n.id!==cur.id))openStep(n,true); else if(!n)finish();
     return;

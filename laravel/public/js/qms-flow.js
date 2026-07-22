@@ -95,7 +95,7 @@
 
   /** Gọi sau khi lưu xong popup của bước hiện tại. */
   F.done = function () {
-    if (EMBED) { post('saved', { stepId: F.current && F.current.id }); return; }
+    if (EMBED) { setTimeout(() => post('saved', { stepId: F.current && F.current.id }), 800); return; }
     if (!F.data || !F.data.enabled) return;
     setTimeout(() => {
       fetchState().then(() => {
