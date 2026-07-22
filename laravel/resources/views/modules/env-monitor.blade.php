@@ -68,6 +68,7 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
       <p>Nhập hai lần đo mỗi ngày, theo dõi vệ sinh và ghi nhận biện pháp khắc phục khi thông số không đạt ngưỡng cấu hình.</p>
     </div>
     <div class="head-actions">
+      <a class="btn" href="{{ route('waste.page') }}">🗑 Rác thải</a>
       <a class="btn" href="{{ route('dev.page') }}">🛠 Trang thiết bị</a>
       <a class="btn" href="/dashboard">↩ Hệ thống cũ</a>
       <div class="userbox"><span>Người thao tác</span><select id="currentUser"></select></div>

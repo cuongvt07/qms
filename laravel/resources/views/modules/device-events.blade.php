@@ -58,6 +58,7 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
   <section class="page-head">
     <div><h1>Theo dõi khử nhiễm trang thiết bị</h1><p>Quản lý các sự kiện khử nhiễm, vệ sinh, bảo dưỡng, sửa chữa và tình trạng thiết bị sau xử lý trong một danh sách dùng chung.</p></div>
     <div class="actions">
+      <a class="btn" href="{{ route('waste.page') }}">🗑 Rác thải</a>
       <a class="btn" href="{{ route('env.page') }}">🌡 Nhiệt độ / độ ẩm</a>
       <a class="btn" href="/dashboard">↩ Hệ thống cũ</a>
       <div class="userbox"><span>Người thao tác</span><select id="currentUser"></select></div>
