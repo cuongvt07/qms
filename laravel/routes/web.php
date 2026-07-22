@@ -13,12 +13,17 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', fn () => redirect()->route('env.page'));
 
 // Auth (Laravel Breeze/Fortify sẽ đăng ký các route login/logout)
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
+
+    // ===== Module QMS dạng CRM (chuyển từ mẫu thiết kế) =====
+    Route::get('/qms/moi-truong', [\App\Http\Controllers\EnvMonitorController::class, 'page'])->name('env.page');
+    Route::get('/qms/moi-truong/du-lieu', [\App\Http\Controllers\EnvMonitorController::class, 'state'])->name('env.state');
+    Route::post('/qms/moi-truong/du-lieu', [\App\Http\Controllers\EnvMonitorController::class, 'save'])->name('env.save');
 
     // Dashboard nhắc việc hàng ngày
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
