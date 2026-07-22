@@ -105,3 +105,18 @@ body { padding-left: var(--qs-w); }
 .qf-resume span { opacity: .75; font-size: 10.5px; }
 .qf-resume:hover { background: #0c5f59; }
 @media (max-width: 980px) { .qf-resume { left: 12px; right: 12px; justify-content: center; } }
+
+/* ===== Chế độ nhúng: chỉ hiện popup, dùng cho trang nhập liệu theo luồng ===== */
+body.qs-embed { padding-left: 0 !important; background: #fff; }
+body.qs-embed .shell, body.qs-embed .qs-side, body.qs-embed .qs-burger,
+body.qs-embed .qs-mask, body.qs-embed .qf-resume, body.qs-embed .qf-step { display: none !important; }
+body.qs-embed .modal-bg {
+  position: static !important; inset: auto !important; background: transparent !important;
+  display: block !important; opacity: 1 !important; visibility: visible !important; padding: 0 !important;
+}
+body.qs-embed .modal {
+  max-width: none !important; width: 100% !important; margin: 0 !important; max-height: none !important;
+  box-shadow: none !important; border: 0 !important; border-radius: 0 !important; transform: none !important;
+}
+body.qs-embed .modal-head .close { display: none !important; }
+body.qs-embed .modal-body { max-height: none !important; }

@@ -13,6 +13,9 @@
     </div>
 
     <nav class="qs-nav">
+        <div class="qs-group">Nhập liệu</div>
+        <a class="qs-item{{ $nav('flow.page') }}" href="{{ route('flow.page') }}"><span class="qs-ic">▶</span> Nhập liệu theo luồng</a>
+
         <div class="qs-group">Theo dõi vận hành</div>
         <a class="qs-item{{ $nav('env.page') }}" href="{{ route('env.page') }}">
             <span class="qs-ic">🌡</span> Nhiệt độ, độ ẩm &amp; vệ sinh

@@ -33,8 +33,10 @@
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 </head>
-<body>
+<body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
+@unless(request()->boolean('embed'))
 @include('modules._sidebar')
+@endunless
 <div class="shell"><main class="module">
   <div class="breadcrumb"><span>Quản lý chất thải</span><span>›</span><b>Nhật ký xử lý rác thải</b></div>
 

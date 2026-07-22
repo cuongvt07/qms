@@ -55,8 +55,10 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 </head>
-<body>
+<body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
+@unless(request()->boolean('embed'))
 @include('modules._sidebar')
+@endunless
 <div class="shell"><main class="module">
   <div class="breadcrumb"><span>Quản lý trang thiết bị</span><span>›</span><b>Theo dõi khử nhiễm</b></div>
   <section class="page-head">

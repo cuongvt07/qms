@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Luồng nhập liệu nối tiếp
     Route::get('/qms/luong', [\App\Http\Controllers\QmsFlowController::class, 'state'])->name('flow.state');
+    Route::get('/qms/nhap-lieu', [\App\Http\Controllers\QmsFlowController::class, 'page'])->name('flow.page');
     Route::get('/qms/vao-luong', [\App\Http\Controllers\QmsFlowController::class, 'entry'])->name('flow.entry');
 
     // Dashboard nhắc việc hàng ngày

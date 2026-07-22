@@ -4,50 +4,56 @@
  *   QMSFlow.init({url:'/qms/luong', module:'env', openers:{daily:openForm, month:openMonthEntry}})
  * và gọi QMSFlow.done() ngay sau khi lưu thành công popup của bước đó.
  *
- * Quy tắc:
- *  - Vào trang có ?flow=1 (hoặc bật tự mở khi đăng nhập) -> mở popup của bước đang tới.
- *  - Đóng popup mà chưa lưu -> bỏ qua trong phiên làm việc này, bấm "Tiếp tục luồng" để mở lại.
- *  - Bước nào đã có dữ liệu hôm nay thì tự bỏ qua, nhảy sang bước chưa nhập.
+ * 2 chế độ:
+ *  - Bình thường: mở popup ngay trên trang module, lưu xong tự chuyển sang trang module kế tiếp.
+ *  - Nhúng (?embed=1): dùng trong trang "Nhập liệu theo luồng" — chỉ hiện popup và báo kết quả
+ *    về trang cha bằng postMessage, không tự chuyển trang.
  */
 (function () {
   const F = { cfg: null, data: null };
   const SKIP = 'qms_flow_skip';
+  const qs = new URLSearchParams(location.search);
+  const EMBED = qs.get('embed') === '1';
+  const FLOW = qs.get('flow') === '1';
+  const STEP_ID = Number(qs.get('step') || 0);
 
   const skipped = () => { try { return JSON.parse(sessionStorage.getItem(SKIP) || '[]'); } catch (e) { return []; } };
   const skip = id => { const s = skipped(); if (!s.includes(id)) { s.push(id); sessionStorage.setItem(SKIP, JSON.stringify(s)); } };
   const clearSkip = () => sessionStorage.removeItem(SKIP);
+
+  function post(event, extra) {
+    if (!EMBED || parent === window) return;
+    parent.postMessage(Object.assign({ qmsFlow: event, module: F.cfg && F.cfg.module }, extra || {}), '*');
+  }
 
   function fetchState() {
     return fetch(F.cfg.url, { credentials: 'same-origin' })
       .then(r => (r.ok ? r.json() : null)).then(j => { F.data = j; return j; }).catch(() => null);
   }
 
-  /** Bước tiếp theo còn phải nhập (bỏ qua bước đã tắt trong phiên này). */
   function nextStep(honorSkip) {
     if (!F.data || !F.data.steps) return null;
     const s = skipped();
     return F.data.steps.find(x => !x.done && (!honorSkip || !s.includes(x.id))) || null;
   }
 
-  function goto(step) {
-    location.href = step.url + '?flow=1';
-  }
+  const goto = step => { location.href = step.url + '?flow=1'; };
 
-  /** Mở popup của bước nếu đang ở đúng module, ngược lại chuyển trang. */
   function run(step) {
     if (!step) { say('Hôm nay đã nhập đủ các bước trong luồng'); return; }
     if (step.module !== F.cfg.module) { goto(step); return; }
     const fn = F.cfg.openers[step.action];
     if (typeof fn !== 'function') return;
     F.current = step;
-    setTimeout(() => { fn(); mountBar(step); }, 60);
+    setTimeout(() => { fn(); if (!EMBED) mountBar(step); }, 60);
   }
 
   function say(msg, type) {
+    if (EMBED) { post('toast', { message: msg }); return; }
     if (typeof toast === 'function') toast(msg, type || ''); else console.log(msg);
   }
 
-  /** Dải nhắc bước trong modal: "Bước 2/3 · Bỏ qua bước này". */
+  /** Dải nhắc bước trong modal (chỉ ở chế độ thường). */
   function mountBar(step) {
     const head = document.querySelector('#modalBox .modal-head') || document.querySelector('.modal-head');
     if (!head || head.querySelector('.qf-step')) return;
@@ -67,19 +73,29 @@
 
   F.init = function (cfg) {
     F.cfg = cfg;
-    const auto = new URLSearchParams(location.search).get('flow') === '1';
     return fetchState().then(d => {
-      if (!d || !d.enabled) return;
+      if (!d || !d.enabled) { if (EMBED) post('empty'); return; }
+
+      if (EMBED) {
+        const step = (STEP_ID && d.steps.find(x => x.id === STEP_ID)) || nextStep(false);
+        if (!step || step.module !== cfg.module) { post('mismatch'); return; }
+        F.current = step;
+        const fn = cfg.openers[step.action];
+        if (typeof fn === 'function') setTimeout(() => { fn(); post('ready', { stepId: step.id }); }, 60);
+        return;
+      }
+
       renderResume();
-      if (auto || d.autoOpen) {
+      if (FLOW) {
         const step = nextStep(true);
-        if (step && (auto || step.module === cfg.module)) run(step);
+        if (step) run(step);
       }
     });
   };
 
-  /** Gọi sau khi lưu xong popup của bước hiện tại -> nhảy bước kế tiếp. */
+  /** Gọi sau khi lưu xong popup của bước hiện tại. */
   F.done = function () {
+    if (EMBED) { post('saved', { stepId: F.current && F.current.id }); return; }
     if (!F.data || !F.data.enabled) return;
     setTimeout(() => {
       fetchState().then(() => {
@@ -90,7 +106,7 @@
         say('Chuyển sang: ' + n.label);
         setTimeout(() => goto(n), 900);
       });
-    }, 700);   // chờ module lưu xong xuống CSDL
+    }, 700);
   };
 
   /** Nút "Tiếp tục luồng" ở góc màn hình khi còn bước chưa nhập. */

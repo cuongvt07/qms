@@ -24,6 +24,11 @@ class QmsFlowController extends Controller
 
     private const ROUTES = ['env' => 'env.page', 'device' => 'dev.page', 'waste' => 'waste.page'];
 
+    public function page()
+    {
+        return view('modules.flow-runner');
+    }
+
     /** Bước đã có dữ liệu của hôm nay chưa. */
     private function doneToday(string $module): bool
     {
@@ -62,19 +67,14 @@ class QmsFlowController extends Controller
         ]);
     }
 
-    /** Điểm vào sau khi đăng nhập: nhảy tới bước chưa nhập của hôm nay. */
+    /** Điểm vào sau khi đăng nhập: mở trang nhập liệu theo luồng nếu có khai báo. */
     public function entry()
     {
-        $steps = QmsFlowStep::where('active', true)->orderBy('sort')->orderBy('id')->get();
-        if ($steps->isEmpty() || ! QmsOption::val('flow_auto_open', true)) {
+        $has = QmsFlowStep::where('active', true)->exists();
+        if (! $has || ! QmsOption::val('flow_auto_open', true)) {
             return redirect()->route('env.page');
         }
-        foreach ($steps as $s) {
-            if (! $this->doneToday($s->module)) {
-                return redirect()->to(route(self::ROUTES[$s->module] ?? 'env.page') . '?flow=1');
-            }
-        }
-        // hôm nay xong hết -> về màn hình đầu luồng
-        return redirect()->route(self::ROUTES[$steps->first()->module] ?? 'env.page');
+
+        return redirect()->route('flow.page');
     }
 }
