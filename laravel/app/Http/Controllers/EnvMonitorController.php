@@ -96,6 +96,12 @@ class EnvMonitorController extends Controller
                 'history'      => [],
             ])->all(),
             'currentUserId' => 'u-admin',
+            // Giao diện dùng để hiện thông tin nhập liệu ban đầu
+            'importInfo' => [
+                'sourceRows'        => EnvRecord::count(),
+                'uniqueRows'        => EnvRecord::count(),
+                'duplicatesRemoved' => 0,
+            ],
         ]);
     }
 
