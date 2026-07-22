@@ -144,3 +144,36 @@ body.qs-embed .modal-body { max-height: none !important; }
 .qd-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;
   padding-top: 10px; border-top: 1px solid #eef2f6; font-size: 11.5px; color: #5f7488; }
 .qd-ow { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; }
+
+/* ===== Select có tìm kiếm ===== */
+.qs2 { position: relative; display: block; width: 100%; }
+.qs2 > select[data-qs2] { position: absolute; opacity: 0; pointer-events: none; width: 100%; height: 100%; left: 0; top: 0; }
+.qs2-btn {
+  width: 100%; height: 32px; border: 1px solid #e3e9ef; background: #fff; color: #16242f;
+  border-radius: 8px; padding: 0 26px 0 9px; font: inherit; font-size: 12px; text-align: left;
+  cursor: pointer; position: relative; display: flex; align-items: center; overflow: hidden;
+}
+.qs2-btn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qs2-btn .qs2-ph { color: #9aa9b8; }
+.qs2-btn > i { position: absolute; right: 8px; font-style: normal; color: #7d8fa1; font-size: 10px; }
+.qs2-btn:hover { border-color: #c9d6e2; }
+.qs2.open .qs2-btn { border-color: #14b8a6; box-shadow: 0 0 0 3px #cdeee9; }
+.qs2-btn:disabled { background: #f5f7f9; color: #9aa9b8; cursor: not-allowed; }
+
+.qs2-pop {
+  display: none; position: absolute; z-index: 90; left: 0; right: 0; top: calc(100% + 4px);
+  background: #fff; border: 1px solid #dbe4ec; border-radius: 10px; box-shadow: 0 12px 30px rgba(15,36,54,.16);
+  padding: 6px; min-width: 210px;
+}
+.qs2.open .qs2-pop { display: block; }
+.qs2.up .qs2-pop { top: auto; bottom: calc(100% + 4px); }
+.qs2-search {
+  width: 100%; height: 30px; border: 1px solid #e3e9ef; border-radius: 7px; padding: 0 8px;
+  font: inherit; font-size: 12px; margin-bottom: 6px; background: #fff; color: #16242f;
+}
+.qs2-search:focus { outline: 2px solid #cdeee9; border-color: #14b8a6; }
+.qs2-list { max-height: 210px; overflow-y: auto; }
+.qs2-opt { padding: 7px 9px; border-radius: 7px; font-size: 12px; cursor: pointer; line-height: 1.35; }
+.qs2-opt:hover, .qs2-opt.hi { background: #eef7f5; }
+.qs2-opt.sel { background: #14b8a6; color: #04222c; font-weight: 700; }
+.qs2-empty { padding: 10px; text-align: center; color: #9aa9b8; font-size: 11.5px; }

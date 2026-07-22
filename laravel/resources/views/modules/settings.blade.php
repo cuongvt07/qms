@@ -55,9 +55,10 @@ label.f span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;m
 @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.shell{padding:16px 12px 40px}
  .page-head{flex-wrap:wrap}.page-head .right{width:100%;margin-left:0}}
 </style>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
 <script>window.QMS_CFG={state:"{{ route('config.state') }}",save:"{{ route('config.save') }}",csrf:"{{ csrf_token() }}"};</script>
 
+<script src="{{ asset('js/qms-select.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -307,7 +308,7 @@ async function reload(quiet){
   if(!r.ok){toast("Không tải được cấu hình","error");return}
   S=await r.json();renderAll();if(!quiet)toast("Đã tải lại")
 }
-(async()=>{try{await reload(true)}catch(e){toast("Lỗi tải dữ liệu: "+e.message,"error");console.error(e)}})();
+(async()=>{try{await reload(true);QMSSelect.auto()}catch(e){toast("Lỗi tải dữ liệu: "+e.message,"error");console.error(e)}})();
 </script>
 </body>
 </html>
