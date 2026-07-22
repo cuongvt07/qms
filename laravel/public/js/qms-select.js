@@ -16,7 +16,6 @@
 
   function build(sel) {
     if (sel.multiple || sel.dataset.qs2 || sel.dataset.noQs2 !== undefined) return;
-    if (sel.options.length < 5) return;              // ít lựa chọn thì không cần tìm kiếm
     sel.dataset.qs2 = '1';
 
     const wrap = document.createElement('div');
@@ -34,6 +33,7 @@
                     '<div class="qs2-list"></div>';
     wrap.appendChild(btn);
     wrap.appendChild(pop);
+    if (sel.options.length < 6) pop.classList.add('nosearch');   // ít lựa chọn thì ẩn ô tìm
 
     const search = pop.querySelector('.qs2-search');
     const list = pop.querySelector('.qs2-list');
@@ -97,10 +97,15 @@
     };
 
     sel.addEventListener('change', paintBtn);
+    S._paints.push(paintBtn);
     // code cũ có thể thay đổi options bằng innerHTML -> vẽ lại nhãn
     new MutationObserver(paintBtn).observe(sel, { childList: true, subtree: true });
     paintBtn();
   }
+
+  S._paints = [];
+  /** Vẽ lại nhãn khi code khác gán select.value bằng tay. */
+  S.refresh = () => S._paints.forEach(f => f());
 
   S.enhance = root => (root || document).querySelectorAll('select').forEach(build);
 

@@ -57,10 +57,11 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
 @media(max-width:620px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.measure-group{grid-template-columns:1fr}.context{align-items:flex-start}.context .push{flex-direction:column}.month-grid{grid-template-columns:1fr 1fr}}
 </style>
 <script>window.QMS_ENV={state:"{{ route('env.state') }}",save:"{{ route('env.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'env') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-select.js') }}?v=2"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -424,13 +425,14 @@ function exportCsv(){
  const blob=new Blob(["\ufeff"+rows.map(row=>row.map(csvCell).join(",")).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="theo-doi-nhiet-do-do-am-ve-sinh.csv";a.click();URL.revokeObjectURL(a.href);toast(`Đã xuất ${rows.length-1} bản ghi`)
 }
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){try{state=JSON.parse(e.newValue);render();toast("Dữ liệu vừa được cập nhật từ tab khác")}catch(_){}}});
-(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_ENV.preset,csrf:window.QMS_ENV.csrf});init();QMSFlow.init({url:window.QMS_ENV.flow,module:'env',openers:{daily:()=>openForm(),month:()=>openMonthEntry()}})}catch(e){document.body.insertAdjacentHTML('beforeend','<div class="toast error" style="position:fixed;left:20px;bottom:20px">'+e.message+'</div>')}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_ENV.preset,csrf:window.QMS_ENV.csrf});init();QMSSelect.auto();QMSFlow.init({url:window.QMS_ENV.flow,module:'env',openers:{daily:()=>openForm(),month:()=>openMonthEntry()}})}catch(e){document.body.insertAdjacentHTML('beforeend','<div class="toast error" style="position:fixed;left:20px;bottom:20px">'+e.message+'</div>')}})();
 
 /* ==== mẫu mặc định cho nhập nhanh theo tháng ==== */
 function collectMonthPreset(){return {inspector:document.getElementById("monthInspector").value}}
 function applyMonthPreset(p){
  const sel=document.getElementById("monthInspector");
  if(p.inspector&&[...sel.options].some(o=>o.value===p.inspector))sel.value=p.inspector;
+ QMSSelect.refresh();
 }
 
 /* ==== nhân bản sang nhiều ngày ==== */

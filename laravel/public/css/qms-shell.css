@@ -177,3 +177,5 @@ body.qs-embed .modal-body { max-height: none !important; }
 .qs2-opt:hover, .qs2-opt.hi { background: #eef7f5; }
 .qs2-opt.sel { background: #14b8a6; color: #04222c; font-weight: 700; }
 .qs2-empty { padding: 10px; text-align: center; color: #9aa9b8; font-size: 11.5px; }
+.qs2-pop.nosearch .qs2-search { display: none; }
+.qs2-pop.nosearch { min-width: 160px; }

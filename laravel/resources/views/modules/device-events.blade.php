@@ -51,10 +51,11 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 @media(max-width:580px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.field-inline{width:100%}.field-inline input,.field-inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.quick-head{flex-direction:column;align-items:stretch}.quick-head .push{margin-left:0}}
 </style>
 <script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'device') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-select.js') }}?v=2"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -348,7 +349,7 @@ function openBatch(){
 function fillBatchCommon(){
  const type=document.getElementById("batchType").value,condition=document.getElementById("batchCondition").value;
  document.querySelectorAll(".batch tbody tr").forEach(tr=>{tr.querySelector(".b-type").value=type;tr.querySelector(".b-condition").value=condition});
- toast("Đã áp dụng loại hoạt động và tình trạng chung")
+ QMSSelect.refresh();toast("Đã áp dụng loại hoạt động và tình trạng chung")
 }
 function saveBatch(){
  const date=document.getElementById("batchDate").value;
@@ -379,7 +380,7 @@ function exportCsv(){
  const blob=new Blob(["\ufeff"+rows.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="theo-doi-khu-nhiem-trang-thiet-bi.csv";a.click();URL.revokeObjectURL(a.href);toast(`Đã xuất ${rows.length-1} bản ghi`)
 }
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){try{state=JSON.parse(e.newValue);render();toast("Dữ liệu vừa được cập nhật từ tab khác")}catch(_){}}});
-(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_DEV.preset,csrf:window.QMS_DEV.csrf});init();QMSFlow.init({url:window.QMS_DEV.flow,module:'device',openers:{event:()=>openForm(),batch:()=>openBatch()}})}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_DEV.preset,csrf:window.QMS_DEV.csrf});init();QMSSelect.auto();QMSFlow.init({url:window.QMS_DEV.flow,module:'device',openers:{event:()=>openForm(),batch:()=>openBatch()}})}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
 
 /* ==== mẫu mặc định cho form nhập nhiều thiết bị ==== */
 function collectDevicePreset(){
@@ -401,6 +402,7 @@ function applyDevicePreset(p){
    tr.querySelector(".b-reason").value=r.reason||"";
    tr.querySelector(".b-note").value=r.note||"";
  });
+ QMSSelect.refresh();
 }
 
 /* ==== nhân bản sang nhiều ngày ==== */
