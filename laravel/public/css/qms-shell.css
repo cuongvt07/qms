@@ -120,3 +120,27 @@ body.qs-embed .modal {
 }
 body.qs-embed .modal-head .close { display: none !important; }
 body.qs-embed .modal-body { max-height: none !important; }
+
+/* ===== Bộ chọn ngày để nhân bản ===== */
+.qd-wrap { min-width: 320px; }
+.qd-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.qd-bar b { min-width: 108px; text-align: center; font-size: 12.5px; }
+.qd-sp { flex: 1 1 auto; }
+.qd-dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 4px; }
+.qd-dow span { text-align: center; font-size: 10px; font-weight: 800; color: #7d8fa1; text-transform: uppercase; }
+.qd-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.qd-empty { height: 46px; }
+.qd-day { height: 46px; border: 1px solid #e3e9ef; background: #fff; border-radius: 9px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-family: inherit; color: #16242f; padding: 0; }
+.qd-day b { font-size: 13px; font-weight: 700; }
+.qd-day i { font-style: normal; font-size: 8.5px; color: #9aa9b8; }
+.qd-day:hover { border-color: #14b8a6; }
+.qd-day.today { border-color: #94a3b8; }
+.qd-day.has { background: #f5f7f9; }
+.qd-day.has i { color: #b08a3c; }
+.qd-day.on { background: #14b8a6; border-color: #14b8a6; color: #04222c; }
+.qd-day.on i { color: #05463c; }
+.qd-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid #eef2f6; font-size: 11.5px; color: #5f7488; }
+.qd-ow { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; white-space: nowrap; }

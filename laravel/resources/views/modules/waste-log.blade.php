@@ -29,9 +29,10 @@
 @media(max-width:650px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid,.detail-grid,.catalog-grid,.session-head{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.notice{flex-direction:column}.notice .push{margin-left:0}}
 </style>
 <script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'waste') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=5">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -78,7 +79,7 @@
 
     <div class="bulk" id="bulkbar">
       <strong id="selectedText"></strong>
-      <button class="btn sm" onclick="duplicateSelected()">Nhân bản sang hôm nay</button>
+      <button class="btn sm" onclick="duplicateSelected()">Nhân bản sang hôm nay</button><button class="btn sm" onclick="dupSelectedDays()">🗓 Nhân bản sang nhiều ngày</button>
       <button class="btn sm danger" onclick="deleteSelected()">Xóa đã chọn</button>
       <span class="push"></span><button class="btn sm" onclick="clearSelection()">Bỏ chọn</button>
     </div>
@@ -154,7 +155,7 @@ function render(){
 }
 function rowHtml(r){
  const b=batch(r.batchId),selected=ui.selected.has(r.id);
- return `<tr class="${selected?"selected":""}"><td class="check"><input type="checkbox" ${selected?"checked":""} onchange="toggleSelect('${r.id}',this.checked)"></td><td><div class="maincell">${dmy(r.date)} · ${esc(r.time)}</div><div class="subcell">${esc(r.id)}</div></td><td><span class="waste">${esc(r.wasteType)}</span></td><td><div class="textcell">${esc(r.treatment)}</div></td><td><div class="maincell">${esc(r.location)}</div></td><td><div class="maincell">${esc(user(r.performerId)?.name||"—")}</div></td><td><div class="note-cell" title="${esc(r.note)}">${esc(r.note||"—")}</div></td><td><button class="btn sm" onclick="openBatchDetail('${r.batchId}')">${state.rows.filter(x=>x.batchId===r.batchId).length} dòng</button><div class="subcell">${esc(b?.department||"")}</div></td><td><div class="maincell">${dmy(r.updatedAt.slice(0,10))}</div><div class="subcell">${new Date(r.updatedAt).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</div></td><td><div class="row-actions"><button class="btn sm icon" onclick="openDetail('${r.id}')">◉</button><button class="btn sm icon" onclick="openSingleForm('${r.id}')">✎</button><button class="btn sm icon" onclick="duplicateOne('${r.id}')">⧉</button><button class="btn sm icon danger" onclick="deleteOne('${r.id}')">×</button></div></td></tr>`
+ return `<tr class="${selected?"selected":""}"><td class="check"><input type="checkbox" ${selected?"checked":""} onchange="toggleSelect('${r.id}',this.checked)"></td><td><div class="maincell">${dmy(r.date)} · ${esc(r.time)}</div><div class="subcell">${esc(r.id)}</div></td><td><span class="waste">${esc(r.wasteType)}</span></td><td><div class="textcell">${esc(r.treatment)}</div></td><td><div class="maincell">${esc(r.location)}</div></td><td><div class="maincell">${esc(user(r.performerId)?.name||"—")}</div></td><td><div class="note-cell" title="${esc(r.note)}">${esc(r.note||"—")}</div></td><td><button class="btn sm" onclick="openBatchDetail('${r.batchId}')">${state.rows.filter(x=>x.batchId===r.batchId).length} dòng</button><div class="subcell">${esc(b?.department||"")}</div></td><td><div class="maincell">${dmy(r.updatedAt.slice(0,10))}</div><div class="subcell">${new Date(r.updatedAt).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</div></td><td><div class="row-actions"><button class="btn sm icon" onclick="openDetail('${r.id}')">◉</button><button class="btn sm icon" onclick="openSingleForm('${r.id}')">✎</button><button class="btn sm icon" title="Nhân bản sang hôm nay" onclick="duplicateOne('${r.id}')">⧉</button><button class="btn sm icon" title="Nhân bản sang nhiều ngày" onclick="dupDays('${r.id}')">🗓</button><button class="btn sm icon danger" onclick="deleteOne('${r.id}')">×</button></div></td></tr>`
 }
 function toggleSelect(id,on){on?ui.selected.add(id):ui.selected.delete(id);render()}
 function clearSelection(){ui.selected.clear();render()}
@@ -240,6 +241,37 @@ function applyWastePreset(p){
  if(p.note!=null)document.getElementById("sessionNote").value=p.note;
  const rows=(p.rows||[]).map(r=>Object.assign({},r,{date:today()}));
  if(rows.length){document.getElementById("entryBody").innerHTML="";addRows(rows.length,rows)}
+}
+
+/* ==== nhân bản sang nhiều ngày ==== */
+function dupDays(id){
+ const r=state.rows.find(x=>x.id===id);if(!r)return;
+ QMSDup.open({title:"Nhân bản dòng sang nhiều ngày",
+  sub:`Nguồn: ${dmy(r.date)} ${esc(r.time)} · ${esc(r.wasteType)} — tích chọn ngày cần tạo bản sao.`,
+  existing:state.rows.map(x=>x.date),
+  onSave:(dates,opt)=>applyDupDays([r],dates,opt)});
+}
+function dupSelectedDays(){
+ const rows=state.rows.filter(r=>ui.selected.has(r.id));
+ if(!rows.length){toast("Chưa chọn dòng nào","error");return}
+ QMSDup.open({title:`Nhân bản ${rows.length} dòng sang nhiều ngày`,
+  sub:"Mỗi ngày được chọn sẽ tạo bản sao của các dòng đang tick.",
+  existing:state.rows.map(x=>x.date),
+  onSave:(dates,opt)=>applyDupDays(rows,dates,opt)});
+}
+function applyDupDays(src,dates,opt){
+ const now=new Date().toISOString(),bid=`batch-${Date.now()}`;
+ state.batches.unshift({id:bid,department:state.form.department,note:`Nhân bản ${src.length} dòng sang ${dates.length} ngày`,
+   createdBy:state.currentUserId,createdAt:now,updatedAt:now});
+ let them=0;
+ dates.forEach((d,di)=>{
+   if(opt.overwrite)state.rows=state.rows.filter(x=>!(x.date===d&&src.some(s=>s.wasteType===x.wasteType&&s.time===x.time)));
+   src.forEach((r,i)=>{state.rows.unshift({...clone(r),id:`row-${Date.now()}-${di}-${i}`,batchId:bid,date:d,
+     createdAt:now,updatedAt:now,version:1,history:[]});them++});
+ });
+ ui.selected.clear();
+ save(`Đã nhân bản ${them} dòng sang ${dates.length} ngày`);
+ closeModal();render();
 }
 </script>
 </body>

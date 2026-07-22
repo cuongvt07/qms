@@ -45,7 +45,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 "Segoe UI",sy
 .toast.error{background:#8a1f16}
 @media(max-width:980px){.shell{padding:12px 10px 14px}.head{flex-wrap:wrap}.head .right{width:100%;margin-left:0}}
 </style>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=6">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
 <script>window.QMS_RUN={state:"{{ route('flow.state') }}",config:"{{ route('config.page') }}",home:"{{ route('env.page') }}"};</script>
 </head>
 <body>

@@ -51,9 +51,10 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 @media(max-width:580px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.field-inline{width:100%}.field-inline input,.field-inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.quick-head{flex-direction:column;align-items:stretch}.quick-head .push{margin-left:0}}
 </style>
 <script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'device') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=5">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=7">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -88,7 +89,7 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 
     <div class="bulk" id="bulkbar">
       <strong id="selectedText">0 bản ghi đã chọn</strong>
-      <button class="btn sm" onclick="duplicateSelected()">Nhân bản sang hôm nay</button>
+      <button class="btn sm" onclick="duplicateSelected()">Nhân bản sang hôm nay</button><button class="btn sm" onclick="dupSelectedDays()">🗓 Nhân bản sang nhiều ngày</button>
       <button class="btn sm danger" onclick="deleteSelected()">Xóa đã chọn</button>
       <span class="push"></span><button class="btn sm" onclick="clearSelection()">Bỏ chọn</button>
     </div>
@@ -247,7 +248,7 @@ function rowHtml(e){
   <td>${conditionTag(e.condition)}<div class="subcell">${esc(e.conditionText||"Chưa có mô tả")}</div></td>
   <td><div class="note" title="${esc(e.note)}">${esc(e.note||"—")}</div></td>
   <td><div class="maincell">${fmtDate(e.updatedAt.slice(0,10))}</div><div class="subcell">${new Date(e.updatedAt).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</div></td>
-  <td><div class="row-actions"><button class="btn sm icon" title="Xem chi tiết" onclick="openDetail('${e.id}')">◉</button><button class="btn sm icon" title="Chỉnh sửa" onclick="openForm('${e.id}')">✎</button><button class="btn sm icon" title="Nhân bản" onclick="duplicateOne('${e.id}')">⧉</button><button class="btn sm icon danger" title="Xóa" onclick="deleteOne('${e.id}')">×</button></div></td>
+  <td><div class="row-actions"><button class="btn sm icon" title="Xem chi tiết" onclick="openDetail('${e.id}')">◉</button><button class="btn sm icon" title="Chỉnh sửa" onclick="openForm('${e.id}')">✎</button><button class="btn sm icon" title="Nhân bản sang hôm nay" onclick="duplicateOne('${e.id}')">⧉</button><button class="btn sm icon" title="Nhân bản sang nhiều ngày" onclick="dupDays('${e.id}')">🗓</button><button class="btn sm icon danger" title="Xóa" onclick="deleteOne('${e.id}')">×</button></div></td>
  </tr>`
 }
 function toggleSelect(id,on){on?ui.selected.add(id):ui.selected.delete(id);render()}
@@ -400,6 +401,39 @@ function applyDevicePreset(p){
    tr.querySelector(".b-reason").value=r.reason||"";
    tr.querySelector(".b-note").value=r.note||"";
  });
+}
+
+/* ==== nhân bản sang nhiều ngày ==== */
+function dupDays(id){
+ const e=state.events.find(x=>x.id===id);if(!e)return;
+ const d=device(e.deviceId);
+ QMSDup.open({title:"Nhân bản sự kiện sang nhiều ngày",
+  sub:`Nguồn: ${fmtDate(e.date)} · ${esc(d?.code||"")} — tích chọn ngày cần tạo bản sao.`,
+  existing:state.events.map(x=>x.date),
+  onSave:(dates,opt)=>applyDupDays([e],dates,opt)});
+}
+function dupSelectedDays(){
+ const rows=state.events.filter(e=>ui.selected.has(e.id));
+ if(!rows.length){toast("Chưa chọn sự kiện nào","error");return}
+ QMSDup.open({title:`Nhân bản ${rows.length} sự kiện sang nhiều ngày`,
+  sub:"Mỗi ngày được chọn sẽ tạo bản sao của các sự kiện đang tick.",
+  existing:state.events.map(x=>x.date),
+  onSave:(dates,opt)=>applyDupDays(rows,dates,opt)});
+}
+function applyDupDays(src,dates,opt){
+ const now=new Date().toISOString();let them=0;
+ dates.forEach((d,di)=>{
+   if(opt.overwrite){
+     const bo=state.events.filter(x=>x.date===d&&src.some(s=>s.deviceId===x.deviceId));
+     state.events=state.events.filter(x=>!bo.includes(x));
+   }
+   src.forEach((e,i)=>{const n={...clone(e),id:`evt-${Date.now()}-${di}-${i}`,date:d,
+     createdAt:now,updatedAt:now,version:1,history:[]};
+     addHistory(n,"CREATE","Nhân bản sang nhiều ngày.");state.events.unshift(n);them++});
+ });
+ ui.selected.clear();
+ save(`Đã nhân bản ${them} sự kiện sang ${dates.length} ngày`);
+ closeModal();render();
 }
 </script>
 </body>
