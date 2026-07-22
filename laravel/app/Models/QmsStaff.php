@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class QmsStaff extends Model
 {
     protected $table = 'qms_staff';
-    protected $fillable = ['ext_id', 'name', 'role', 'active'];
+    protected $fillable = ['module', 'ext_id', 'name', 'role', 'active'];
     protected $casts = ['active' => 'boolean'];
 }

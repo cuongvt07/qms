@@ -25,6 +25,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/moi-truong/du-lieu', [\App\Http\Controllers\EnvMonitorController::class, 'state'])->name('env.state');
     Route::post('/qms/moi-truong/du-lieu', [\App\Http\Controllers\EnvMonitorController::class, 'save'])->name('env.save');
 
+    Route::get('/qms/trang-thiet-bi', [\App\Http\Controllers\DeviceEventController::class, 'page'])->name('dev.page');
+    Route::get('/qms/trang-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceEventController::class, 'state'])->name('dev.state');
+    Route::post('/qms/trang-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceEventController::class, 'save'])->name('dev.save');
+
     // Dashboard nhắc việc hàng ngày
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
