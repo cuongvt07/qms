@@ -48,9 +48,9 @@ class EnvMonitorController extends Controller
                 'reviewer'    => 'ThS. Nguyễn Thị Ngọc Ánh',
             ]);
         }
-        if (QmsStaff::where('module', 'env')->count() === 0) {
+        if (QmsStaff::count() === 0) {
             foreach (self::SEED_STAFF as [$ext, $name, $role]) {
-                QmsStaff::create(['module' => 'env', 'ext_id' => $ext, 'name' => $name, 'role' => $role]);
+                QmsStaff::create(['module' => 'all', 'ext_id' => $ext, 'name' => $name, 'role' => $role]);
             }
         }
         return $s;
@@ -78,7 +78,7 @@ class EnvMonitorController extends Controller
                 'measurementTime1' => $s->time1,
                 'measurementTime2' => $s->time2,
             ],
-            'users' => QmsStaff::where('module', 'env')->where('active', true)->orderBy('id')
+            'users' => QmsStaff::where('active', true)->orderBy('id')
                 ->get()->map(fn ($u) => ['id' => $u->ext_id, 'name' => $u->name, 'role' => $u->role])->all(),
             'records' => EnvRecord::orderBy('date', 'desc')->orderBy('id', 'desc')->get()->map(fn ($r) => [
                 'id'           => $r->ext_id,
@@ -141,18 +141,6 @@ class EnvMonitorController extends Controller
             'time2'           => $st['measurementTime2'] ?? null,
         ], fn ($v) => $v !== null));
 
-        // Nhân sự
-        if (! empty($data['users'])) {
-            $keep = [];
-            foreach ($data['users'] as $u) {
-                if (empty($u['id'])) {
-                    continue;
-                }
-                QmsStaff::updateOrCreate(['module' => 'env', 'ext_id' => $u['id']], ['name' => $u['name'] ?? $u['id'], 'role' => $u['role'] ?? 'technician', 'active' => true]);
-                $keep[] = $u['id'];
-            }
-            QmsStaff::where('module', 'env')->whereNotIn('ext_id', $keep)->update(['active' => false]);
-        }
 
         // Dòng nhật ký
         $rows = $data['records'] ?? [];

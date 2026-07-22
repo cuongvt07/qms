@@ -51,9 +51,10 @@ class WasteLogController extends Controller
             }
         }
         foreach ($seed['users'] ?? [] as $u) {
-            QmsStaff::updateOrCreate(['module' => self::MODULE, 'ext_id' => $u['id']], [
-                'name' => $u['name'] ?? $u['id'],
-                'role' => $u['role'] ?? 'staff',
+            QmsStaff::updateOrCreate(['ext_id' => $u['id']], [
+                'module' => 'all',
+                'name'   => $u['name'] ?? $u['id'],
+                'role'   => $u['role'] ?? 'staff',
             ]);
         }
         foreach ($seed['batches'] ?? [] as $b) {
@@ -100,7 +101,7 @@ class WasteLogController extends Controller
                 'year'          => (int) $s->year,
             ],
             'catalogs' => $catalogs,
-            'users'    => QmsStaff::where('module', self::MODULE)->where('active', true)->orderBy('id')
+            'users'    => QmsStaff::where('active', true)->orderBy('id')
                 ->get()->map(fn ($u) => ['id' => $u->ext_id, 'name' => $u->name, 'role' => $u->role])->all(),
             'batches' => WasteBatch::orderBy('id')->get()->map(fn ($b) => [
                 'id'         => $b->ext_id,
@@ -173,21 +174,6 @@ class WasteLogController extends Controller
             }
         }
 
-        if (! empty($users)) {
-            $keep = [];
-            foreach ($users as $u) {
-                if (empty($u['id'])) {
-                    continue;
-                }
-                QmsStaff::updateOrCreate(['module' => self::MODULE, 'ext_id' => $u['id']], [
-                    'name'   => $u['name'] ?? $u['id'],
-                    'role'   => $u['role'] ?? 'staff',
-                    'active' => true,
-                ]);
-                $keep[] = $u['id'];
-            }
-            QmsStaff::where('module', self::MODULE)->whereNotIn('ext_id', $keep)->update(['active' => false]);
-        }
 
         $keep = [];
         foreach ($batches as $b) {

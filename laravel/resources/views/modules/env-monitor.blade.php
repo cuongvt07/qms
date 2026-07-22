@@ -57,7 +57,7 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{min-height:100vh;
 @media(max-width:620px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.measure-group{grid-template-columns:1fr}.context{align-items:flex-start}.context .push{flex-direction:column}.month-grid{grid-template-columns:1fr 1fr}}
 </style>
 <script>window.QMS_ENV={state:"{{ route('env.state') }}",save:"{{ route('env.save') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=1">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=3">
 </head>
 <body>
 @include('modules._sidebar')

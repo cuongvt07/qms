@@ -30,6 +30,7 @@
         <a class="qs-item" href="{{ route('admin.form-templates.index') }}"><span class="qs-ic">📄</span> Quản lý biểu mẫu</a>
 
         <div class="qs-group">Quản trị</div>
+        <a class="qs-item{{ $nav('config.page') }}" href="{{ route('config.page') }}"><span class="qs-ic">⚙</span> Cấu hình chung</a>
         <a class="qs-item" href="{{ route('admin.operations') }}"><span class="qs-ic">⚙</span> Trung tâm điều hành</a>
         <a class="qs-item" href="{{ route('admin.audit-log') }}"><span class="qs-ic">🕘</span> Nhật ký hoạt động</a>
     </nav>

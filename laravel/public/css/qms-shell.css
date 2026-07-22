@@ -55,3 +55,31 @@ body { padding-left: var(--qs-w); }
   /* chừa chỗ cho nút menu */
   .shell > .module > .breadcrumb, .shell > .module > .page-head { padding-left: 44px; }
 }
+
+/* ===== Nén header module: breadcrumb + tiêu đề + nút gọn trong 1 dòng ===== */
+.shell > .module > .breadcrumb { font-size: 10.5px; margin-bottom: 4px !important; }
+.shell > .module > .page-head {
+  display: flex; align-items: center; gap: 14px; flex-wrap: nowrap;
+  margin-bottom: 12px !important; padding-bottom: 0 !important; border-bottom: 0 !important;
+}
+.shell > .module > .page-head > div:first-child { min-width: 0; flex: 1 1 auto; }
+.shell > .module > .page-head h1 { font-size: 20px !important; margin: 0 !important; line-height: 1.25; }
+/* mô tả dài -> 1 dòng, cắt bớt */
+.shell > .module > .page-head > div:first-child > p {
+  margin: 2px 0 0 !important; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.shell > .module > .page-head .actions,
+.shell > .module > .page-head .head-actions {
+  margin-left: auto; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end;
+  gap: 6px !important; max-width: 62%;
+}
+.shell > .module > .page-head .btn { height: 32px !important; padding: 0 11px !important; font-size: 11px !important; }
+.shell > .module > .page-head .userbox { height: 32px; }
+.shell > .module > .page-head .userbox select { height: 26px; font-size: 11px; }
+
+@media (max-width: 980px) {
+  .shell > .module > .page-head { flex-wrap: wrap; }
+  .shell > .module > .page-head .actions,
+  .shell > .module > .page-head .head-actions { max-width: 100%; margin-left: 0; }
+  .shell > .module > .page-head > div:first-child > p { white-space: normal; }
+}
