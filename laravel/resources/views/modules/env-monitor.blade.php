@@ -437,7 +437,7 @@ function applyMonthPreset(p){
 function dupDays(id){
  const r=state.records.find(x=>x.id===id);if(!r)return;
  QMSDup.open({title:"Nhân bản bản ghi sang nhiều ngày",
-  sub:`Nguồn: ${dmy(r.date)} · ${esc((user(r.inspectorId)||{}).name||"")} — tích chọn ngày cần tạo bản sao.`,
+  sub:`Nguồn: ${dateVi(r.date)} · ${esc((user(r.inspectorId)||{}).name||"")} — tích chọn ngày cần tạo bản sao.`,
   existing:state.records.map(x=>x.date),
   onSave:(dates,opt)=>applyDupDays([r],dates,opt)});
 }
