@@ -55,7 +55,7 @@ label.f span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;m
 @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.shell{padding:16px 12px 40px}
  .page-head{flex-wrap:wrap}.page-head .right{width:100%;margin-left:0}}
 </style>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=5">
 <script>window.QMS_CFG={state:"{{ route('config.state') }}",save:"{{ route('config.save') }}",csrf:"{{ csrf_token() }}"};</script>
 
 </head>
@@ -148,13 +148,29 @@ label.f span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;m
         <button class="btn sm" onclick="addCat('locations')">＋ Thêm</button></div>
     </div>
   </section>
+
+  <!-- LUỒNG NHẬP LIỆU -->
+  <section class="card hidden" data-pane="flow">
+    <h2>Luồng nhập liệu nối tiếp</h2>
+    <p class="sub">Khai báo thứ tự các popup cần nhập trong ngày: lưu xong bước này sẽ tự mở bước kế tiếp.
+      Bước nào đã có dữ liệu hôm nay sẽ được bỏ qua.</p>
+    <label class="chk" style="margin-bottom:12px">
+      <input type="checkbox" id="flowAuto"> Tự mở popup của bước đầu tiên ngay khi đăng nhập
+    </label>
+    <table><thead><tr>
+      <th style="width:6%">Bước</th><th style="width:24%">Module</th><th style="width:24%">Popup</th>
+      <th style="width:28%">Nhãn hiển thị</th><th style="width:10%">Bật</th><th style="width:8%"></th>
+    </tr></thead><tbody id="tbFlow"></tbody></table>
+    <div class="rowbar"><button class="btn sm" onclick="addFlow()">＋ Thêm bước</button>
+      <span class="count" id="cFlow"></span></div>
+  </section>
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
 const TABS=[["staff","👤 Nhân sự"],["dep","🏥 Phòng ban"],["dev","🛠 Trang thiết bị"],
-            ["env","🌡 Ngưỡng nhiệt độ / độ ẩm"],["waste","🗑 Danh mục rác thải"]];
+            ["env","🌡 Ngưỡng nhiệt độ / độ ẩm"],["waste","🗑 Danh mục rác thải"],["flow","🔁 Luồng nhập liệu"]];
 let S=null, tab="staff", seq=0;
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -234,7 +250,36 @@ function renderWaste(){
   document.getElementById("wDep").innerHTML=depOptions(w.department);
   catBox("wasteTypes","lsWaste");catBox("treatments","lsTreat");catBox("locations","lsLoc");
 }
-function renderAll(){renderTabs();renderStaff();renderDep();renderDev();renderEnv();renderWaste()}
+
+const MODNAME={env:"Nhiệt độ, độ ẩm & vệ sinh",device:"Khử nhiễm trang thiết bị",waste:"Nhật ký xử lý rác thải"};
+function actionOptions(module,sel){const a=(S.flow.actions||{})[module]||{};
+  return Object.entries(a).map(([k,v])=>`<option value="${k}" ${k===sel?"selected":""}>${esc(v)}</option>`).join("")}
+function moduleOptions(sel){return Object.entries(MODNAME).map(([k,v])=>
+  `<option value="${k}" ${k===sel?"selected":""}>${esc(v)}</option>`).join("")}
+function setFlowModule(i,v){S.flow.steps[i].module=v;
+  const first=Object.keys((S.flow.actions||{})[v]||{})[0]||"";S.flow.steps[i].action=first;renderFlow()}
+function renderFlow(){
+  document.getElementById("flowAuto").checked=!!S.flow.autoOpen;
+  document.getElementById("tbFlow").innerHTML=(S.flow.steps||[]).map((st,i)=>`<tr>
+    <td style="color:var(--muted);font-weight:800">${i+1}</td>
+    <td><select onchange="setFlowModule(${i},this.value)">${moduleOptions(st.module)}</select></td>
+    <td><select onchange="S.flow.steps[${i}].action=this.value">${actionOptions(st.module,st.action)}</select></td>
+    <td><input type="text" value="${esc(st.label)}" placeholder="để trống = tên mặc định"
+        oninput="S.flow.steps[${i}].label=this.value"></td>
+    <td><label class="chk"><input type="checkbox" ${st.active?"checked":""}
+        onchange="S.flow.steps[${i}].active=this.checked"></label></td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="btn sm" onclick="moveFlow(${i},-1)" title="Lên">↑</button>
+      <button class="btn sm" onclick="moveFlow(${i},1)" title="Xuống">↓</button>
+      <button class="btn sm danger" onclick="S.flow.steps.splice(${i},1);renderFlow()">Xoá</button></td>
+  </tr>`).join("");
+  document.getElementById("cFlow").textContent=(S.flow.steps||[]).length+" bước";
+}
+function moveFlow(i,d){const a=S.flow.steps,j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];renderFlow()}
+function addFlow(){const m="env";S.flow.steps.push({module:m,action:Object.keys((S.flow.actions||{})[m]||{})[0]||"daily",
+  label:"",active:true});renderFlow()}
+
+function renderAll(){renderTabs();renderStaff();renderDep();renderDev();renderEnv();renderWaste();renderFlow()}
 
 function collect(){
   const g=id=>document.getElementById(id).value;
@@ -243,7 +288,9 @@ function collect(){
     time1:g("eT1"),time2:g("eT2")};
   S.waste.documentCode=g("wCode");S.waste.formVersion=g("wVer");S.waste.effectiveDate=g("wDate");
   S.waste.department=g("wDep");
-  return {staff:S.staff,departments:S.departments,devices:S.devices,env:S.env,waste:S.waste};
+  S.flow.autoOpen=document.getElementById('flowAuto').checked;
+  return {staff:S.staff,departments:S.departments,devices:S.devices,env:S.env,waste:S.waste,
+          flow:{autoOpen:S.flow.autoOpen,steps:S.flow.steps}};
 }
 async function saveAll(){
   try{

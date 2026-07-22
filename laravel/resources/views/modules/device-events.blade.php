@@ -50,9 +50,10 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 @media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}.page-head{flex-direction:column}.filter-meta{margin-left:0}.userbox{display:none}.table-wrap{max-height:none}}
 @media(max-width:580px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.field-inline{width:100%}.field-inline input,.field-inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.quick-head{flex-direction:column;align-items:stretch}.quick-head .push{margin-left:0}}
 </style>
-<script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",preset:"{{ route('preset.index', 'device') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
+<script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'device') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=5">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -294,7 +295,7 @@ function openForm(id="",prefill={}){
    if(!x.date||!x.deviceId||!x.reason.trim()){toast("Vui lòng nhập đủ ngày, thiết bị và nội dung thực hiện","error");return}
    if(old){Object.assign(old,x,{updatedAt:new Date().toISOString(),version:(old.version||1)+1});addHistory(old,"UPDATE","Cập nhật thông tin sự kiện.")}
    else{const n={id:"evt-"+Date.now(),...x,createdBy:state.currentUserId,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),version:1,history:[]};addHistory(n,"CREATE","Tạo sự kiện mới.");state.events.unshift(n)}
-   save(old?"Đã cập nhật sự kiện":"Đã thêm sự kiện");closeModal();render()
+   save(old?"Đã cập nhật sự kiện":"Đã thêm sự kiện");closeModal();render();if(!old)QMSFlow.done()
  })
 }
 function syncConditionText(){
@@ -358,7 +359,7 @@ function saveBatch(){
    const n={id:`evt-${Date.now()}-${i}`,date,deviceId:tr.dataset.device,activityType:tr.querySelector(".b-type").value,reason,condition,conditionText:CONDITIONS[condition][0],note:tr.querySelector(".b-note").value.trim(),performedBy:"",createdBy:state.currentUserId,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),version:1,history:[]};
    addHistory(n,"CREATE","Tạo bằng chức năng nhập nhiều thiết bị.");state.events.unshift(n);created++
  }
- save(`Đã thêm ${created} sự kiện`);closeModal();render()
+ save(`Đã thêm ${created} sự kiện`);closeModal();render();QMSFlow.done()
 }
 
 function openModal(title,sub,body,saveLabel,handler,wide=false){
@@ -375,7 +376,7 @@ function exportCsv(){
  const blob=new Blob(["\ufeff"+rows.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="theo-doi-khu-nhiem-trang-thiet-bi.csv";a.click();URL.revokeObjectURL(a.href);toast(`Đã xuất ${rows.length-1} bản ghi`)
 }
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){try{state=JSON.parse(e.newValue);render();toast("Dữ liệu vừa được cập nhật từ tab khác")}catch(_){}}});
-(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_DEV.preset,csrf:window.QMS_DEV.csrf});init()}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_DEV.preset,csrf:window.QMS_DEV.csrf});init();QMSFlow.init({url:window.QMS_DEV.flow,module:'device',openers:{event:()=>openForm(),batch:()=>openBatch()}})}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
 
 /* ==== mẫu mặc định cho form nhập nhiều thiết bị ==== */
 function collectDevicePreset(){

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\EnvSetting;
 use App\Models\QmsDepartment;
 use App\Models\QmsDevice;
+use App\Models\QmsFlowStep;
+use App\Models\QmsOption;
 use App\Models\QmsStaff;
 use App\Models\WasteCatalog;
 use App\Models\WasteSetting;
@@ -80,6 +82,16 @@ class QmsConfigController extends Controller
                 'year'          => (int) $waste->year,
                 'catalogs'      => $catalogs,
             ],
+            'flow' => [
+                'autoOpen' => (bool) QmsOption::val('flow_auto_open', true),
+                'steps'    => QmsFlowStep::orderBy('sort')->orderBy('id')->get()->map(fn ($s) => [
+                    'module' => $s->module,
+                    'action' => $s->action,
+                    'label'  => $s->label ?? '',
+                    'active' => (bool) $s->active,
+                ])->all(),
+                'actions' => QmsFlowController::ACTIONS,
+            ],
             'roles' => [
                 'admin'      => 'Quản trị',
                 'manager'    => 'Phụ trách',
@@ -97,12 +109,14 @@ class QmsConfigController extends Controller
             'devices'     => 'array',
             'env'         => 'array',
             'waste'       => 'array',
+            'flow'        => 'array',
         ]);
         $staff = $request->input('staff', []);
         $deps  = $request->input('departments', []);
         $devs  = $request->input('devices', []);
         $env   = $request->input('env', []);
         $waste = $request->input('waste', []);
+        $flow  = $request->input('flow', null);
 
         // ===== Nhân sự (dùng chung 3 module) =====
         $keep = [];
@@ -208,6 +222,26 @@ class QmsConfigController extends Controller
                     }
                     WasteCatalog::create(['kind' => $kind, 'value' => $v, 'sort' => $i]);
                 }
+            }
+        }
+
+        // ===== Luồng nhập liệu =====
+        if (is_array($flow)) {
+            QmsOption::put('flow_auto_open', (bool) ($flow['autoOpen'] ?? true));
+            QmsFlowStep::query()->delete();
+            foreach ($flow['steps'] ?? [] as $i => $st) {
+                $module = $st['module'] ?? '';
+                $action = $st['action'] ?? '';
+                if (! isset(QmsFlowController::ACTIONS[$module][$action])) {
+                    continue;
+                }
+                QmsFlowStep::create([
+                    'sort'   => $i,
+                    'module' => $module,
+                    'action' => $action,
+                    'label'  => trim($st['label'] ?? '') ?: null,
+                    'active' => (bool) ($st['active'] ?? true),
+                ]);
             }
         }
 

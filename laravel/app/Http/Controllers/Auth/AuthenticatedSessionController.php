@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('env.page', absolute: false));
+        return redirect()->intended(route('flow.entry', absolute: false));
     }
 
     /**

@@ -42,6 +42,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'store'])->name('preset.store');
     Route::delete('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'destroy'])->name('preset.destroy');
 
+    // Luồng nhập liệu nối tiếp
+    Route::get('/qms/luong', [\App\Http\Controllers\QmsFlowController::class, 'state'])->name('flow.state');
+    Route::get('/qms/vao-luong', [\App\Http\Controllers\QmsFlowController::class, 'entry'])->name('flow.entry');
+
     // Dashboard nhắc việc hàng ngày
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 

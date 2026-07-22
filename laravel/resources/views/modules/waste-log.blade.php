@@ -28,9 +28,10 @@
 @media(max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)}.page-head{flex-direction:column}.userbox{display:none}.table-wrap{max-height:none}}
 @media(max-width:650px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid,.detail-grid,.catalog-grid,.session-head{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.notice{flex-direction:column}.notice .push{margin-left:0}}
 </style>
-<script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",preset:"{{ route('preset.index', 'waste') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
+<script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'waste') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=5">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -185,7 +186,7 @@ function saveBatch(editId=""){
  const now=new Date().toISOString(),batchId=editId||`batch-${Date.now()}`;
  if(editId){const b=batch(editId);Object.assign(b,{department,note,updatedAt:now});state.rows=state.rows.filter(r=>r.batchId!==editId)}else state.batches.unshift({id:batchId,department,note,createdBy:state.currentUserId,createdAt:now,updatedAt:now});
  entries.forEach((r,i)=>state.rows.unshift({id:`row-${Date.now()}-${i}`,batchId,...r,createdAt:now,updatedAt:now,version:1,history:[]}));
- save(`Đã lưu ${entries.length} dòng độc lập`);closeModal();render()
+ save(`Đã lưu ${entries.length} dòng độc lập`);closeModal();render();QMSFlow.done()
 }
 function copyLatestBatch(){const latest=[...state.batches].sort((a,b)=>b.createdAt.localeCompare(a.createdAt))[0];if(!latest){openBatchEntry();return}const rows=state.rows.filter(r=>r.batchId===latest.id).map(r=>({...clone(r),date:today()}));openBatchEntry("",rows)}
 function copyBatch(id){const rows=state.rows.filter(r=>r.batchId===id).map(r=>({...clone(r),date:today()}));closeDrawer();openBatchEntry("",rows)}
@@ -195,7 +196,7 @@ function openSingleForm(id="",prefill={}){
  openModal(old?"Sửa dòng nhật ký":"Thêm một dòng","Một dòng có toàn bộ thông tin riêng.",`<form class="form-grid" id="singleForm"><div class="field"><label>Ngày *</label><input name="date" type="date" value="${r.date}"></div><div class="field"><label>Giờ *</label><input name="time" type="time" value="${r.time}"></div><div class="field full"><label>Loại rác *</label><select name="wasteType">${options(state.catalogs.wasteTypes,r.wasteType,"Chọn loại rác")}</select></div><div class="field full"><label>Xử lý *</label><select name="treatment">${options(state.catalogs.treatments,r.treatment,"Chọn xử lý")}</select></div><div class="field"><label>Vị trí *</label><select name="location">${options(state.catalogs.locations,r.location,"Chọn vị trí")}</select></div><div class="field"><label>Người thực hiện *</label><select name="performerId">${userOptions(r.performerId)}</select></div><div class="field full"><label>Ghi chú</label><textarea name="note">${esc(r.note)}</textarea></div></form>`,old?"Lưu thay đổi":"Thêm dòng",()=>{
   const x=Object.fromEntries(new FormData(document.getElementById("singleForm")).entries());if(!x.date||!x.time||!x.wasteType||!x.treatment||!x.location||!x.performerId){toast("Vui lòng nhập đủ trường bắt buộc","error");return}
   const now=new Date().toISOString();if(old)Object.assign(old,x,{updatedAt:now,version:(old.version||1)+1});else{const batchId=`batch-${Date.now()}`;state.batches.unshift({id:batchId,department:state.form.department,note:"Tạo từ một dòng",createdBy:state.currentUserId,createdAt:now,updatedAt:now});state.rows.unshift({id:`row-${Date.now()}`,batchId,...x,createdAt:now,updatedAt:now,version:1,history:[]})}
-  save(old?"Đã cập nhật dòng":"Đã thêm dòng");closeModal();render()
+  save(old?"Đã cập nhật dòng":"Đã thêm dòng");closeModal();render();if(!old)QMSFlow.done()
  })
 }
 
@@ -223,7 +224,7 @@ function closeModal(){document.getElementById("modalBg").classList.remove("show"
 document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg")closeModal()});
 function csv(v){return `"${String(v??"").replace(/"/g,'""')}"`}
 function exportCsv(){const data=[["Ngày","Giờ","Loại rác","Xử lý","Vị trí","Người thực hiện","Ghi chú"],...filtered().map(r=>[r.date,r.time,r.wasteType,r.treatment,r.location,user(r.performerId)?.name,r.note])],blob=new Blob(["\ufeff"+data.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="nhat-ky-xu-ly-rac-thai.csv";a.click();URL.revokeObjectURL(a.href)}
-(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_WASTE.preset,csrf:window.QMS_WASTE.csrf});init()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_WASTE.preset,csrf:window.QMS_WASTE.csrf});init();QMSFlow.init({url:window.QMS_WASTE.flow,module:'waste',openers:{batch:()=>openBatchEntry(),single:()=>openSingleForm()}})}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 
 /* ==== mẫu mặc định cho form nhập nhiều dòng rác thải ==== */
 function collectWastePreset(){
