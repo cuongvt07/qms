@@ -55,7 +55,7 @@ label.f span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;m
 @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.shell{padding:16px 12px 40px}
  .page-head{flex-wrap:wrap}.page-head .right{width:100%;margin-left:0}}
 </style>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=2">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
 <script>window.QMS_CFG={state:"{{ route('config.state') }}",save:"{{ route('config.save') }}",csrf:"{{ csrf_token() }}"};</script>
 
 </head>

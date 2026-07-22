@@ -37,6 +37,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/cau-hinh/du-lieu', [\App\Http\Controllers\QmsConfigController::class, 'state'])->name('config.state');
     Route::post('/qms/cau-hinh/du-lieu', [\App\Http\Controllers\QmsConfigController::class, 'save'])->name('config.save');
 
+    // Mẫu mặc định cho các form nhập nhiều
+    Route::get('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'index'])->name('preset.index');
+    Route::post('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'store'])->name('preset.store');
+    Route::delete('/qms/mac-dinh/{module}', [\App\Http\Controllers\QmsPresetController::class, 'destroy'])->name('preset.destroy');
+
     // Dashboard nhắc việc hàng ngày
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 

@@ -83,3 +83,11 @@ body { padding-left: var(--qs-w); }
   .shell > .module > .page-head .head-actions { max-width: 100%; margin-left: 0; }
   .shell > .module > .page-head > div:first-child > p { white-space: normal; }
 }
+
+/* ===== Thanh "mẫu mặc định" trong các modal nhập nhiều ===== */
+.qp-bar { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: 8px; }
+.qp-chip { display: inline-flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 20px;
+  background: #e7f7f3; color: #0f766e; font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+.qp-bar .btn { white-space: nowrap; }
+.qp-host { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+@media (max-width: 700px) { .qp-bar { margin-left: 0; width: 100%; } }

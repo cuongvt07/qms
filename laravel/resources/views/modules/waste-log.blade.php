@@ -28,8 +28,9 @@
 @media(max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)}.page-head{flex-direction:column}.userbox{display:none}.table-wrap{max-height:none}}
 @media(max-width:650px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid,.detail-grid,.catalog-grid,.session-head{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.notice{flex-direction:column}.notice .push{margin-left:0}}
 </style>
-<script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=3">
+<script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",preset:"{{ route('preset.index', 'waste') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
+<script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -169,7 +170,8 @@ function collectRows(){return [...document.querySelectorAll("#entryBody tr")].ma
 function openBatchEntry(editId="",prefill=null){
  const b=editId?batch(editId):null,source=prefill||(editId?state.rows.filter(r=>r.batchId===editId).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)):[]);
  openModal(b?"Chỉnh sửa phiên nhập":"Nhập nhiều dòng độc lập","Mỗi dòng tự có ngày, giờ, loại rác, cách xử lý, vị trí, người thực hiện và ghi chú.",`<div class="session-head"><div class="field"><label>Khoa / đơn vị</label><input id="sessionDepartment" value="${esc(b?.department||state.form.department)}"></div><div class="field"><label>Ghi chú phiên</label><input id="sessionNote" value="${esc(b?.note||"")}"></div></div><div class="batch-toolbar"><button class="btn sm" type="button" onclick="addRows(1)">＋ Thêm 1 dòng</button><button class="btn sm" type="button" onclick="addRows(5)">＋ Thêm 5 dòng</button><button class="btn sm" type="button" onclick="fillTodayBlank()">Điền hôm nay cho dòng trống</button><button class="btn sm" type="button" onclick="loadLatestRows()">Sao chép phiên gần nhất</button><span class="push"></span><span class="help">Mỗi dòng hoàn toàn độc lập.</span></div><div class="entry-wrap"><table class="entry-table"><thead><tr><th></th><th>Ngày *</th><th>Giờ *</th><th>Loại rác *</th><th>Xử lý *</th><th>Vị trí *</th><th>Người thực hiện *</th><th>Ghi chú</th><th>Nhân dòng</th></tr></thead><tbody id="entryBody"></tbody></table></div>`,source.length?`Lưu ${source.length} dòng`:"Lưu phiên",()=>saveBatch(editId),true);
- addRows(source.length||3,source.length?source:[{},{},{}])
+ addRows(source.length||3,source.length?source:[{},{},{}]);
+ QMSPreset.attach("batch",{host:".batch-toolbar .push",collect:collectWastePreset,apply:applyWastePreset,skip:!!editId||!!prefill});
 }
 function loadLatestRows(){
  const latest=[...state.batches].sort((a,b)=>b.createdAt.localeCompare(a.createdAt))[0];if(!latest){toast("Chưa có phiên trước","error");return}
@@ -221,7 +223,21 @@ function closeModal(){document.getElementById("modalBg").classList.remove("show"
 document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg")closeModal()});
 function csv(v){return `"${String(v??"").replace(/"/g,'""')}"`}
 function exportCsv(){const data=[["Ngày","Giờ","Loại rác","Xử lý","Vị trí","Người thực hiện","Ghi chú"],...filtered().map(r=>[r.date,r.time,r.wasteType,r.treatment,r.location,user(r.performerId)?.name,r.note])],blob=new Blob(["\ufeff"+data.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="nhat-ky-xu-ly-rac-thai.csv";a.click();URL.revokeObjectURL(a.href)}
-(async()=>{try{state=await load();init()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_WASTE.preset,csrf:window.QMS_WASTE.csrf});init()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+
+/* ==== mẫu mặc định cho form nhập nhiều dòng rác thải ==== */
+function collectWastePreset(){
+ return {department:document.getElementById("sessionDepartment").value.trim(),
+  note:document.getElementById("sessionNote").value.trim(),
+  rows:collectRows().map(r=>({time:r.time,wasteType:r.wasteType,treatment:r.treatment,
+    location:r.location,performerId:r.performerId,note:r.note}))};
+}
+function applyWastePreset(p){
+ if(p.department!=null)document.getElementById("sessionDepartment").value=p.department;
+ if(p.note!=null)document.getElementById("sessionNote").value=p.note;
+ const rows=(p.rows||[]).map(r=>Object.assign({},r,{date:today()}));
+ if(rows.length){document.getElementById("entryBody").innerHTML="";addRows(rows.length,rows)}
+}
 </script>
 </body>
 </html>

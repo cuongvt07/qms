@@ -50,8 +50,9 @@ body{margin:0}button,input,select,textarea{font:inherit}.shell{padding:24px;min-
 @media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}.page-head{flex-direction:column}.filter-meta{margin-left:0}.userbox{display:none}.table-wrap{max-height:none}}
 @media(max-width:580px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.field-inline{width:100%}.field-inline input,.field-inline select{width:100%}.form-grid{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.detail-grid{grid-template-columns:1fr}.quick-head{flex-direction:column;align-items:stretch}.quick-head .push{margin-left:0}}
 </style>
-<script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=3">
+<script>window.QMS_DEV={state:"{{ route('dev.state') }}",save:"{{ route('dev.save') }}",preset:"{{ route('preset.index', 'dev') }}",csrf:"{{ csrf_token() }}"};</script>
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=4">
+<script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -337,7 +338,8 @@ function openBatch(){
   </div>
   <div class="batch-wrap"><table class="batch"><thead><tr><th style="width:40px">Nhập</th><th>Thiết bị</th><th>Loại hoạt động</th><th>Lý do / nội dung</th><th>Tình trạng sau xử lý</th><th>Ghi chú</th></tr></thead><tbody>
    ${state.devices.map(d=>`<tr data-device="${d.id}"><td><input class="b-check" type="checkbox"></td><td class="device-cell"><strong>${esc(d.code)}</strong><span>${esc(d.name)} · ${esc(d.location)}</span></td><td><select class="b-type">${typeOptions("decontamination")}</select></td><td><textarea class="b-reason" placeholder="Nội dung thực hiện..."></textarea></td><td><select class="b-condition">${conditionOptions("normal")}</select></td><td><input class="b-note" placeholder="Không bắt buộc"></td></tr>`).join("")}
-  </tbody></table></div>`,`Lưu các dòng đã chọn`,saveBatch,true)
+  </tbody></table></div>`,`Lưu các dòng đã chọn`,saveBatch,true);
+ QMSPreset.attach("batch",{host:".quick-head .push",collect:collectDevicePreset,apply:applyDevicePreset});
 }
 function fillBatchCommon(){
  const type=document.getElementById("batchType").value,condition=document.getElementById("batchCondition").value;
@@ -373,7 +375,29 @@ function exportCsv(){
  const blob=new Blob(["\ufeff"+rows.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="theo-doi-khu-nhiem-trang-thiet-bi.csv";a.click();URL.revokeObjectURL(a.href);toast(`Đã xuất ${rows.length-1} bản ghi`)
 }
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){try{state=JSON.parse(e.newValue);render();toast("Dữ liệu vừa được cập nhật từ tab khác")}catch(_){}}});
-(async()=>{try{state=await load();init()}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_DEV.preset,csrf:window.QMS_DEV.csrf});init()}catch(e){document.getElementById('toastWrap')&&toast('Lỗi tải dữ liệu: '+e.message,'error');console.error(e)}})();
+
+/* ==== mẫu mặc định cho form nhập nhiều thiết bị ==== */
+function collectDevicePreset(){
+ return {type:document.getElementById("batchType").value,
+  condition:document.getElementById("batchCondition").value,
+  rows:[...document.querySelectorAll(".batch tbody tr")].map(tr=>({
+    device:tr.dataset.device, on:tr.querySelector(".b-check").checked,
+    type:tr.querySelector(".b-type").value, reason:tr.querySelector(".b-reason").value,
+    condition:tr.querySelector(".b-condition").value, note:tr.querySelector(".b-note").value}))};
+}
+function applyDevicePreset(p){
+ if(p.type)document.getElementById("batchType").value=p.type;
+ if(p.condition)document.getElementById("batchCondition").value=p.condition;
+ (p.rows||[]).forEach(r=>{
+   const tr=document.querySelector('.batch tbody tr[data-device="'+r.device+'"]');if(!tr)return;
+   tr.querySelector(".b-check").checked=!!r.on;
+   if(r.type)tr.querySelector(".b-type").value=r.type;
+   if(r.condition)tr.querySelector(".b-condition").value=r.condition;
+   tr.querySelector(".b-reason").value=r.reason||"";
+   tr.querySelector(".b-note").value=r.note||"";
+ });
+}
 </script>
 </body>
 </html>
