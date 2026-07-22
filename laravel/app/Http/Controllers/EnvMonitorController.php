@@ -108,14 +108,21 @@ class EnvMonitorController extends Controller
     /** Lưu toàn bộ trạng thái từ giao diện xuống CSDL. */
     public function save(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'metadata'        => 'array',
-            'settings'        => 'array',
-            'users'           => 'array',
-            'records'         => 'array',
-            'records.*.id'    => 'required|string|max:60',
-            'records.*.date'  => 'nullable|date',
+        $request->validate([
+            'metadata'       => 'array',
+            'settings'       => 'array',
+            'users'          => 'array',
+            'records'        => 'array',
+            'records.*.id'   => 'required|string|max:60',
+            'records.*.date' => 'nullable|date',
         ]);
+        // LƯU Ý: validate() chỉ trả field đã khai báo -> phải đọc payload thô để không mất cột.
+        $data = [
+            'metadata' => $request->input('metadata', []),
+            'settings' => $request->input('settings', []),
+            'users'    => $request->input('users', []),
+            'records'  => $request->input('records', []),
+        ];
 
         $s  = $this->settings();
         $md = $data['metadata'] ?? [];
