@@ -97,7 +97,7 @@
     };
 
     sel.addEventListener('change', paintBtn);
-    S._paints.push(paintBtn);
+    S._paints.push({ sel: sel, paint: paintBtn });
     // code cũ có thể thay đổi options bằng innerHTML -> vẽ lại nhãn
     new MutationObserver(paintBtn).observe(sel, { childList: true, subtree: true });
     paintBtn();
@@ -105,7 +105,10 @@
 
   S._paints = [];
   /** Vẽ lại nhãn khi code khác gán select.value bằng tay. */
-  S.refresh = () => S._paints.forEach(f => f());
+  S.refresh = function () {
+    S._paints = S._paints.filter(x => document.contains(x.sel));
+    S._paints.forEach(x => x.paint());
+  };
 
   S.enhance = root => (root || document).querySelectorAll('select').forEach(build);
 
