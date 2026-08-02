@@ -112,10 +112,11 @@ tbody tr.off td{background:#fafbfb;color:#89979e}
 }
 </style>
 <script>window.QMS_USE={state:"{{ route('usage.state') }}",save:"{{ route('usage.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'usage') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script src="{{ asset('js/qms-select.js') }}?v=3"></script>
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
+<script src="{{ asset('js/qms-date.js') }}?v=1"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -606,7 +607,7 @@ function init(){
   document.getElementById("checkAll").onchange=e=>{filtered().filter(r=>r.status!=="off").forEach(r=>e.target.checked?selected.add(r.id):selected.delete(r.id));render()};
   render()
 }
-(async()=>{try{state=await load();init();QMSSelect.auto();await QMSPreset.init({url:window.QMS_USE.preset,csrf:window.QMS_USE.csrf});QMSFlow.init({url:window.QMS_USE.flow,module:'usage',openers:{month:()=>openQuickMonthForm(),confirm:()=>selectPending()||quickConfirm()}})}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+(async()=>{try{state=await load();init();QMSSelect.auto();QMSDate.auto();await QMSPreset.init({url:window.QMS_USE.preset,csrf:window.QMS_USE.csrf});QMSFlow.init({url:window.QMS_USE.flow,module:'usage',openers:{month:()=>openQuickMonthForm(),confirm:()=>selectPending()||quickConfirm()}})}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 /* ==== bản mẫu mặc định cho popup tạo sổ tháng ==== */
 function collect_month(){
  const f=document.getElementById("quickMonthForm"),g=n=>f.elements[n]?f.elements[n].value:"";

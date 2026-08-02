@@ -29,11 +29,12 @@
 @media(max-width:650px){.shell{padding:14px}.stats{grid-template-columns:1fr}.search,.search input,.inline{width:100%}.inline input,.inline select{width:100%}.form-grid,.detail-grid,.catalog-grid,.session-head{grid-template-columns:1fr}.field.full,.detail.full{grid-column:auto}.notice{flex-direction:column}.notice .push{margin-left:0}}
 </style>
 <script>window.QMS_WASTE={state:"{{ route('waste.state') }}",save:"{{ route('waste.save') }}",flow:"{{ route('flow.state') }}",preset:"{{ route('preset.index', 'waste') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script src="{{ asset('js/qms-preset.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-flow.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-dup.js') }}?v=1"></script>
 <script src="{{ asset('js/qms-select.js') }}?v=3"></script>
+<script src="{{ asset('js/qms-date.js') }}?v=1"></script>
 </head>
 <body class="{{ request()->boolean('embed') ? 'qs-embed' : '' }}">
 @unless(request()->boolean('embed'))
@@ -229,7 +230,7 @@ function closeModal(){document.getElementById("modalBg").classList.remove("show"
 document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg")closeModal()});
 function csv(v){return `"${String(v??"").replace(/"/g,'""')}"`}
 function exportCsv(){const data=[["Ngày","Giờ","Loại rác","Xử lý","Vị trí","Người thực hiện","Ghi chú"],...filtered().map(r=>[r.date,r.time,r.wasteType,r.treatment,r.location,user(r.performerId)?.name,r.note])],blob=new Blob(["\ufeff"+data.map(r=>r.map(csv).join(",")).join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="nhat-ky-xu-ly-rac-thai.csv";a.click();URL.revokeObjectURL(a.href)}
-(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_WASTE.preset,csrf:window.QMS_WASTE.csrf});init();QMSSelect.auto();QMSFlow.init({url:window.QMS_WASTE.flow,module:'waste',openers:{batch:()=>openBatchEntry(),single:()=>openSingleForm()}})}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+(async()=>{try{state=await load();await QMSPreset.init({url:window.QMS_WASTE.preset,csrf:window.QMS_WASTE.csrf});init();QMSSelect.auto();QMSDate.auto();QMSFlow.init({url:window.QMS_WASTE.flow,module:'waste',openers:{batch:()=>openBatchEntry(),single:()=>openSingleForm()}})}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 
 /* ==== mẫu mặc định cho form nhập nhiều dòng rác thải ==== */
 function collectWastePreset(){

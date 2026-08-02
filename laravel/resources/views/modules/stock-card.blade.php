@@ -100,8 +100,9 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 }
 </style>
 <script>window.QMS_STOCK={state:"{{ route('stock.state') }}",save:"{{ route('stock.save') }}",csrf:"{{ csrf_token() }}"};</script>
-<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=8">
+<link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script src="{{ asset('js/qms-select.js') }}?v=3"></script>
+<script src="{{ asset('js/qms-date.js') }}?v=1"></script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -305,7 +306,7 @@ function resetDemo(){load()}
 function show(id){$(id).classList.add('show')}function closeModal(id){$(id).classList.remove('show')}
 function toast(msg){const e=document.createElement('div');e.className='toast';e.textContent=msg;$('toastWrap').appendChild(e);setTimeout(()=>e.remove(),2600)}
 function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));(async()=>{try{await load();QMSSelect.auto()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));(async()=>{try{await load();QMSSelect.auto();QMSDate.auto()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 </script>
 </body>
 </html>
