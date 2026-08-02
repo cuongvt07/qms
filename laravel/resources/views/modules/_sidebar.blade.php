@@ -31,7 +31,9 @@
         </a>
 
         <div class="qs-group">Kho vật tư</div>
-        <a class="qs-item{{ $nav('stock.page') }}" href="{{ route('stock.page') }}"><span class="qs-ic">🏷</span> Quản lý thẻ kho</a>
+        <a class="qs-item{{ $nav('stock.dash') }}" href="{{ route('stock.dash') }}"><span class="qs-ic">📊</span> Tổng quan kho</a>
+        <a class="qs-item{{ $nav('item.page') }}" href="{{ route('item.page') }}"><span class="qs-ic">📦</span> Quản lý mã hàng</a>
+        <a class="qs-item{{ $nav('stock.page') }}" href="{{ route('stock.page') }}"><span class="qs-ic">🏷</span> Thẻ kho</a>
 
         <div class="qs-group">Hồ sơ &amp; tài liệu</div>
         <a class="qs-item" href="{{ route('dashboard') }}"><span class="qs-ic">📋</span> Biểu mẫu &amp; nhắc việc</a>

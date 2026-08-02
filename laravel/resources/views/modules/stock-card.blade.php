@@ -109,7 +109,7 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 <div class="shell"><main class="app">
   <section class="topbar">
     <div><div class="breadcrumb">Quản lý kho › Thẻ kho</div><h1>Quản lý thẻ kho</h1><p class="subtitle">Mỗi sản phẩm có một thẻ kho duy nhất. Các lần nhập, xuất, hủy và kiểm kê được ghi nối tiếp theo thời gian.</p></div>
-    <div class="actions"><button class="btn" onclick="load()">↻ Tải lại</button><button class="btn primary" onclick="openProductForm()">＋ Thêm sản phẩm</button></div>
+    <div class="actions"><a class="btn" href="{{ route('stock.dash') }}">📊 Tổng quan kho</a><a class="btn" href="{{ route('item.page') }}">📦 Quản lý mã hàng</a><button class="btn" onclick="load()">↻ Tải lại</button><button class="btn primary" onclick="openProductForm()">＋ Thêm sản phẩm</button></div>
   </section>
 
   <section class="stats" id="stats"></section>
@@ -306,7 +306,7 @@ function resetDemo(){load()}
 function show(id){$(id).classList.add('show')}function closeModal(id){$(id).classList.remove('show')}
 function toast(msg){const e=document.createElement('div');e.className='toast';e.textContent=msg;$('toastWrap').appendChild(e);setTimeout(()=>e.remove(),2600)}
 function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));(async()=>{try{await load();QMSSelect.auto();QMSDate.auto()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
+$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));(async()=>{try{await load();QMSSelect.auto();const productParam=new URLSearchParams(location.search).get('product');if(productParam&&state.products.some(x=>x.id===productParam))setTimeout(()=>openCard(productParam),120);QMSDate.auto()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 </script>
 </body>
 </html>

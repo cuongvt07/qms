@@ -39,6 +39,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/qms/su-dung-thiet-bi', [\App\Http\Controllers\DeviceUsageController::class, 'page'])->name('usage.page');
 
+    Route::get('/qms/kho', [\App\Http\Controllers\StockItemController::class, 'dashboardPage'])->name('stock.dash');
+    Route::get('/qms/kho/so-lieu', [\App\Http\Controllers\StockItemController::class, 'dashboard'])->name('stock.dash.data');
+    Route::get('/qms/ma-hang', [\App\Http\Controllers\StockItemController::class, 'page'])->name('item.page');
+    Route::get('/qms/ma-hang/du-lieu', [\App\Http\Controllers\StockItemController::class, 'state'])->name('item.state');
+    Route::post('/qms/ma-hang/du-lieu', [\App\Http\Controllers\StockItemController::class, 'save'])->name('item.save');
     Route::get('/qms/the-kho', [\App\Http\Controllers\StockCardController::class, 'page'])->name('stock.page');
     Route::get('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'state'])->name('stock.state');
     Route::post('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'save'])->name('stock.save');
