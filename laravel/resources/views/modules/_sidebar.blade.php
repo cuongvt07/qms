@@ -30,6 +30,9 @@
             <span class="qs-ic">🗑</span> Nhật ký xử lý rác thải
         </a>
 
+        <div class="qs-group">Kho vật tư</div>
+        <a class="qs-item{{ $nav('stock.page') }}" href="{{ route('stock.page') }}"><span class="qs-ic">🏷</span> Quản lý thẻ kho</a>
+
         <div class="qs-group">Hồ sơ &amp; tài liệu</div>
         <a class="qs-item" href="{{ route('dashboard') }}"><span class="qs-ic">📋</span> Biểu mẫu &amp; nhắc việc</a>
         <a class="qs-item" href="{{ route('admin.drive') }}"><span class="qs-ic">🗂</span> Ổ tài liệu</a>

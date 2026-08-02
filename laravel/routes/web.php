@@ -38,6 +38,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/qms/cau-hinh/du-lieu', [\App\Http\Controllers\QmsConfigController::class, 'save'])->name('config.save');
 
     Route::get('/qms/su-dung-thiet-bi', [\App\Http\Controllers\DeviceUsageController::class, 'page'])->name('usage.page');
+
+    Route::get('/qms/the-kho', [\App\Http\Controllers\StockCardController::class, 'page'])->name('stock.page');
+    Route::get('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'state'])->name('stock.state');
+    Route::post('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'save'])->name('stock.save');
     Route::get('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'state'])->name('usage.state');
     Route::post('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'save'])->name('usage.save');
 
