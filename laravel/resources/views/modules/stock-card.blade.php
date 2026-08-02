@@ -62,7 +62,41 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 @media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.topbar{flex-direction:column}.actions{justify-content:flex-start}.table-wrap{max-height:none}.card-head{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.shell{padding:13px}.stats{grid-template-columns:1fr}.search,.search input,.input,.input input,.input select{width:100%}.meta{margin-left:0}.form-grid,.card-head{grid-template-columns:1fr}.field.full{grid-column:auto}}
 @media print{
-  body{background:#fff}.shell,.topbar,.stats,.panel{display:none!important}.modal-bg{position:static!important;background:#fff!important;display:block!important;padding:0!important}.modal{box-shadow:none!important;width:100%!important;max-height:none!important;border-radius:0!important}.modal-head .close,.toolbar,.modal-foot{display:none!important}.modal-head{justify-content:center;border:0;padding-bottom:8px}.modal-head h2{font-size:18px}.modal-body{padding:0}.stock-table-wrap{border-color:#000}.stock-table th,.stock-table td{border-color:#000;font-family:"Times New Roman",serif;font-size:9px}.info{border:0;background:#fff;padding:4px}.card-head{grid-template-columns:1fr 1fr 1fr 1fr}.notice{display:none}
+  .qs-side,.qs-burger,.qs-mask{display:none!important}
+  body{background:#fff;padding-left:0!important}.shell,.topbar,.stats,.panel{display:none!important}.modal-bg{position:static!important;background:#fff!important;display:block!important;padding:0!important}.modal{box-shadow:none!important;width:100%!important;max-height:none!important;border-radius:0!important}.modal-head,.toolbar,.modal-foot,.notice{display:none!important}.modal-head{justify-content:center;border:0;padding-bottom:8px}.modal-head h2{font-size:18px}.modal-body{padding:0}.stock-table-wrap{border-color:#000}.stock-table th,.stock-table td{border-color:#000;font-family:"Times New Roman",serif;font-size:9px}.info{border:0;background:#fff;padding:4px}.card-head{grid-template-columns:1fr 1fr 1fr 1fr}.notice{display:none}
+}
+
+/* ===== Thẻ kho: phiếu in + nhập liệu trực tiếp ===== */
+.qc-sheet{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:12px;background:#fff}
+.qc-sheet h3{text-align:center;margin:0 0 3px;font-size:15px;letter-spacing:.04em}
+.qc-doc{text-align:center;font-size:9px;color:var(--muted);margin-bottom:12px}
+.qc-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 26px}
+.qc-line{display:flex;gap:8px;font-size:10.5px;align-items:baseline}
+.qc-line label{min-width:132px;text-align:right;color:#475569;flex:none}
+.qc-line b{font-weight:800}
+.qc-months{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.qc-y{display:inline-flex;align-items:center;gap:4px;margin-right:6px}
+.qc-mbtn{height:26px;padding:0 9px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:9.5px;font-weight:800;color:var(--muted)}
+.qc-mbtn.has{border-color:#9fd0c9;background:#eefaf8;color:#0b5662}
+.qc-mbtn.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.qc-mhead td{background:#eef3f7!important;font-weight:900;text-align:left!important;font-size:9px;letter-spacing:.05em;cursor:pointer}
+.qc-mhead .qc-caret{display:inline-block;width:12px}
+.qc-mhead .qc-sum{float:right;font-weight:700;color:#49636c}
+.stock-table input,.stock-table select{width:100%;min-width:64px;border:1px solid transparent;border-radius:6px;
+  padding:4px 5px;font-size:9px;background:transparent;text-align:center;color:var(--text)}
+.stock-table input:hover,.stock-table select:hover{border-color:var(--line)}
+.stock-table input:focus,.stock-table select:focus{border-color:var(--primary);background:#fff;outline:2px solid #d6ecef}
+.stock-table td.left input{text-align:left}
+.stock-table input[type=date]{min-width:104px}
+.stock-table .qc-del{width:22px;height:22px;border:1px solid #f1c7c3;background:#fff6f5;color:var(--red);border-radius:6px;font-size:10px;line-height:1}
+.qc-newrow td{background:#fbfdff}
+.qc-addbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.qc-hint{font-size:8.7px;color:var(--muted)}
+@media print{
+  .qc-months,.qc-addbar,.qc-del,.qc-newrow{display:none!important}
+  .stock-table input,.stock-table select{border:0!important;background:transparent!important;-webkit-appearance:none;appearance:none}
+  .qc-sheet{border:0;padding:0}
+  .qc-mhead td{background:#fff!important;border-top:1px solid #000}
 }
 </style>
 <script>window.QMS_STOCK={state:"{{ route('stock.state') }}",save:"{{ route('stock.save') }}",csrf:"{{ csrf_token() }}"};</script>
@@ -99,10 +133,11 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 </form></div><div class="modal-foot"><button class="btn" onclick="closeModal('productModal')">Hủy</button><button class="btn primary" onclick="saveProduct()">Lưu sản phẩm</button></div></div></div>
 
 <div class="modal-bg" id="cardModal"><div class="modal wide"><div class="modal-head"><div><h2>THẺ KHO</h2><p>Mã số tài liệu: BM.01/QTQL.26 · Phiên bản 2.25</p></div><button class="close" onclick="closeModal('cardModal')">×</button></div><div class="modal-body">
-<div class="notice">Tồn kho được tính tự động: <b>Tồn mới = Tồn trước + Nhập - Xuất - Hủy</b>. Khi xuất kho, hệ thống ưu tiên gợi ý lô có hạn sử dụng gần nhất.</div>
-<div class="card-head" id="cardInfo"></div>
-<div class="toolbar"><button class="btn green" onclick="openTransaction('import')">＋ Nhập kho</button><button class="btn primary" onclick="openTransaction('export')">− Xuất kho</button><button class="btn red" onclick="openTransaction('destroy')">Hủy / quá hạn</button><button class="btn" onclick="openTransaction('adjust')">Kiểm kê</button><span class="push"></span><button class="btn" onclick="window.print()">In thẻ kho</button></div>
-<div class="stock-table-wrap"><table class="stock-table"><thead><tr><th rowspan="2">Ngày, tháng</th><th colspan="3">Nhập</th><th colspan="4">Xuất</th><th rowspan="2">Hàng quá hạn / hủy (c)</th><th rowspan="2">Tồn (d)</th><th rowspan="2">Đếm kho thực tế</th><th rowspan="2">Người giao</th><th rowspan="2">Người nhận</th><th rowspan="2">Ghi chú</th></tr><tr><th>Số lượng nhập (a)</th><th>Số lô</th><th>Hạn sử dụng</th><th>Số lượng (b)</th><th>Nơi nhận</th><th>Số lô</th><th>Hạn sử dụng</th></tr></thead><tbody id="cardBody"></tbody></table></div>
+<div class="notice">Điền trực tiếp vào ô trên bảng — mỗi dòng lưu ngay khi rời ô. <b>Tồn = Tồn trước + Nhập − Xuất − Hủy</b>.</div>
+<div class="qc-sheet" id="cardSheet"></div>
+<div class="toolbar"><span class="qc-hint">Chọn tháng để mở rộng / rút gọn. Dòng cuối mỗi tháng là dòng trống để thêm phát sinh mới.</span><span class="push"></span><button class="btn" onclick="expandAllMonths(true)">Mở tất cả</button><button class="btn" onclick="expandAllMonths(false)">Rút gọn tất cả</button><button class="btn" onclick="window.print()">In thẻ kho</button></div>
+<div class="qc-months" id="cardMonths"></div>
+<div class="stock-table-wrap"><table class="stock-table"><thead><tr><th rowspan="2">Ngày, tháng</th><th colspan="3">Nhập</th><th colspan="4">Xuất</th><th rowspan="2">Hàng quá hạn / hủy (c)</th><th rowspan="2">Tồn (d)</th><th rowspan="2">Đếm kho thực tế</th><th rowspan="2">Người giao</th><th rowspan="2">Người nhận</th><th rowspan="2">Ghi chú</th><th rowspan="2"></th></tr><tr><th>Số lượng nhập (a)</th><th>Số lô</th><th>Hạn sử dụng</th><th>Số lượng (b)</th><th>Nơi nhận</th><th>Số lô</th><th>Hạn sử dụng</th></tr></thead><tbody id="cardBody"></tbody></table></div>
 </div><div class="modal-foot"><button class="btn" onclick="closeModal('cardModal')">Đóng</button></div></div></div>
 
 <div class="modal-bg" id="txModal"><div class="modal"><div class="modal-head"><div><h2 id="txTitle">Nhập kho</h2><p id="txSub"></p></div><button class="close" onclick="closeModal('txModal')">×</button></div><div class="modal-body"><form id="txForm" class="form-grid">
@@ -117,6 +152,7 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 <script>
 const KEY='stock_card_template_v1';
 let state={products:[],transactions:[]}, currentProductId=null, currentType='import';
+let cardYear=new Date().getFullYear(), openMonths=new Set([new Date().getMonth()+1]);
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function nextCardNo(){let m=0;state.products.forEach(p=>{const g=/TK-(\d+)/.exec(p.cardNo||'');if(g)m=Math.max(m,Number(g[1]))});return 'TK-'+String(m+1).padStart(5,'0')}
@@ -137,13 +173,131 @@ function renderStats(){const vals=state.products.map(p=>status(p)[0]),total=stat
 function openProductForm(id=''){const p=state.products.find(x=>x.id===id);$('productTitle').textContent=p?'Cập nhật sản phẩm':'Thêm sản phẩm';$('pId').value=p?.id||'';$('pCode').value=p?.code||'';$('pName').value=p?.name||'';$('pUnit').value=p?.unit||'';$('pPacking').value=p?.packing||'';$('pSupplier').value=p?.supplier||'';$('pMin').value=p?.min||0;$('pMax').value=p?.max||0;show('productModal')}
 function saveProduct(){const code=$('pCode').value.trim();if(!code||!$('pName').value.trim()||!$('pUnit').value.trim())return toast('Vui lòng nhập đủ mã, tên và đơn vị tính');const id=$('pId').value||uid();const existing=state.products.find(x=>x.id===id);if(!existing&&state.products.some(x=>x.code.toLowerCase()===code.toLowerCase()))return toast('Mã hàng "'+code+'" đã có thẻ kho');const cardNo=existing?.cardNo||nextCardNo();const obj={id,cardNo,code,name:$('pName').value.trim(),unit:$('pUnit').value.trim(),packing:$('pPacking').value.trim(),supplier:$('pSupplier').value.trim(),min:Number($('pMin').value||0),max:Number($('pMax').value||0)};const i=state.products.findIndex(x=>x.id===id);i>=0?state.products[i]=obj:state.products.push(obj);save();closeModal('productModal');render();toast(existing?'Đã cập nhật thẻ kho':'Đã tạo mã hàng & tự sinh thẻ kho '+cardNo)}
 function deleteProduct(id){if(!confirm('Xóa sản phẩm và toàn bộ phát sinh của thẻ kho này?'))return;state.products=state.products.filter(x=>x.id!==id);state.transactions=state.transactions.filter(x=>x.productId!==id);save();render();toast('Đã xóa thẻ kho')}
-function openCard(id){currentProductId=id;const p=state.products.find(x=>x.id===id),b=balance(id),st=status(p);$('cardInfo').innerHTML=`<div class="info"><label>Tên hàng hóa</label><strong>${esc(p.name)}</strong><div class="sub">Mã: ${esc(p.code)} · Thẻ kho: <b>${esc(p.cardNo||"—")}</b></div></div><div class="info"><label>Đơn vị / Quy cách</label><strong>${esc(p.unit)}</strong><div class="sub">${esc(p.packing||'—')}</div></div><div class="info"><label>Nhà cung cấp</label><strong>${esc(p.supplier||'—')}</strong></div><div class="info"><label>Tồn hiện tại</label><strong>${fmt(b)} ${esc(p.unit)}</strong><div class="sub"><span class="badge ${st[0]}">${st[1]}</span> · Min ${fmt(p.min)} · Max ${fmt(p.max)}</div></div>`;renderCard();show('cardModal')}
-function renderCard(){let bal=0;const rows=txSorted(currentProductId).map(x=>{if(x.type==='import')bal+=Number(x.qty);if(x.type==='export'||x.type==='destroy')bal-=Number(x.qty);if(x.type==='adjust')bal=Number(x.actual);return `<tr class="${x.type}"><td>${fmtDate(x.date)}</td><td>${x.type==='import'?fmt(x.qty):''}</td><td>${x.type==='import'?esc(x.batch||''):''}</td><td>${x.type==='import'?fmtDate(x.expiry):''}</td><td>${x.type==='export'?fmt(x.qty):''}</td><td>${x.type==='export'?esc(x.destination||''):''}</td><td>${x.type==='export'?esc(x.batch||''):''}</td><td>${x.type==='export'?fmtDate(x.expiry):''}</td><td>${x.type==='destroy'?fmt(x.qty):''}</td><td class="balance">${fmt(bal)}</td><td>${x.type==='adjust'?fmt(x.actual):''}</td><td>${esc(x.deliverer||'')}</td><td>${esc(x.receiver||'')}</td><td class="left">${esc(x.note||'')}</td></tr>`}).join('');$('cardBody').innerHTML=rows||`<tr><td colspan="14" class="empty">Chưa có phát sinh nhập kho.</td></tr>`}
+function openCard(id){
+  currentProductId=id;
+  const p=state.products.find(x=>x.id===id);
+  const years=[...new Set(txSorted(id).map(x=>x.date.slice(0,4)))];
+  if(years.length&&!years.includes(String(cardYear)))cardYear=Number(years[years.length-1]);
+  renderSheet();renderMonths();renderCard();show('cardModal')
+}
+/* Phần đầu thẻ kho — giống hệt phiếu in giấy */
+function renderSheet(){
+  const p=state.products.find(x=>x.id===currentProductId),b=balance(currentProductId),st=status(p);
+  $('cardSheet').innerHTML=`<h3>THẺ KHO</h3>
+   <div class="qc-doc">Mã số tài liệu: BM.01/QTQL.26 · Phiên bản 2.25 · Số thẻ kho: <b>${esc(p.cardNo||'—')}</b> · Năm ${cardYear}</div>
+   <div class="qc-info">
+     <div class="qc-line"><label>Tên hàng hóa:</label><b>${esc(p.name)}</b></div>
+     <div class="qc-line"><label>Mã hàng hóa:</label><b>${esc(p.code)}</b></div>
+     <div class="qc-line"><label>Đơn vị tính:</label><span>${esc(p.unit||'—')}</span></div>
+     <div class="qc-line"><label>Quy cách đóng gói:</label><span>${esc(p.packing||'—')}</span></div>
+     <div class="qc-line"><label>Công ty cung cấp:</label><span>${esc(p.supplier||'—')}</span></div>
+     <div class="qc-line"><label>Tồn hiện tại:</label><b>${fmt(b)} ${esc(p.unit||'')}</b>&nbsp;<span class="badge ${st[0]}">${st[1]}</span></div>
+     <div class="qc-line"><label>Lượng lưu kho tối thiểu:</label><span>${fmt(p.min)}</span></div>
+     <div class="qc-line"><label>Lượng lưu kho tối đa:</label><span>${fmt(p.max)}</span></div>
+   </div>`;
+}
+/* Dải 12 tháng — bấm để mở rộng / rút gọn */
+function renderMonths(){
+  const rows=txSorted(currentProductId);
+  const years=[...new Set(rows.map(x=>x.date.slice(0,4)).concat(String(cardYear)))].sort();
+  const cnt={};rows.filter(x=>x.date.startsWith(cardYear+'-')).forEach(x=>{const m=Number(x.date.slice(5,7));cnt[m]=(cnt[m]||0)+1});
+  $('cardMonths').innerHTML=
+    `<span class="qc-y"><button class="qc-mbtn" onclick="setCardYear(${cardYear-1})">‹</button>`+
+    `<b style="font-size:11px">Năm ${cardYear}</b>`+
+    `<button class="qc-mbtn" onclick="setCardYear(${cardYear+1})">›</button></span>`+
+    Array.from({length:12},(_,i)=>{const m=i+1,n=cnt[m]||0;
+      return `<button class="qc-mbtn ${openMonths.has(m)?'on':(n?'has':'')}" onclick="toggleMonth(${m})">Th${m}${n?` · ${n}`:''}</button>`}).join('')+
+    (years.length>1?`<span class="qc-hint">Có dữ liệu: ${years.join(', ')}</span>`:'');
+}
+function setCardYear(y){cardYear=y;renderSheet();renderMonths();renderCard()}
+function toggleMonth(m){openMonths.has(m)?openMonths.delete(m):openMonths.add(m);renderMonths();renderCard()}
+function expandAllMonths(on){openMonths=on?new Set([1,2,3,4,5,6,7,8,9,10,11,12]):new Set();renderMonths();renderCard()}
+function renderCard(){
+  const p=state.products.find(x=>x.id===currentProductId);
+  const all=txSorted(currentProductId);
+  /* tồn lũy kế tính trên toàn bộ lịch sử để số tồn luôn đúng */
+  let bal=0;const balOf={};
+  all.forEach(x=>{if(x.type==='import')bal+=Number(x.qty);
+    if(x.type==='export'||x.type==='destroy')bal-=Number(x.qty);
+    if(x.type==='adjust')bal=Number(x.actual);balOf[x.id]=bal});
+  const COLS=15;
+  let html='';
+  for(let m=1;m<=12;m++){
+    const mk=`${cardYear}-${String(m).padStart(2,'0')}`;
+    const rows=all.filter(x=>x.date.startsWith(mk));
+    const open=openMonths.has(m);
+    const nhap=rows.filter(x=>x.type==='import').reduce((s,x)=>s+Number(x.qty),0);
+    const xuat=rows.filter(x=>x.type==='export').reduce((s,x)=>s+Number(x.qty),0);
+    html+=`<tr class="qc-mhead" onclick="toggleMonth(${m})"><td colspan="${COLS}">
+      <span class="qc-caret">${open?'▾':'▸'}</span> Tháng ${String(m).padStart(2,'0')}/${cardYear}
+      <span class="qc-sum">${rows.length} dòng${rows.length?` · nhập ${fmt(nhap)} · xuất ${fmt(xuat)}`:''}</span></td></tr>`;
+    if(!open)continue;
+    rows.forEach(x=>{html+=txRow(x,balOf[x.id],p)});
+    html+=newRow(mk,p);
+  }
+  $('cardBody').innerHTML=html;
+}
+/* 1 dòng phát sinh — mọi ô đều sửa được tại chỗ */
+function txRow(x,bal,p){
+  const t=x.type,i=(f,val,type='text',extra='')=>
+    `<input data-tx="${x.id}" data-f="${f}" type="${type}" value="${esc(val??'')}" ${extra}>`;
+  return `<tr class="${t}">
+   <td>${i('date',x.date,'date')}</td>
+   <td class="import">${t==='import'?i('qty',x.qty,'number','step="0.01" min="0"'):''}</td>
+   <td class="import">${t==='import'?i('batch',x.batch):''}</td>
+   <td class="import">${t==='import'?i('expiry',x.expiry,'date'):''}</td>
+   <td class="export">${t==='export'?i('qty',x.qty,'number','step="0.01" min="0"'):''}</td>
+   <td class="export">${t==='export'?i('destination',x.destination):''}</td>
+   <td class="export">${t==='export'?i('batch',x.batch):''}</td>
+   <td class="export">${t==='export'?i('expiry',x.expiry,'date'):''}</td>
+   <td class="destroy">${t==='destroy'?i('qty',x.qty,'number','step="0.01" min="0"'):''}</td>
+   <td class="balance">${fmt(bal)}</td>
+   <td>${t==='adjust'?i('actual',x.actual,'number','step="0.01" min="0"'):''}</td>
+   <td>${i('deliverer',x.deliverer)}</td>
+   <td>${i('receiver',x.receiver)}</td>
+   <td class="left">${i('note',x.note)}</td>
+   <td><button class="qc-del" title="Xóa dòng" onclick="removeTx('${x.id}')">×</button></td>
+  </tr>`;
+}
+/* Dòng trống cuối mỗi tháng: chọn loại rồi điền là thành phát sinh mới */
+function newRow(mk,p){
+  const d=`${mk}-01`;
+  return `<tr class="qc-newrow"><td colspan="15">
+    <div class="qc-addbar">
+      <span class="qc-hint">Thêm vào tháng ${mk.slice(5)}/${mk.slice(0,4)}:</span>
+      <button class="btn sm green" onclick="addTx('import','${d}')">＋ Nhập kho</button>
+      <button class="btn sm primary" onclick="addTx('export','${d}')">− Xuất kho</button>
+      <button class="btn sm red" onclick="addTx('destroy','${d}')">Hủy / quá hạn</button>
+      <button class="btn sm" onclick="addTx('adjust','${d}')">Kiểm kê</button>
+    </div></td></tr>`;
+}
+/* Thêm dòng trống rồi điền thẳng trên bảng */
+function addTx(type,date){
+  state.transactions.push({id:uid(),productId:currentProductId,date,type,qty:0,actual:type==='adjust'?0:null,
+    batch:'',expiry:'',destination:'',deliverer:'',receiver:'',note:''});
+  const m=Number(date.slice(5,7));openMonths.add(m);
+  save();renderSheet();renderMonths();renderCard();render();
+  setTimeout(()=>{const el=[...document.querySelectorAll('#cardBody input')].pop();el&&el.focus()},30);
+}
+function removeTx(id){
+  if(!confirm('Xóa dòng phát sinh này?'))return;
+  state.transactions=state.transactions.filter(x=>x.id!==id);
+  save();renderSheet();renderMonths();renderCard();render();toast('Đã xóa dòng')
+}
+/* Sửa tại chỗ: rời ô là lưu */
+function onCellChange(el){
+  const tx=state.transactions.find(x=>x.id===el.dataset.tx);if(!tx)return;
+  const f=el.dataset.f;
+  if(f==='qty'||f==='actual'){tx[f]=Number(el.value||0)}else{tx[f]=el.value}
+  if(f==='date'){const m=Number(el.value.slice(5,7));if(m)openMonths.add(m);cardYear=Number(el.value.slice(0,4))||cardYear}
+  save();renderSheet();renderMonths();renderCard();render();
+}
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.tx)onCellChange(e.target)});
 function batchBalances(pid){const map={};txSorted(pid).forEach(x=>{if(!x.batch)return;map[x.batch]??={batch:x.batch,expiry:x.expiry||'',qty:0};if(x.type==='import')map[x.batch].qty+=Number(x.qty);if(x.type==='export'||x.type==='destroy')map[x.batch].qty-=Number(x.qty)});return Object.values(map).filter(x=>x.qty>0).sort((a,b)=>(a.expiry||'9999').localeCompare(b.expiry||'9999'))}
 function openTransaction(type){currentType=type;const p=state.products.find(x=>x.id===currentProductId);$('txTitle').textContent={import:'Nhập kho',export:'Xuất kho',destroy:'Hủy / quá hạn',adjust:'Kiểm kê kho'}[type];$('txSub').textContent=`${p.code} - ${p.name}`;$('tDate').value=today();$('tQty').value='';$('tBatch').value='';$('tExpiry').value='';$('tDestination').value='';$('tDeliverer').value='';$('tReceiver').value='';$('tActual').value='';$('tNote').value='';document.querySelectorAll('.batch-field').forEach(e=>e.style.display=type==='import'?'grid':'none');document.querySelectorAll('.export-field').forEach(e=>e.style.display=type==='export'||type==='destroy'?'grid':'none');document.querySelectorAll('.adjust-field').forEach(e=>e.style.display=type==='adjust'?'grid':'none');$('tQty').closest('.field').style.display=type==='adjust'?'none':'grid';const batches=batchBalances(currentProductId);$('tBatchSelect').innerHTML=batches.length?batches.map((b,i)=>`<option value="${esc(b.batch)}" data-expiry="${esc(b.expiry)}" data-qty="${b.qty}">${esc(b.batch)} · còn ${fmt(b.qty)} · HSD ${fmtDate(b.expiry)||'—'}${i===0?' · Gợi ý FEFO':''}</option>`).join(''):'<option value="">Không còn lô khả dụng</option>';$('batchHelp').textContent=batches.length?'Đã sắp theo hạn sử dụng gần nhất.':'';show('txModal')}
 function saveTransaction(){const p=state.products.find(x=>x.id===currentProductId);if(!$('tDate').value)return toast('Vui lòng chọn ngày');if(currentType==='adjust'){if($('tActual').value==='')return toast('Nhập số lượng kiểm kê thực tế');state.transactions.push({id:uid(),productId:p.id,date:$('tDate').value,type:'adjust',actual:Number($('tActual').value),qty:0,deliverer:$('tDeliverer').value.trim(),receiver:$('tReceiver').value.trim(),note:$('tNote').value.trim()})}else{const qty=Number($('tQty').value);if(!(qty>0))return toast('Số lượng phải lớn hơn 0');let batch='',expiry='';if(currentType==='import'){batch=$('tBatch').value.trim();expiry=$('tExpiry').value}else{const opt=$('tBatchSelect').selectedOptions[0];batch=$('tBatchSelect').value;expiry=opt?.dataset.expiry||'';const available=Number(opt?.dataset.qty||0);if(!batch)return toast('Không có lô khả dụng');if(qty>available)return toast(`Lô ${batch} chỉ còn ${fmt(available)} ${p.unit}`);if(qty>balance(p.id))return toast('Số lượng xuất vượt tồn kho hiện tại')}
 state.transactions.push({id:uid(),productId:p.id,date:$('tDate').value,type:currentType,qty,batch,expiry,destination:$('tDestination').value.trim(),deliverer:$('tDeliverer').value.trim(),receiver:$('tReceiver').value.trim(),note:$('tNote').value.trim()})}
-save();closeModal('txModal');openCard(currentProductId);render();toast('Đã lưu phát sinh kho')}
+save();closeModal('txModal');renderSheet();renderMonths();renderCard();render();toast('Đã lưu phát sinh kho')}
 function clearFilters(){$('search').value='';$('statusFilter').value='';render()}
 function resetDemo(){load()}
 function show(id){$(id).classList.add('show')}function closeModal(id){$(id).classList.remove('show')}
