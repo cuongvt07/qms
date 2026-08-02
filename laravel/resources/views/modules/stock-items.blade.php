@@ -24,7 +24,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .panel{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .filters{padding:11px 12px;border-bottom:1px solid var(--line);background:#fbfcfd;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .filters input,.filters select{height:33px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:11px;background:#fff}
-.filters .search{width:300px}
+.filters .search{width:300px;flex:0 0 300px}
+.filters .qs2{width:190px;flex:0 0 190px}
+.filters>select{width:190px}
 .meta{margin-left:auto;font-size:10px;color:var(--muted)}
 .table-wrap{overflow:auto;max-height:calc(100vh - 300px)}
 table{width:100%;border-collapse:separate;border-spacing:0;min-width:1250px}
