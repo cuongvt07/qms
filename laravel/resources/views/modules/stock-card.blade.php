@@ -132,7 +132,7 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 <div class="field"><label>Lượng lưu kho tối thiểu</label><input id="pMin" type="number" min="0" step="0.01" value="0"></div><div class="field"><label>Lượng lưu kho tối đa</label><input id="pMax" type="number" min="0" step="0.01" value="0"></div>
 </form></div><div class="modal-foot"><button class="btn" onclick="closeModal('productModal')">Hủy</button><button class="btn primary" onclick="saveProduct()">Lưu sản phẩm</button></div></div></div>
 
-<div class="modal-bg" id="cardModal"><div class="modal wide"><div class="modal-head"><div><h2>THẺ KHO</h2><p>Mã số tài liệu: BM.01/QTQL.26 · Phiên bản 2.25</p></div><button class="close" onclick="closeModal('cardModal')">×</button></div><div class="modal-body">
+<div class="modal-bg" id="cardModal"><div class="modal wide"><div class="modal-head"><div><h2 id="cardHeadTitle">Thẻ kho</h2><p id="cardHeadSub"></p></div><button class="close" onclick="closeModal('cardModal')">×</button></div><div class="modal-body">
 <div class="notice">Điền trực tiếp vào ô trên bảng — mỗi dòng lưu ngay khi rời ô. <b>Tồn = Tồn trước + Nhập − Xuất − Hủy</b>.</div>
 <div class="qc-sheet" id="cardSheet"></div>
 <div class="toolbar"><span class="qc-hint">Chọn tháng để mở rộng / rút gọn. Dòng cuối mỗi tháng là dòng trống để thêm phát sinh mới.</span><span class="push"></span><button class="btn" onclick="expandAllMonths(true)">Mở tất cả</button><button class="btn" onclick="expandAllMonths(false)">Rút gọn tất cả</button><button class="btn" onclick="window.print()">In thẻ kho</button></div>
@@ -178,6 +178,8 @@ function openCard(id){
   const p=state.products.find(x=>x.id===id);
   const years=[...new Set(txSorted(id).map(x=>x.date.slice(0,4)))];
   if(years.length&&!years.includes(String(cardYear)))cardYear=Number(years[years.length-1]);
+  $('cardHeadTitle').textContent=p.name;
+  $('cardHeadSub').textContent=`Mã hàng: ${p.code} · Số thẻ kho: ${p.cardNo||'—'} · ĐVT: ${p.unit||'—'}`;
   renderSheet();renderMonths();renderCard();show('cardModal')
 }
 /* Phần đầu thẻ kho — giống hệt phiếu in giấy */
