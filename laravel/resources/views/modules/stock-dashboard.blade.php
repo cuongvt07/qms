@@ -82,7 +82,7 @@ tbody tr:last-child td{border-bottom:0}
     <div class="right">
       <select class="pick" id="year"></select>
       <select class="pick" id="item"></select>
-      <a class="btn" href="{{ route('item.page') }}">📦 Quản lý mã hàng</a>
+      <a class="btn" href="{{ route('entry.page') }}">🛒 Nhập / xuất nhanh</a><a class="btn" href="{{ route('item.page') }}">📦 Quản lý mã hàng</a>
       <a class="btn primary" id="openCard" href="#">🏷 Mở thẻ kho</a>
     </div>
   </div>

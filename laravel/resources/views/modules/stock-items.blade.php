@@ -82,7 +82,7 @@ tbody tr:hover td{background:#fbfdfe}
       <p>Mỗi mã hàng gắn với đúng một thẻ kho — tạo mã hàng là hệ thống tự sinh thẻ kho tương ứng.</p>
     </div>
     <div class="right">
-      <a class="btn" href="{{ route('stock.dash') }}">📊 Tổng quan kho</a>
+      <a class="btn" href="{{ route('entry.page') }}">🛒 Nhập / xuất nhanh</a><a class="btn" href="{{ route('stock.dash') }}">📊 Tổng quan kho</a>
       <button class="btn" onclick="exportCsv()">⇩ Xuất danh mục</button>
       <button class="btn primary" onclick="openItem()">＋ Thêm mã hàng</button>
     </div>

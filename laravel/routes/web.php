@@ -39,6 +39,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/qms/su-dung-thiet-bi', [\App\Http\Controllers\DeviceUsageController::class, 'page'])->name('usage.page');
 
+    Route::get('/qms/nhap-xuat', [\App\Http\Controllers\StockEntryController::class, 'page'])->name('entry.page');
+    Route::get('/qms/nhap-xuat/du-lieu', [\App\Http\Controllers\StockEntryController::class, 'state'])->name('entry.state');
+    Route::post('/qms/nhap-xuat/luu', [\App\Http\Controllers\StockEntryController::class, 'store'])->name('entry.save');
     Route::get('/qms/kho', [\App\Http\Controllers\StockItemController::class, 'dashboardPage'])->name('stock.dash');
     Route::get('/qms/kho/so-lieu', [\App\Http\Controllers\StockItemController::class, 'dashboard'])->name('stock.dash.data');
     Route::get('/qms/ma-hang', [\App\Http\Controllers\StockItemController::class, 'page'])->name('item.page');

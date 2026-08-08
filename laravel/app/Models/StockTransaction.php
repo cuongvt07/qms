@@ -9,7 +9,7 @@ class StockTransaction extends Model
 {
     protected $fillable = [
         'ext_id', 'product_ext_id', 'date', 'type', 'qty', 'actual',
-        'batch', 'expiry', 'destination', 'deliverer', 'receiver', 'note',
+        'batch', 'expiry', 'destination', 'deliverer', 'receiver', 'note', 'created_by',
     ];
     protected $casts = ['date' => 'date', 'expiry' => 'date'];
 }
