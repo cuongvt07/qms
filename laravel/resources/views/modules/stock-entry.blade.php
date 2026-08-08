@@ -45,6 +45,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
  display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
 .card:hover{border-color:#a9c6cc;box-shadow:0 4px 14px rgba(15,23,42,.07)}
 .card.on{border-color:var(--primary);box-shadow:0 0 0 2px #cfe8ec}
+.card .thumb{width:100%;height:104px;border-radius:9px;background:#eef3f7 center/cover no-repeat;
+ display:grid;place-items:center;color:#93a6b8;font-size:20px;font-weight:800;margin-bottom:2px;position:relative;overflow:hidden}
+.card .thumb .cam{position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:50%;border:0;
+ background:rgba(255,255,255,.92);font-size:11px;line-height:1;display:grid;place-items:center;box-shadow:0 2px 6px rgba(15,23,42,.2)}
 .card .code{font-size:12px;font-weight:800;letter-spacing:-.01em}
 .card .name{font-size:10.5px;color:#425466;line-height:1.35;
  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:28px}
@@ -92,6 +96,21 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .rec{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line2);font-size:10px}
 .rec .t{width:52px;font-weight:800}.rec .t.import{color:var(--green)}.rec .t.export{color:var(--primary)}.rec .t.destroy{color:var(--red)}
 .rec .n{margin-left:auto;color:var(--muted);font-size:9px}
+/* popup tạo thẻ kho nhanh */
+.mbg{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+.mbg.show{display:flex}
+.mdl{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;box-shadow:0 18px 55px rgba(15,23,42,.2)}
+.mdl-h{padding:14px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start}
+.mdl-h h2{font-size:14px;margin:0 0 3px}.mdl-h p{margin:0;font-size:9.5px;color:var(--muted)}
+.mdl-h .x{width:28px;height:28px;border:0;border-radius:8px;background:#eef2f6}
+.mdl-b{padding:15px 17px;display:grid;grid-template-columns:150px 1fr;gap:13px}
+.mdl-f{padding:12px 17px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.pick-img{border:1px dashed #b9cbd6;border-radius:11px;background:#f8fbfc center/cover no-repeat;
+ aspect-ratio:1/1;display:grid;place-items:center;text-align:center;color:#6c8595;font-size:10px;padding:8px;cursor:pointer}
+.pick-img span{display:block;font-size:22px;margin-bottom:3px}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.qgrid .f.full{grid-column:1/-1}
+@media(max-width:650px){.mdl-b{grid-template-columns:1fr}.qgrid{grid-template-columns:1fr}}
 .toast-wrap{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:130}
 .toast{background:#18333d;color:#fff;padding:10px 13px;border-radius:9px;font-size:10.5px;max-width:330px}
 .toast.err{background:#8a1f16}
@@ -104,7 +123,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 <script src="{{ asset('js/qms-select.js') }}?v=3"></script>
 <script src="{{ asset('js/qms-date.js') }}?v=1"></script>
 <script>window.QMS_ENTRY={state:"{{ route('entry.state') }}",save:"{{ route('entry.save') }}",
- card:"{{ route('stock.page') }}",csrf:"{{ csrf_token() }}"};</script>
+ card:"{{ route('stock.page') }}",quick:"{{ route('entry.quick') }}",
+ image:"{{ route('item.image.set', ['product' => '__ID__']) }}",csrf:"{{ csrf_token() }}"};</script>
 </head>
 <body>
 @include('modules._sidebar')
@@ -138,6 +158,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
           <option value="high">Vượt tối đa</option>
         </select>
         <button class="btn sm" onclick="clearAll()">Bỏ chọn hết</button>
+        <button class="btn sm primary" onclick="openQuick()">＋ Tạo thẻ kho</button>
       </div>
       <div class="chips" id="chips"></div>
       <div class="grid" id="grid"></div>
@@ -172,6 +193,33 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
     <div id="recent"></div>
   </div>
 </div>
+
+<div class="mbg" id="quickModal"><div class="mdl">
+  <div class="mdl-h"><div><h2>Tạo thẻ kho nhanh</h2>
+    <p>Nhập thông tin cơ bản — hệ thống tự cấp số thẻ kho cho mã hàng này.</p></div>
+    <button class="x" onclick="closeQuick()">×</button></div>
+  <div class="mdl-b">
+    <div>
+      <div class="pick-img" id="qImgBox" onclick="document.getElementById('qImg').click()">
+        <span>📷</span>Chọn ảnh<br>(không bắt buộc)</div>
+      <input type="file" id="qImg" accept="image/*" style="display:none" onchange="previewImg(this)">
+      <button class="btn sm" style="width:100%;margin-top:7px;justify-content:center" onclick="clearImg()">Bỏ ảnh</button>
+    </div>
+    <div class="qgrid">
+      <div class="f"><label>Mã hàng *</label><input id="qCode" placeholder="VD: 994646"></div>
+      <div class="f"><label>Đơn vị tính *</label><input id="qUnit" placeholder="Kg, Cái, Chai..."></div>
+      <div class="f full"><label>Tên hàng hóa *</label><input id="qName"></div>
+      <div class="f"><label>Nhóm hàng</label><input id="qGroup" list="groupList2"><datalist id="groupList2"></datalist></div>
+      <div class="f"><label>Quy cách</label><input id="qPacking" placeholder="1 Kg/Túi"></div>
+      <div class="f"><label>Tồn tối thiểu</label><input id="qMin" type="number" min="0" step="0.01" value="0"></div>
+      <div class="f"><label>Tồn tối đa</label><input id="qMax" type="number" min="0" step="0.01" value="0"></div>
+    </div>
+  </div>
+  <div class="mdl-f"><button class="btn" onclick="closeQuick()">Hủy</button>
+    <button class="btn primary" id="qSave" onclick="saveQuick()">Tạo thẻ kho</button></div>
+</div></div>
+
+<input type="file" id="imgPicker" accept="image/*" style="display:none">
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -219,6 +267,8 @@ function renderGrid(){
   $('grid').innerHTML=rows.length?rows.map(x=>{
     const s=ST[x.status],c=cart[x.id];
     return `<div class="card ${c?'on':''}" onclick="pick('${x.id}',event)">
+      <div class="thumb" style="${x.image?`background-image:url('${x.image}')`:''}">${x.image?'':esc(x.code.slice(0,2).toUpperCase())}
+        <button class="cam" title="Chọn ảnh cho mã hàng" onclick="event.stopPropagation();pickImage('${x.id}')">📷</button></div>
       <div class="code">${esc(x.code)}</div>
       <div class="name">${esc(x.name)}</div>
       <div class="meta">${esc(x.unit)}${x.packing?' · '+esc(x.packing):''} · <span class="badge ${s[0]}">${s[1]}</span></div>
@@ -293,6 +343,56 @@ function renderRecent(){
 }
 function render(){renderGrid();renderCart()}
 
+/* ==== tạo thẻ kho nhanh + ảnh mã hàng ==== */
+function openQuick(){
+  ['qCode','qName','qUnit','qGroup','qPacking'].forEach(i=>$(i).value='');
+  $('qMin').value=0;$('qMax').value=0;clearImg();
+  $('groupList2').innerHTML=(D.groups||[]).map(g=>`<option value="${esc(g)}">`).join('');
+  $('quickModal').classList.add('show');setTimeout(()=>$('qCode').focus(),60);
+}
+function closeQuick(){$('quickModal').classList.remove('show')}
+function previewImg(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  $('qImgBox').style.backgroundImage=`url('${URL.createObjectURL(f)}')`;$('qImgBox').innerHTML='';
+}
+function clearImg(){$('qImg').value='';$('qImgBox').style.backgroundImage='';
+  $('qImgBox').innerHTML='<span>📷</span>Chọn ảnh<br>(không bắt buộc)'}
+async function saveQuick(){
+  const code=$('qCode').value.trim(),name=$('qName').value.trim(),unit=$('qUnit').value.trim();
+  if(!code||!name||!unit)return toast('Nhập đủ mã hàng, tên và đơn vị tính',true);
+  const fd=new FormData();
+  fd.append('code',code);fd.append('name',name);fd.append('unit',unit);
+  fd.append('group',$('qGroup').value.trim());fd.append('packing',$('qPacking').value.trim());
+  fd.append('min',$('qMin').value||0);fd.append('max',$('qMax').value||0);
+  if($('qImg').files[0])fd.append('image',$('qImg').files[0]);
+  $('qSave').disabled=true;
+  try{
+    const r=await fetch(window.QMS_ENTRY.quick,{method:'POST',credentials:'same-origin',
+      headers:{'X-CSRF-TOKEN':window.QMS_ENTRY.csrf,'Accept':'application/json'},body:fd});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){toast((j.errors||['Tạo thất bại']).join('<br>'),true);return}
+    closeQuick();await load();
+    toast(`Đã tạo thẻ kho <b>${esc(j.cardNo)}</b> cho mã ${esc(code)}`);
+  }catch(e){toast('Tạo thất bại: '+e.message,true)}finally{$('qSave').disabled=false}
+}
+/** Chọn / đổi ảnh cho mã hàng đã có. */
+function pickImage(id){
+  const inp=$('imgPicker');inp.value='';
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;
+    const fd=new FormData();fd.append('image',f);
+    const it=D.items.find(x=>x.id===id);
+    try{
+      const r=await fetch(window.QMS_ENTRY.image.replace('__ID__',encodeURIComponent(id)),
+        {method:'POST',credentials:'same-origin',
+         headers:{'X-CSRF-TOKEN':window.QMS_ENTRY.csrf,'Accept':'application/json'},body:fd});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      await load();toast(`Đã cập nhật ảnh cho ${esc(it?it.code:'')}`);
+    }catch(e){toast('Không lưu được ảnh: '+e.message,true)}
+  };
+  inp.click();
+}
+
 async function submitEntry(){
   const lines=Object.entries(cart).map(([id,c])=>({id,qty:Number(c.qty),batch:c.batch||'',expiry:c.expiry||''}));
   if(!lines.length)return;
@@ -319,6 +419,7 @@ async function load(){
   $('staffList').innerHTML=(D.staff||[]).map(s=>`<option value="${esc(s)}">`).join('');
   renderChips();render();renderRecent();fillWho();
 }
+$('quickModal').addEventListener('click',e=>{if(e.target.id==='quickModal')closeQuick()});
 ['q','fStatus'].forEach(id=>$(id).addEventListener(id==='q'?'input':'change',renderGrid));
 (async()=>{try{await load();QMSSelect.auto();QMSDate.auto()}catch(e){console.error(e);alert('Lỗi tải dữ liệu: '+e.message)}})();
 </script>

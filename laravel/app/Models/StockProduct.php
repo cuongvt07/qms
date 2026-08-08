@@ -11,6 +11,6 @@ class StockProduct extends Model
 
     protected $fillable = [
         'ext_id', 'card_no', 'code', 'name', 'group_name', 'unit', 'packing', 'supplier',
-        'min_qty', 'max_qty', 'active', 'note',
+        'min_qty', 'max_qty', 'active', 'note', 'image_path',
     ];
 }

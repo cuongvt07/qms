@@ -82,6 +82,7 @@ class StockEntryController extends Controller
                 'max'     => (float) $p->max_qty,
                 'balance' => $b,
                 'status'  => $st,
+                'image'   => $p->image_path ? route('item.image', $p->id) : '',
                 'batches' => $batches[$p->ext_id] ?? [],
             ];
         })->values()->all();
@@ -183,5 +184,107 @@ class StockEntryController extends Controller
         [$bal] = $this->computed();
 
         return response()->json(['ok' => true, 'saved' => $saved, 'balances' => $bal]);
+    }
+
+    /** Tạo nhanh một thẻ kho ngay tại màn chọn (kèm ảnh nếu có). */
+    public function quickCreate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'code'  => 'required|string|max:80',
+            'name'  => 'required|string|max:190',
+            'unit'  => 'required|string|max:40',
+            'group' => 'nullable|string|max:120',
+            'packing' => 'nullable|string|max:190',
+            'min'   => 'nullable|numeric|min:0',
+            'max'   => 'nullable|numeric|min:0',
+            'image' => 'nullable|image|max:8192',
+        ]);
+        $code = trim($data['code']);
+        if (StockProduct::whereRaw('LOWER(code) = ?', [mb_strtolower($code)])->exists()) {
+            return response()->json(['ok' => false, 'errors' => ["Mã hàng \"{$code}\" đã có thẻ kho"]], 422);
+        }
+
+        $p = StockProduct::create([
+            'ext_id'     => 'p' . (StockProduct::max('id') + 1) . '-' . substr(md5($code . microtime()), 0, 5),
+            'card_no'    => StockCardController::nextCardNo(),
+            'code'       => $code,
+            'name'       => trim($data['name']),
+            'group_name' => $data['group'] ?? null,
+            'unit'       => trim($data['unit']),
+            'packing'    => $data['packing'] ?? null,
+            'min_qty'    => $data['min'] ?? 0,
+            'max_qty'    => $data['max'] ?? 0,
+            'active'     => true,
+        ]);
+
+        if ($request->hasFile('image')) {
+            $p->update(['image_path' => $this->storeImage($request->file('image'), $p->ext_id)]);
+        }
+
+        ActivityLogger::log('stock_item', "Tạo nhanh thẻ kho {$p->card_no} cho mã hàng {$code}");
+
+        return response()->json(['ok' => true, 'id' => $p->ext_id, 'cardNo' => $p->card_no]);
+    }
+
+    /** Đổi ảnh cho một mã hàng đã có. */
+    public function setImage(Request $request, StockProduct $product): JsonResponse
+    {
+        $request->validate(['image' => 'required|image|max:8192']);
+        if ($product->image_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($product->image_path)) {
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($product->image_path);
+        }
+        $product->update(['image_path' => $this->storeImage($request->file('image'), $product->ext_id)]);
+
+        return response()->json(['ok' => true, 'url' => route('item.image', $product->id)]);
+    }
+
+    /** Trả ảnh mã hàng. */
+    public function image(StockProduct $product)
+    {
+        abort_unless($product->image_path, 404);
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        abort_unless($disk->exists($product->image_path), 404);
+
+        return response($disk->get($product->image_path), 200, [
+            'Content-Type'  => $disk->mimeType($product->image_path) ?: 'image/jpeg',
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
+    }
+
+    /** Thu nhỏ ảnh về tối đa 640px cho nhẹ rồi lưu vào storage. */
+    private function storeImage($file, string $ext): string
+    {
+        $dir  = 'stock_images';
+        $name = $dir . '/' . $ext . '-' . substr(md5(microtime()), 0, 6) . '.jpg';
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk->makeDirectory($dir);
+
+        $src = @imagecreatefromstring(file_get_contents($file->getRealPath()));
+        if (! $src) {                                   // không đọc được -> lưu nguyên bản
+            $raw = $dir . '/' . $ext . '-' . substr(md5(microtime()), 0, 6) . '.' . $file->getClientOriginalExtension();
+            $disk->put($raw, file_get_contents($file->getRealPath()));
+
+            return $raw;
+        }
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $max = 640;
+        if ($w > $max || $h > $max) {
+            $r  = min($max / $w, $max / $h);
+            $nw = (int) round($w * $r);
+            $nh = (int) round($h * $r);
+            $dst = imagecreatetruecolor($nw, $nh);
+            imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+            imagedestroy($src);
+            $src = $dst;
+        }
+        ob_start();
+        imagejpeg($src, null, 82);
+        $bin = ob_get_clean();
+        imagedestroy($src);
+        $disk->put($name, $bin);
+
+        return $name;
     }
 }
