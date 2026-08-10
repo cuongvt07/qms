@@ -211,6 +211,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
       <div class="f full"><label>Tên hàng hóa *</label><input id="qName"></div>
       <div class="f"><label>Nhóm hàng</label><input id="qGroup" list="groupList2"><datalist id="groupList2"></datalist></div>
       <div class="f"><label>Quy cách</label><input id="qPacking" placeholder="1 Kg/Túi"></div>
+      <div class="f full"><label>Hạn hóa chất / vật tư</label><input id="qExpiry" type="date"></div>
       <div class="f"><label>Tồn tối thiểu</label><input id="qMin" type="number" min="0" step="0.01" value="0"></div>
       <div class="f"><label>Tồn tối đa</label><input id="qMax" type="number" min="0" step="0.01" value="0"></div>
     </div>
@@ -345,7 +346,7 @@ function render(){renderGrid();renderCart()}
 
 /* ==== tạo thẻ kho nhanh + ảnh mã hàng ==== */
 function openQuick(){
-  ['qCode','qName','qUnit','qGroup','qPacking'].forEach(i=>$(i).value='');
+  ['qCode','qName','qUnit','qGroup','qPacking','qExpiry'].forEach(i=>$(i).value='');
   $('qMin').value=0;$('qMax').value=0;clearImg();
   $('groupList2').innerHTML=(D.groups||[]).map(g=>`<option value="${esc(g)}">`).join('');
   $('quickModal').classList.add('show');setTimeout(()=>$('qCode').focus(),60);
@@ -363,6 +364,7 @@ async function saveQuick(){
   const fd=new FormData();
   fd.append('code',code);fd.append('name',name);fd.append('unit',unit);
   fd.append('group',$('qGroup').value.trim());fd.append('packing',$('qPacking').value.trim());
+  if($('qExpiry').value)fd.append('expiry',$('qExpiry').value);
   fd.append('min',$('qMin').value||0);fd.append('max',$('qMax').value||0);
   if($('qImg').files[0])fd.append('image',$('qImg').files[0]);
   $('qSave').disabled=true;

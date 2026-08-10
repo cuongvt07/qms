@@ -86,6 +86,7 @@ class StockCardController extends Controller
                 'unit'     => $p->unit ?? '',
                 'packing'  => $p->packing ?? '',
                 'supplier' => $p->supplier ?? '',
+                'expiry'   => $p->expiry?->toDateString() ?? '',
                 'min'      => (float) $p->min_qty,
                 'max'      => (float) $p->max_qty,
             ])->all(),
@@ -133,6 +134,7 @@ class StockCardController extends Controller
                 'unit'     => $p['unit'] ?? null,
                 'packing'  => $p['packing'] ?? null,
                 'supplier' => $p['supplier'] ?? null,
+                'expiry'   => ($p['expiry'] ?? '') ?: null,
                 'min_qty'  => $p['min'] ?? 0,
                 'max_qty'  => $p['max'] ?? 0,
             ]);
