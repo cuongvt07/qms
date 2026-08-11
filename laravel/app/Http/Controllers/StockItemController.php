@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StockProduct;
 use App\Models\StockTransaction;
 use App\Services\ActivityLogger;
+use App\Services\XlsxWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -95,6 +96,45 @@ class StockItemController extends Controller
             'groups' => StockProduct::whereNotNull('group_name')->where('group_name', '!=', '')
                 ->distinct()->orderBy('group_name')->pluck('group_name')->all(),
         ]);
+    }
+
+    /** Xuất danh mục mã hàng ra Excel (kèm hạn hóa chất / vật tư và tình trạng hạn). */
+    public function exportItems()
+    {
+        app(StockCardController::class)->state();
+
+        $tx   = StockTransaction::orderBy('date')->orderBy('id')->get()->groupBy('product_ext_id');
+        $rows = [];
+        foreach (StockProduct::orderBy('code')->get() as $p) {
+            $r = $tx->get($p->ext_id, collect());
+            $b = $this->balance($r);
+
+            $tinhTrang = '';
+            if ($p->expiry) {
+                $ngay = (int) now()->startOfDay()->diffInDays($p->expiry, false);
+                $tinhTrang = $ngay < 0 ? 'Quá hạn ' . (-$ngay) . ' ngày'
+                    : ($ngay === 0 ? 'Hết hạn hôm nay' : 'Còn ' . $ngay . ' ngày');
+            }
+
+            $rows[] = [
+                $p->code, $p->name, $p->group_name ?? '', $p->unit ?? '', $p->packing ?? '',
+                $p->supplier ?? '', $p->expiry?->format('d/m/Y') ?? '', $tinhTrang,
+                $b, (float) $p->min_qty, (float) $p->max_qty,
+                ['ok' => 'Còn hàng', 'low' => 'Sắp hết', 'out' => 'Hết hàng', 'high' => 'Vượt tối đa'][$this->statusOf($p, $b)],
+                $p->card_no, $r->count(), $p->active ? 'Đang dùng' : 'Ngừng dùng', $p->note ?? '',
+            ];
+        }
+
+        return XlsxWriter::taiVe('danh-muc-ma-hang.xlsx', [[
+            'name'   => 'Danh mục mã hàng',
+            'title'  => 'DANH MỤC MÃ HÀNG',
+            'note'   => ['Xuất ngày ' . now()->format('d/m/Y H:i') . ' · ' . count($rows) . ' mã hàng'],
+            'header' => ['Mã hàng', 'Tên hàng hóa', 'Nhóm hàng', 'ĐVT', 'Quy cách', 'Nhà cung cấp',
+                'Hạn hóa chất / vật tư', 'Tình trạng hạn', 'Tồn', 'Tối thiểu', 'Tối đa', 'Trạng thái tồn',
+                'Số thẻ kho', 'Số phát sinh', 'Trạng thái', 'Ghi chú'],
+            'widths' => [14, 34, 16, 8, 16, 26, 15, 16, 10, 10, 10, 14, 12, 12, 13, 26],
+            'rows'   => $rows,
+        ]]);
     }
 
     public function save(Request $request): JsonResponse

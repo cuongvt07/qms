@@ -53,6 +53,32 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/the-kho', [\App\Http\Controllers\StockCardController::class, 'page'])->name('stock.page');
     Route::get('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'state'])->name('stock.state');
     Route::post('/qms/the-kho/du-lieu', [\App\Http\Controllers\StockCardController::class, 'save'])->name('stock.save');
+    // Sổ soạn tiêu bản + hóa mô miễn dịch
+    Route::get('/qms/so-tieu-ban', [\App\Http\Controllers\SlideBookController::class, 'page'])->name('slide.page');
+    Route::get('/qms/so-tieu-ban/du-lieu', [\App\Http\Controllers\SlideBookController::class, 'state'])->name('slide.state');
+    Route::post('/qms/so-tieu-ban/luu', [\App\Http\Controllers\SlideBookController::class, 'saveRows'])->name('slide.save');
+    Route::get('/qms/so-tieu-ban/doc', [\App\Http\Controllers\SlideBookController::class, 'readerState'])->name('slide.reader');
+    Route::post('/qms/so-tieu-ban/danh-dau-doc', [\App\Http\Controllers\SlideBookController::class, 'markRead'])->name('slide.mark');
+    Route::get('/qms/so-tieu-ban/tinh-trang', [\App\Http\Controllers\SlideBookController::class, 'statusState'])->name('slide.status');
+    Route::get('/qms/so-tieu-ban/tien-trinh', [\App\Http\Controllers\SlideBookController::class, 'trace'])->name('slide.trace');
+    Route::get('/qms/so-tieu-ban/hmmd', [\App\Http\Controllers\SlideBookController::class, 'ihcState'])->name('slide.ihc');
+    Route::post('/qms/so-tieu-ban/hmmd', [\App\Http\Controllers\SlideBookController::class, 'ihcSave'])->name('slide.ihc.save');
+    Route::post('/qms/so-tieu-ban/hmmd/{ihc}/buoc', [\App\Http\Controllers\SlideBookController::class, 'ihcStep'])->name('slide.ihc.step');
+    Route::get('/qms/so-tieu-ban/hoi-chan', [\App\Http\Controllers\SlideBookController::class, 'consultState'])->name('slide.consult');
+    Route::post('/qms/so-tieu-ban/hoi-chan/mo', [\App\Http\Controllers\SlideBookController::class, 'consultOpen'])->name('slide.consult.open');
+    Route::post('/qms/so-tieu-ban/hoi-chan/y-kien', [\App\Http\Controllers\SlideBookController::class, 'consultNote'])->name('slide.consult.note');
+    Route::post('/qms/so-tieu-ban/hoi-chan/anh', [\App\Http\Controllers\SlideBookController::class, 'consultUpload'])->name('slide.consult.upload');
+    Route::get('/qms/so-tieu-ban/hoi-chan/anh/{image}', [\App\Http\Controllers\SlideBookController::class, 'consultImage'])->name('slide.consult.image');
+    Route::delete('/qms/so-tieu-ban/hoi-chan/anh/{image}', [\App\Http\Controllers\SlideBookController::class, 'consultImageDelete'])->name('slide.consult.image.del');
+    Route::post('/qms/so-tieu-ban/hoi-chan/chot', [\App\Http\Controllers\SlideBookController::class, 'consultClose'])->name('slide.consult.close');
+    Route::get('/qms/so-tieu-ban/benh-nhan', [\App\Http\Controllers\SlideBookController::class, 'patientLookup'])->name('slide.patient');
+    Route::get('/qms/so-tieu-ban/xuat-excel', [\App\Http\Controllers\SlideBookController::class, 'exportBook'])->name('slide.export');
+    Route::get('/qms/so-tieu-ban/hmmd/xuat-excel', [\App\Http\Controllers\SlideBookController::class, 'exportIhc'])->name('slide.ihc.export');
+
+    // Xuất Excel cho module kho
+    Route::get('/qms/the-kho/xuat-excel', [\App\Http\Controllers\StockCardController::class, 'exportCard'])->name('stock.export');
+    Route::get('/qms/ma-hang/xuat-excel', [\App\Http\Controllers\StockItemController::class, 'exportItems'])->name('item.export');
+
     Route::get('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'state'])->name('usage.state');
     Route::post('/qms/su-dung-thiet-bi/du-lieu', [\App\Http\Controllers\DeviceUsageController::class, 'save'])->name('usage.save');
 

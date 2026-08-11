@@ -30,6 +30,11 @@
             <span class="qs-ic">🗑</span> Nhật ký xử lý rác thải
         </a>
 
+        <div class="qs-group">Giải phẫu bệnh</div>
+        <a class="qs-item{{ $nav('slide.page') }}" href="{{ route('slide.page') }}">
+            <span class="qs-ic">🔬</span> Sổ soạn tiêu bản &amp; HMMD
+        </a>
+
         <div class="qs-group">Kho vật tư</div>
         <a class="qs-item{{ $nav('entry.page') }}" href="{{ route('entry.page') }}"><span class="qs-ic">🛒</span> Nhập / xuất nhanh</a>
         <a class="qs-item{{ $nav('stock.dash') }}" href="{{ route('stock.dash') }}"><span class="qs-ic">📊</span> Tổng quan kho</a>

@@ -1,0 +1,1167 @@
+[
+{
+"ten": "Actin",
+"clone": "MMab, BSB-15",
+"hang": "BioSB"
+},
+{
+"ten": "AFP",
+"clone": "MMAb, BSB-23",
+"hang": "BioSB"
+},
+{
+"ten": "ALK",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "ALK D5F3",
+"clone": "RMab, D5F3",
+"hang": "Ventana"
+},
+{
+"ten": "ALK-1",
+"clone": "ALK01",
+"hang": "Ventana"
+},
+{
+"ten": "ALK-1/CD246",
+"clone": "RMab, RBT-ALK1",
+"hang": "BioSB"
+},
+{
+"ten": "Androgen Receptor",
+"clone": "MMab",
+"hang": "BioSB"
+},
+{
+"ten": "Arginase-1",
+"clone": "RMab, EP261",
+"hang": "Cell Marque"
+},
+{
+"ten": "ATRX",
+"clone": "MMAb, BSB-108",
+"hang": "BioSB"
+},
+{
+"ten": "Bcl-2",
+"clone": "MMab, 124",
+"hang": "Cell Marque"
+},
+{
+"ten": "Bcl-6",
+"clone": "RMab, EP278",
+"hang": "BioSB"
+},
+{
+"ten": "Beta-catenin",
+"clone": "MMAb, 14",
+"hang": "BioSB"
+},
+{
+"ten": "Braf",
+"clone": "MMab",
+"hang": "Ventana"
+},
+{
+"ten": "c-Myc",
+"clone": "RMab, Y69",
+"hang": "Ventana"
+},
+{
+"ten": "C1q/FITC",
+"clone": "RPab",
+"hang": "BioSB"
+},
+{
+"ten": "C3c/FITC",
+"clone": "RPab",
+"hang": "BioSB"
+},
+{
+"ten": "C4c/FITC",
+"clone": "RPab",
+"hang": "BioSB"
+},
+{
+"ten": "C4d",
+"clone": "RMab, EP272",
+"hang": "BioSB"
+},
+{
+"ten": "CA-125",
+"clone": "MMab, OC125",
+"hang": "Cell Marque"
+},
+{
+"ten": "CA-9",
+"clone": "",
+"hang": "BioSB"
+},
+{
+"ten": "CA19-9",
+"clone": "MMab, 121SLE",
+"hang": "Cell Marque"
+},
+{
+"ten": "Calcitonin",
+"clone": "RMab, EP92",
+"hang": "BioSB"
+},
+{
+"ten": "Caldesmon",
+"clone": "MMAb, BSB-19 (CALD-31)",
+"hang": "BioSB"
+},
+{
+"ten": "Calretinin",
+"clone": "RMab, SP65",
+"hang": "Ventana"
+},
+{
+"ten": "CAM 5.2",
+"clone": "Mmab",
+"hang": "Ventana"
+},
+{
+"ten": "Carbonic anhydrase 9",
+"clone": "Tinto",
+"hang": "BioSB"
+},
+{
+"ten": "CD10",
+"clone": "MMab, 56C6",
+"hang": "BioSB"
+},
+{
+"ten": "CD117",
+"clone": "RMab, EP10",
+"hang": "Ventana"
+},
+{
+"ten": "CD138",
+"clone": "MMAb, B-A38",
+"hang": "Cell Marque"
+},
+{
+"ten": "CD15",
+"clone": "MMAb, MMA",
+"hang": "BioSB"
+},
+{
+"ten": "CD1a",
+"clone": "RMab, EP80",
+"hang": "BioSB"
+},
+{
+"ten": "CD2",
+"clone": "MMAb, AB75",
+"hang": "Cell Marque"
+},
+{
+"ten": "CD20",
+"clone": "MMAb, AB75",
+"hang": "BioSB"
+},
+{
+"ten": "CD21",
+"clone": "RMab, EP3093",
+"hang": "Cell Marque"
+},
+{
+"ten": "CD23",
+"clone": "RMab, SP23",
+"hang": "Cell Marque"
+},
+{
+"ten": "CD3",
+"clone": "RMAb, RBT-CD3",
+"hang": "BioSB"
+},
+{
+"ten": "CD3 Confirm",
+"clone": "RMab, 2GV6",
+"hang": "Ventana"
+},
+{
+"ten": "CD30",
+"clone": "MMAb, Ber-H2",
+"hang": "BioSB"
+},
+{
+"ten": "CD31",
+"clone": "Mab, 1A10",
+"hang": "BioSB"
+},
+{
+"ten": "CD34",
+"clone": "RMab, EP88",
+"hang": "BioSB"
+},
+{
+"ten": "CD35",
+"clone": "MMab, RLB25",
+"hang": "BioSB"
+},
+{
+"ten": "CD35 Tino",
+"clone": "MMab, RLB25",
+"hang": "BioSB"
+},
+{
+"ten": "CD38",
+"clone": "MMab, SPC32",
+"hang": "BioSB"
+},
+{
+"ten": "CD4",
+"clone": "RMab, SP35",
+"hang": "Ventana"
+},
+{
+"ten": "CD43",
+"clone": "MMab, MT7",
+"hang": "BioSB"
+},
+{
+"ten": "CD45",
+"clone": "MMab, 2B11&PD7/26",
+"hang": "BioSB"
+},
+{
+"ten": "CD5",
+"clone": "RMab, RBT-CD5",
+"hang": "BioSB"
+},
+{
+"ten": "CD56",
+"clone": "RMab",
+"hang": "Cell Marque"
+},
+{
+"ten": "CD68",
+"clone": "MMab, KP-1",
+"hang": "BioSB"
+},
+{
+"ten": "CD7",
+"clone": "MMab, LP15",
+"hang": "BioSB"
+},
+{
+"ten": "CD79a",
+"clone": "Mab",
+"hang": "BioSB"
+},
+{
+"ten": "CD8",
+"clone": "RMab, SP57",
+"hang": "Ventana"
+},
+{
+"ten": "CD99",
+"clone": "MMAb, BSB-9",
+"hang": "BioSB"
+},
+{
+"ten": "CDK4",
+"clone": "RMab, EP180",
+"hang": "BioSB"
+},
+{
+"ten": "CDX2",
+"clone": "EPR2764Y",
+"hang": "Cell Marque"
+},
+{
+"ten": "CEA",
+"clone": "CEA31",
+"hang": "Cell Marque"
+},
+{
+"ten": "CEA Tino",
+"clone": "MMAb, BSB-13",
+"hang": "BioSB"
+},
+{
+"ten": "Chất đệm làm lạnh nhanh dùng trong cắt lạnh",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Chromogranin A",
+"clone": "MMab, LK2H10",
+"hang": "BioSB"
+},
+{
+"ten": "CK",
+"clone": "MMab, MNF116",
+"hang": "BioSB"
+},
+{
+"ten": "CK 19",
+"clone": "MMAb, BSB-34",
+"hang": "BioSB"
+},
+{
+"ten": "CK 5&6",
+"clone": "MMab, D5&16B4",
+"hang": "BioSB"
+},
+{
+"ten": "CK 8&18",
+"clone": "MMab, B22.1&B23.1",
+"hang": "BioSB"
+},
+{
+"ten": "CK ae1/ae3",
+"clone": "MMab, AE1&AE3",
+"hang": "Ventana"
+},
+{
+"ten": "CK20",
+"clone": "Ks20.8",
+"hang": "BioSB"
+},
+{
+"ten": "CK5/6",
+"clone": "MMAb, D5&16B4",
+"hang": "BioSB"
+},
+{
+"ten": "CK7",
+"clone": "MMAb, OV-TL 12/30",
+"hang": "BioSB"
+},
+{
+"ten": "CK8.18",
+"clone": "MMab, B22.1&B23.1",
+"hang": "BioSB"
+},
+{
+"ten": "CMV",
+"clone": "",
+"hang": "Cell Marque"
+},
+{
+"ten": "CMV Blend",
+"clone": "",
+"hang": "Cell Marque"
+},
+{
+"ten": "CONFIRM anti-Ki67",
+"clone": "RMAb, 30-9",
+"hang": "Ventana"
+},
+{
+"ten": "Congo Red Amyloid Stain Kit",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Cylin D1",
+"clone": "RMab, RBT-14",
+"hang": "BioSB"
+},
+{
+"ten": "Cytomegalovirus",
+"clone": "MMAb, 8B1.2, 1G5.2 & 2D4.2",
+"hang": "BioSB"
+},
+{
+"ten": "D2-40",
+"clone": "MMab, D2-40",
+"hang": "BioSB"
+},
+{
+"ten": "Desmin",
+"clone": "MMAb, D33",
+"hang": "BioSB"
+},
+{
+"ten": "disodium hydrogen phosphate",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "DOG-1",
+"clone": "SP31",
+"hang": "Cell Marque"
+},
+{
+"ten": "Dog1",
+"clone": "SP31",
+"hang": "Cell Marque"
+},
+{
+"ten": "E-cadherin",
+"clone": "RMab, EP6",
+"hang": "BioSB"
+},
+{
+"ten": "Ebar Label Kit 2500 nhãn",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "EGFR",
+"clone": "MMab, 31G7",
+"hang": "BioSB"
+},
+{
+"ten": "EMA",
+"clone": "MMab, E29",
+"hang": "BioSB"
+},
+{
+"ten": "Eosin alcohol 1000ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Eosin alcohol 500ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Eosin Y 100g",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "EpCAM",
+"clone": "MMab, Ber-EP4",
+"hang": "Cell Marque"
+},
+{
+"ten": "Epstein Barr Virus LMP-1",
+"clone": "MMAb, CS1-4",
+"hang": "BioSB"
+},
+{
+"ten": "ER",
+"clone": "RMab, SP1",
+"hang": "Ventana"
+},
+{
+"ten": "ERG",
+"clone": "RMab, EP111",
+"hang": "Cell Marque"
+},
+{
+"ten": "EZPrep",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "FLI-1",
+"clone": "G146-222",
+"hang": "Vitro"
+},
+{
+"ten": "Formaldehyde 4%",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Galectin-3",
+"clone": "MMab, 9C4",
+"hang": "BioSB"
+},
+{
+"ten": "GATA3",
+"clone": "MMab, L50-823",
+"hang": "Cell Marque"
+},
+{
+"ten": "GCDFP-15",
+"clone": "MMAb, 23A3",
+"hang": "Cell Marque"
+},
+{
+"ten": "GFAP",
+"clone": "MMab, G-A-5",
+"hang": "BioSB"
+},
+{
+"ten": "Giấy in barcode Slide Label Kit",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Giemsa bột",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Glutamin Synthetase (GS-6)",
+"clone": "MMab, GS-6",
+"hang": "Cell Marque"
+},
+{
+"ten": "Glypican- 3, 1ml",
+"clone": "MMab, 1G12",
+"hang": "BioSB"
+},
+{
+"ten": "Glypican-3",
+"clone": "MMab, GC33",
+"hang": "Ventana"
+},
+{
+"ten": "Gycerol",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "H3K27Me3",
+"clone": "Tinto",
+"hang": "BioSB"
+},
+{
+"ten": "Hematoxylin 1000ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Hematoxylin 500ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Hematoxylin II",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Hepar-1",
+"clone": "MMAb, OCH1E5",
+"hang": "BioSB"
+},
+{
+"ten": "Her-2/neu 4B5",
+"clone": "RMab, 4B5",
+"hang": "Ventana"
+},
+{
+"ten": "HER2 Dual ISH Cocktail",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "HMB-45",
+"clone": "Mab, HMB-45",
+"hang": "BioSB"
+},
+{
+"ten": "HMGA-2",
+"clone": "RMab, EP398",
+"hang": "BioSB"
+},
+{
+"ten": "HSP70",
+"clone": "RMab, RM432",
+"hang": "BioSB"
+},
+{
+"ten": "HybReady",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Hydrophilic Plus",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "IDH-2",
+"clone": "",
+"hang": "Sigma"
+},
+{
+"ten": "IDH1",
+"clone": "MMab, IHC132",
+"hang": "BioSB"
+},
+{
+"ten": "IgA/FITC",
+"clone": "Polyclonal",
+"hang": "Dako"
+},
+{
+"ten": "IgG/FITC",
+"clone": "Polyclonal",
+"hang": "Dako"
+},
+{
+"ten": "IgG4",
+"clone": "MMAb, BSB-96",
+"hang": "BioSB"
+},
+{
+"ten": "IgM/FITC",
+"clone": "Polyclonal",
+"hang": "Dako"
+},
+{
+"ten": "Inform Eber",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Inform EBER Probe-us export",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Inhibin",
+"clone": "MMab, R1",
+"hang": "Cell Marque"
+},
+{
+"ten": "INI-1",
+"clone": "MMab, MRQ-27",
+"hang": "Cell Marque"
+},
+{
+"ten": "INSM1",
+"clone": "",
+"hang": "Vitro"
+},
+{
+"ten": "Iron stain Kit (perl)",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "ISH Protease 3",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Kappa",
+"clone": "",
+"hang": "Dako"
+},
+{
+"ten": "Keo gắn Bio Mount 100ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Ki-67",
+"clone": "RMab, EP5",
+"hang": "BioSB"
+},
+{
+"ten": "Ki67",
+"clone": "RMAb, 30-9",
+"hang": "Ventana"
+},
+{
+"ten": "Lam ISH",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Lam kính Optica",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Lam tomo hộp 100",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Lambda",
+"clone": "",
+"hang": "Dako"
+},
+{
+"ten": "LCA",
+"clone": "RP2/18",
+"hang": "Ventana"
+},
+{
+"ten": "Mamaglobin",
+"clone": "RMab, EP249",
+"hang": "BioSB"
+},
+{
+"ten": "MART-1",
+"clone": "MMab, Melan A A103",
+"hang": "Cell Marque"
+},
+{
+"ten": "MDM2",
+"clone": "MMAb, BSB-64",
+"hang": "BioSB"
+},
+{
+"ten": "MDM2, 1ml",
+"clone": "MMab, BSB64",
+"hang": "BioSB"
+},
+{
+"ten": "Meso",
+"clone": "MMAb, HBME-1",
+"hang": "BioSB"
+},
+{
+"ten": "Mesothelial Cell, 1ml",
+"clone": "MMab, HBME-1",
+"hang": "BioSB"
+},
+{
+"ten": "Methylen blue",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "MLH- 1",
+"clone": "MMab, M1",
+"hang": "Ventana"
+},
+{
+"ten": "mono sodium dihydrogen phosphate",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "MSH2",
+"clone": "MMab, G219-1129",
+"hang": "Ventana"
+},
+{
+"ten": "MSH6",
+"clone": "RMab, SP93",
+"hang": "Ventana"
+},
+{
+"ten": "MUC4",
+"clone": "MMab, 8G7",
+"hang": "BioSB"
+},
+{
+"ten": "MUM1",
+"clone": "MUM1p",
+"hang": "BioSB"
+},
+{
+"ten": "Mum1 tinto",
+"clone": "",
+"hang": "BioSB"
+},
+{
+"ten": "Mực đánh dấu mô",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "MyoD1",
+"clone": "Tinto",
+"hang": "BioSB"
+},
+{
+"ten": "Myogenin",
+"clone": "MMAb, F5D",
+"hang": "BioSB"
+},
+{
+"ten": "Napsin A",
+"clone": "MAD-000752QD-7",
+"hang": "Vitro"
+},
+{
+"ten": "Negative Control Ig",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Negative Control Probe",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "negative control probe-us export",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "NSE",
+"clone": "MMab, BSB-94",
+"hang": "BioSB"
+},
+{
+"ten": "Nutm1",
+"clone": "Tinto",
+"hang": "BioSB"
+},
+{
+"ten": "Oct-4",
+"clone": "RMab, EP143",
+"hang": "BioSB"
+},
+{
+"ten": "Oct-4 = Oct3/4",
+"clone": "Ventana",
+"hang": "Ventana"
+},
+{
+"ten": "Oct3/4",
+"clone": "",
+"hang": "Leica"
+},
+{
+"ten": "Olig2",
+"clone": "RMab, EP112",
+"hang": "BioSB"
+},
+{
+"ten": "Oligo2",
+"clone": "RMab, EP112",
+"hang": "BioSB"
+},
+{
+"ten": "OptiView Amplification Kit",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "optiview DAB IHC Detection Kit",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "p16",
+"clone": "MMAb, 16P04, JC2",
+"hang": "BioSB"
+},
+{
+"ten": "p16 CINtec",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "p16 INK4A",
+"clone": "MMab, JC2",
+"hang": "Cell Marque"
+},
+{
+"ten": "P40",
+"clone": "BC28, Mmab",
+"hang": "Ventana"
+},
+{
+"ten": "P504S",
+"clone": "MAD-000305QD-3",
+"hang": "BioSB"
+},
+{
+"ten": "P53",
+"clone": "MMab, DO7",
+"hang": "BioSB"
+},
+{
+"ten": "p63",
+"clone": "RMab, EP174",
+"hang": "BioSB"
+},
+{
+"ten": "Pax5",
+"clone": "RMab, RBT-Pax5",
+"hang": "BioSB"
+},
+{
+"ten": "Pax8",
+"clone": "RMab, EP298",
+"hang": "BioSB"
+},
+{
+"ten": "PD-L1 22C3",
+"clone": "",
+"hang": "Dako"
+},
+{
+"ten": "PD-L1 SP263",
+"clone": "SP263",
+"hang": "Ventana"
+},
+{
+"ten": "PLAP",
+"clone": "MMab, NB10",
+"hang": "BioSB"
+},
+{
+"ten": "PMS2",
+"clone": "MMab, A16-4",
+"hang": "Ventana"
+},
+{
+"ten": "potassium dihydrogen phosphate",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Progesteron Receptor",
+"clone": "RMab, 1E2",
+"hang": "Ventana"
+},
+{
+"ten": "Protease 2",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "PSA",
+"clone": "MMab, BSB-7",
+"hang": "BioSB"
+},
+{
+"ten": "PSAP",
+"clone": "PASE/4LJ",
+"hang": "Cell Marque"
+},
+{
+"ten": "PSMA",
+"clone": "RMab, EP192",
+"hang": "BioSB"
+},
+{
+"ten": "RCC",
+"clone": "MMAb, PN-15",
+"hang": "Cell Marque"
+},
+{
+"ten": "Reaction Buffer",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Red counterstain II",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Red ISH",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Ribbon ebar printer",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "RNA Positive Control Probe",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "RP Confirm",
+"clone": "RMab, 1E2",
+"hang": "Ventana"
+},
+{
+"ten": "S100",
+"clone": "4C4.9",
+"hang": "BioSB"
+},
+{
+"ten": "SALL4",
+"clone": "RMab, EP299",
+"hang": "Cell Marque"
+},
+{
+"ten": "SATB2",
+"clone": "RMab, EP281",
+"hang": "BioSB"
+},
+{
+"ten": "Silver ISH",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "SMA",
+"clone": "1A4, MMb",
+"hang": "BioSB"
+},
+{
+"ten": "SMA - smooth muscle actin",
+"clone": "1A4, MMb",
+"hang": "Cell Marque"
+},
+{
+"ten": "Somatostatin",
+"clone": "RMab, EP130",
+"hang": "BioSB"
+},
+{
+"ten": "Sox-10",
+"clone": "MMAb, BSB-62",
+"hang": "BioSB"
+},
+{
+"ten": "SS18-SSX",
+"clone": "RMab",
+"hang": "BioSB"
+},
+{
+"ten": "STAT 6",
+"clone": "RMab, EP325",
+"hang": "Cell Marque"
+},
+{
+"ten": "SV40",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Synap",
+"clone": "RMAb, BSB2238",
+"hang": "BioSB"
+},
+{
+"ten": "TdT",
+"clone": "RMAb, EP266",
+"hang": "Cell Marque"
+},
+{
+"ten": "TFE3",
+"clone": "RMab, EP285",
+"hang": "Vitro"
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm AFB",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm Diastase",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm GMS II",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm Jones",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm Reticulum II",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thuốc thử xét nghiệm nhuộm Trichrome",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Thyro",
+"clone": "RMab, EP250",
+"hang": "BioSB"
+},
+{
+"ten": "Thyroglobulin",
+"clone": "MMAb, BSB-49",
+"hang": "BioSB"
+},
+{
+"ten": "TIA-1",
+"clone": "Tinto",
+"hang": "BioSB"
+},
+{
+"ten": "TLE1",
+"clone": "RBT-TLE1",
+"hang": "BioSB"
+},
+{
+"ten": "Toluen",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Tomo slide",
+"clone": "",
+"hang": "Nhật"
+},
+{
+"ten": "TTF-1",
+"clone": "MMab, 8G7G3/1",
+"hang": "BioSB"
+},
+{
+"ten": "Ultra CC1",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Ultra CC2",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "ultra LCS",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "ultra Silverwash",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "ultraView Universal DAB Detection Kit",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Ventana ISH/Viewblue Detection kit",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Ventana Red ISH DIG Detection Kit",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Ventana Silver ISH DNP Detection Kit",
+"clone": "",
+"hang": "Ventana"
+},
+{
+"ten": "Vimentin",
+"clone": "RMab, EP21",
+"hang": "BioSB"
+},
+{
+"ten": "Vimentin, 1ml",
+"clone": "MMab, V9",
+"hang": "BioSB"
+},
+{
+"ten": "WT- 1",
+"clone": "PAb, 6F-H2",
+"hang": "Cell Marque"
+},
+{
+"ten": "Xilmount 500ml",
+"clone": "",
+"hang": ""
+},
+{
+"ten": "Đệm rửa Envision",
+"clone": "",
+"hang": ""
+}
+]

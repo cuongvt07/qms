@@ -87,7 +87,8 @@ tbody tr:hover td{background:#fbfdfe}
     </div>
     <div class="right">
       <a class="btn" href="{{ route('entry.page') }}">🛒 Nhập / xuất nhanh</a><a class="btn" href="{{ route('stock.dash') }}">📊 Tổng quan kho</a>
-      <button class="btn" onclick="exportCsv()">⇩ Xuất danh mục</button>
+      <a class="btn" href="{{ route('item.export') }}">⇩ Xuất Excel</a>
+      <button class="btn" onclick="exportCsv()">⇩ CSV</button>
       <button class="btn primary" onclick="openItem()">＋ Thêm mã hàng</button>
     </div>
   </div>

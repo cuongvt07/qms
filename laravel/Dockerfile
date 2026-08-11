@@ -6,7 +6,9 @@ FROM php:8.2-apache AS php-base
 
 RUN apt-get update && apt-get install -y \
     libzip-dev zip unzip git curl libpng-dev libonig-dev libxml2-dev \
+    libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libreoffice-writer libreoffice-core \
+    && docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

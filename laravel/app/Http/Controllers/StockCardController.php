@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StockProduct;
 use App\Models\StockTransaction;
 use App\Services\ActivityLogger;
+use App\Services\XlsxWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -105,6 +106,66 @@ class StockCardController extends Controller
                 'note'        => $t->note ?? '',
             ])->all(),
         ]);
+    }
+
+    /** Xuất một thẻ kho ra Excel theo đúng bố cục phiếu giấy BM.01/QTQL.26. */
+    public function exportCard(Request $request)
+    {
+        $this->seedIfEmpty();
+        $ext = trim((string) $request->query('product', ''));
+        $p   = StockProduct::where('ext_id', $ext)->first();
+        abort_unless($p, 404);
+
+        $tx  = StockTransaction::where('product_ext_id', $p->ext_id)
+            ->orderBy('date')->orderBy('id')->get();
+
+        $bal  = 0.0;
+        $rows = [];
+        foreach ($tx as $t) {
+            $nhap = $xuat = $huy = null;
+            if ($t->type === 'import') {
+                $bal += (float) $t->qty;
+                $nhap = (float) $t->qty;
+            } elseif ($t->type === 'export') {
+                $bal -= (float) $t->qty;
+                $xuat = (float) $t->qty;
+            } elseif ($t->type === 'destroy') {
+                $bal -= (float) $t->qty;
+                $huy = (float) $t->qty;
+            } elseif ($t->type === 'adjust') {
+                $bal = (float) $t->actual;
+            }
+            $rows[] = [
+                $t->date?->format('d/m/Y') ?? '',
+                $nhap, $t->type === 'import' ? ($t->batch ?? '') : '',
+                $t->type === 'import' ? ($t->expiry?->format('d/m/Y') ?? '') : '',
+                $xuat, $t->destination ?? '',
+                $t->type === 'export' ? ($t->batch ?? '') : '',
+                $t->type === 'export' ? ($t->expiry?->format('d/m/Y') ?? '') : '',
+                $huy, round($bal, 2),
+                $t->type === 'adjust' ? (float) $t->actual : null,
+                $t->deliverer ?? '', $t->receiver ?? '', $t->note ?? '',
+            ];
+        }
+
+        return XlsxWriter::taiVe('the-kho-' . $p->code . '.xlsx', [[
+            'name'  => 'Thẻ kho ' . $p->card_no,
+            'title' => 'THẺ KHO',
+            'note'  => [
+                'Mã số tài liệu: BM.01/QTQL.26 · Phiên bản 2.25 · Số thẻ kho: ' . $p->card_no,
+                'Tên hàng hóa: ' . $p->name . '   |   Mã hàng: ' . $p->code . '   |   Đơn vị tính: ' . ($p->unit ?: '—'),
+                'Quy cách đóng gói: ' . ($p->packing ?: '—') . '   |   Công ty cung cấp: ' . ($p->supplier ?: '—'),
+                'Hạn hóa chất / vật tư: ' . ($p->expiry?->format('d/m/Y') ?: '—')
+                    . '   |   Tồn tối thiểu: ' . rtrim(rtrim(number_format((float) $p->min_qty, 2, '.', ''), '0'), '.')
+                    . '   |   Tồn tối đa: ' . rtrim(rtrim(number_format((float) $p->max_qty, 2, '.', ''), '0'), '.'),
+                'Tồn hiện tại: ' . rtrim(rtrim(number_format($bal, 2, '.', ''), '0'), '.') . ' ' . ($p->unit ?: ''),
+            ],
+            'header' => ['Ngày tháng', 'SL nhập (a)', 'Số lô nhập', 'HSD nhập', 'SL xuất (b)', 'Nơi nhận',
+                'Số lô xuất', 'HSD xuất', 'Hủy / quá hạn (c)', 'Tồn (d)', 'Đếm kho thực tế',
+                'Người giao', 'Người nhận', 'Ghi chú'],
+            'widths' => [12, 11, 13, 12, 11, 18, 13, 12, 13, 11, 13, 16, 16, 26],
+            'rows'   => $rows,
+        ]]);
     }
 
     public function save(Request $request): JsonResponse

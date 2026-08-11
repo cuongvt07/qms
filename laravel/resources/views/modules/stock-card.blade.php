@@ -99,7 +99,7 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
   .qc-mhead td{background:#fff!important;border-top:1px solid #000}
 }
 </style>
-<script>window.QMS_STOCK={state:"{{ route('stock.state') }}",save:"{{ route('stock.save') }}",csrf:"{{ csrf_token() }}"};</script>
+<script>window.QMS_STOCK={state:"{{ route('stock.state') }}",save:"{{ route('stock.save') }}",export:"{{ route('stock.export') }}",csrf:"{{ csrf_token() }}"};</script>
 <link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script src="{{ asset('js/qms-select.js') }}?v=3"></script>
 <script src="{{ asset('js/qms-date.js') }}?v=1"></script>
@@ -136,7 +136,7 @@ table{width:100%;border-collapse:separate;border-spacing:0}.data{min-width:1180p
 <div class="modal-bg" id="cardModal"><div class="modal wide"><div class="modal-head"><div><h2 id="cardHeadTitle">Thẻ kho</h2><p id="cardHeadSub"></p></div><button class="close" onclick="closeModal('cardModal')">×</button></div><div class="modal-body">
 <div class="notice">Điền trực tiếp vào ô trên bảng — mỗi dòng lưu ngay khi rời ô. <b>Tồn = Tồn trước + Nhập − Xuất − Hủy</b>.</div>
 <div class="qc-sheet" id="cardSheet"></div>
-<div class="toolbar"><span class="qc-hint">Chọn tháng để mở rộng / rút gọn. Dòng cuối mỗi tháng là dòng trống để thêm phát sinh mới.</span><span class="push"></span><button class="btn" onclick="expandAllMonths(true)">Mở tất cả</button><button class="btn" onclick="expandAllMonths(false)">Rút gọn tất cả</button><button class="btn" onclick="window.print()">In thẻ kho</button></div>
+<div class="toolbar"><span class="qc-hint">Chọn tháng để mở rộng / rút gọn. Dòng cuối mỗi tháng là dòng trống để thêm phát sinh mới.</span><span class="push"></span><button class="btn" onclick="expandAllMonths(true)">Mở tất cả</button><button class="btn" onclick="expandAllMonths(false)">Rút gọn tất cả</button><button class="btn" onclick="xuatExcel()">⇩ Xuất Excel</button><button class="btn" onclick="window.print()">In thẻ kho</button></div>
 <div class="qc-months" id="cardMonths"></div>
 <div class="stock-table-wrap"><table class="stock-table"><thead><tr><th rowspan="2">Ngày, tháng</th><th colspan="3">Nhập</th><th colspan="4">Xuất</th><th rowspan="2">Hàng quá hạn / hủy (c)</th><th rowspan="2">Tồn (d)</th><th rowspan="2">Đếm kho thực tế</th><th rowspan="2">Người giao</th><th rowspan="2">Người nhận</th><th rowspan="2">Ghi chú</th><th rowspan="2"></th></tr><tr><th>Số lượng nhập (a)</th><th>Số lô</th><th>Hạn sử dụng</th><th>Số lượng (b)</th><th>Nơi nhận</th><th>Số lô</th><th>Hạn sử dụng</th></tr></thead><tbody id="cardBody"></tbody></table></div>
 </div><div class="modal-foot"><button class="btn" onclick="closeModal('cardModal')">Đóng</button></div></div></div>
@@ -302,6 +302,10 @@ function openTransaction(type){currentType=type;const p=state.products.find(x=>x
 function saveTransaction(){const p=state.products.find(x=>x.id===currentProductId);if(!$('tDate').value)return toast('Vui lòng chọn ngày');if(currentType==='adjust'){if($('tActual').value==='')return toast('Nhập số lượng kiểm kê thực tế');state.transactions.push({id:uid(),productId:p.id,date:$('tDate').value,type:'adjust',actual:Number($('tActual').value),qty:0,deliverer:$('tDeliverer').value.trim(),receiver:$('tReceiver').value.trim(),note:$('tNote').value.trim()})}else{const qty=Number($('tQty').value);if(!(qty>0))return toast('Số lượng phải lớn hơn 0');let batch='',expiry='';if(currentType==='import'){batch=$('tBatch').value.trim();expiry=$('tExpiry').value}else{const opt=$('tBatchSelect').selectedOptions[0];batch=$('tBatchSelect').value;expiry=opt?.dataset.expiry||'';const available=Number(opt?.dataset.qty||0);if(!batch)return toast('Không có lô khả dụng');if(qty>available)return toast(`Lô ${batch} chỉ còn ${fmt(available)} ${p.unit}`);if(qty>balance(p.id))return toast('Số lượng xuất vượt tồn kho hiện tại')}
 state.transactions.push({id:uid(),productId:p.id,date:$('tDate').value,type:currentType,qty,batch,expiry,destination:$('tDestination').value.trim(),deliverer:$('tDeliverer').value.trim(),receiver:$('tReceiver').value.trim(),note:$('tNote').value.trim()})}
 save();closeModal('txModal');renderSheet();renderMonths();renderCard();render();toast('Đã lưu phát sinh kho')}
+function xuatExcel(){
+  if(!currentProductId)return toast('Chưa mở thẻ kho nào');
+  location.href=window.QMS_STOCK.export+'?product='+encodeURIComponent(currentProductId);
+}
 function clearFilters(){$('search').value='';$('statusFilter').value='';render()}
 function resetDemo(){load()}
 function show(id){$(id).classList.add('show')}function closeModal(id){$(id).classList.remove('show')}
