@@ -8,7 +8,7 @@
 :root{--bg:#f4f7fb;--line:#dfe6ee;--line2:#edf1f5;--text:#1e293b;--muted:#64748b;
  --primary:#0f6b7a;--primary2:#0b5662;--soft:#e8f5f7;--green:#15803d;--green-soft:#ecfdf3;
  --amber:#a16207;--amber-soft:#fff8e6;--red:#b42318;--red-soft:#fff1f0;--blue:#1d4ed8;--blue-soft:#eef4ff;
- --purple:#6d28d9;--purple-soft:#f3eeff}
+ --purple:#6d28d9;--purple-soft:#f3eeff;--rowh:32px}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 Inter,"Segoe UI",system-ui,sans-serif}
 button,input,select,textarea{font:inherit}button{cursor:pointer}
@@ -57,10 +57,11 @@ tr.blank td{background:#fcfdfe}
 .b-xong{background:var(--green-soft);color:var(--green)}.b-off{background:#f1f5f9;color:#64748b}
 /* lưới sổ soạn */
 .grid-t{min-width:1180px;table-layout:fixed}
-.grid-t td{padding:0;height:32px}          /* chiều cao cố định để cuộn ảo tính đúng vị trí */
+.grid-t td{padding:0;height:var(--rowh)}   /* chiều cao cố định để cuộn ảo tính đúng vị trí */
 .grid-t td.pad{padding:5px 9px}
 .grid-t tr.spacer td{padding:0;border:0;background:#fff}
-#gridScroll{max-height:calc(100vh - 300px)}
+.grid-t td input{height:calc(var(--rowh) - 2px)}
+#gridScroll{max-height:calc(100vh - 300px);max-height:calc(100dvh - 300px)}
 .grid-t td input{width:100%;height:29px;border:1px solid transparent;border-radius:0;padding:0 8px;
  font-size:10.5px;background:transparent;color:var(--text)}
 .grid-t td input:hover{border-color:var(--line)}
@@ -152,7 +153,14 @@ tr.blank td{background:#fcfdfe}
 @media(max-width:1250px){.tiles{grid-template-columns:repeat(3,1fr)}.hc-wrap{grid-template-columns:1fr}
  .hc-list{border-right:0;border-bottom:1px solid var(--line);max-height:210px}}
 @media(max-width:700px){.shell{padding:12px 10px 30px}.tiles{grid-template-columns:repeat(2,1fr)}
- .head{flex-wrap:wrap}.f3,.f2{grid-template-columns:1fr}}
+ .head{flex-wrap:wrap}.f3,.f2{grid-template-columns:1fr}
+ /* iOS tự phóng to trang khi focus ô có cỡ chữ < 16px — phóng xong lại co về, nhìn như nháy.
+    Ép 16px cho mọi ô nhập trên điện thoại để Safari không zoom. */
+ :root{--rowh:44px}
+ .grid-t td input,.f input,.f select,.f textarea,.pbar input,.pbar select,
+ .bulk input,.yk-add input,.yk-add textarea{font-size:16px}
+ #gridScroll{max-height:calc(100dvh - 240px)}
+ .grid-t td.pad.code{font-size:12px}}
 </style>
 <link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script>window.SLIDE={
@@ -207,10 +215,10 @@ tr.blank td{background:#fcfdfe}
       </div>
       <div class="bulk off" id="bulkBar">
         <b id="bulkCount"></b>
-        <label class="lbl">Giá số<input id="bGia" style="width:80px"></label>
+        <label class="lbl">Giá số<input id="bGia" list="giaList" style="width:80px"></label>
         <label class="lbl">KTV cắt<input id="bCat" list="ktvList" style="width:130px"></label>
         <label class="lbl">KTV soạn<input id="bSoan" list="ktvList" style="width:130px"></label>
-        <label class="lbl">BS đọc<input id="bBs" list="ktvList" style="width:130px"></label>
+        <label class="lbl">BS đọc<input id="bBs" list="bsList" style="width:130px"></label>
         <button class="btn sm primary" onclick="apBulk()">Áp cho dòng đã chọn</button>
         <button class="btn sm" onclick="boChon()">Bỏ chọn</button>
       </div>
@@ -227,7 +235,10 @@ tr.blank td{background:#fcfdfe}
   <section class="view" id="v-doc">
     <div class="panel">
       <div class="pbar"><h2>Chọn giá tiêu bản</h2>
-        <span class="hint">Mỗi ô là một giá đã soạn. Chọn giá để đọc và ghi kết quả cho từng mã.</span></div>
+        <input id="giaGo" list="giaList" placeholder="Gõ số giá rồi Enter" style="width:170px"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();moGiaGo()}">
+        <button class="btn sm" onclick="moGiaGo()">Mở giá</button>
+        <span class="hint">Bấm vào thẻ bên dưới, hoặc gõ thẳng số giá vào ô trên.</span></div>
       <div class="racks" id="racks"></div>
     </div>
     <div class="panel" id="docPanel" style="display:none">
@@ -310,6 +321,7 @@ tr.blank td{background:#fcfdfe}
 </div>
 
 <datalist id="ktvList"></datalist>
+<datalist id="giaList"></datalist>
 <datalist id="bsList"></datalist>
 
 <!-- popup chỉ định marker + thông tin bệnh nhân -->
@@ -431,8 +443,16 @@ async function taiSoan(){
   D=await get(`${window.SLIDE.state}?prefix=${encodeURIComponent(p)}`);
   $('whoAmI').textContent=D.me?('Đang đăng nhập: '+D.me):'';
   $('ktvList').innerHTML=(D.ktv||[]).map(x=>`<option value="${esc(x)}">`).join('');
+  $('bsList').innerHTML=(D.ktv||[]).map(x=>`<option value="${esc(x)}">`).join('');
+  veGiaList();
   $('btnXuat').href=window.SLIDE.export+'?prefix='+encodeURIComponent(D.prefix);
   veDauMa();veSoan(true);
+}
+/** Gợi ý giá lấy từ chính các mã đã nhập — gõ giá mới vẫn được, đây chỉ là gợi ý. */
+function veGiaList(){
+  const gs=[...new Set(Object.values(D.rows||{}).map(r=>String(r.giaSo||'').trim()).filter(Boolean))]
+    .sort((a,b)=>(Number(a)||1e9)-(Number(b)||1e9)||a.localeCompare(b));
+  $('giaList').innerHTML=gs.map(g=>`<option value="${esc(g)}">`).join('');
 }
 function veDauMa(){
   const cur=$('prefix').value||D.prefix;
@@ -440,8 +460,33 @@ function veDauMa(){
     ${x.prefix}${x.n?` — ${x.n} mã`:' — sổ trống'}</option>`).join('');
 }
 /* ---- Cuộn ảo: sổ trải đủ 9999 dòng nhưng chỉ dựng những dòng đang nhìn thấy ---- */
-const ROW_H=32;
+/* Chiều cao dòng đọc thẳng từ CSS: điện thoại dùng dòng cao hơn cho dễ bấm,
+   nếu hằng số trong JS lệch với CSS thì cuộn ảo sẽ tính sai vị trí. */
+let ROW_H=32;
+function doCaoDong(){
+  const v=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowh'));
+  if(v>0)ROW_H=v;
+}
 let vStart=-1,vEnd=-1;
+/** Đang đặt con trỏ trong một ô của lưới? Lúc đó tuyệt đối không dựng lại tbody. */
+function dangGo(){
+  const a=document.activeElement;
+  return !!(a&&a.dataset&&a.dataset.seq&&a.closest&&a.closest('#soanBody'));
+}
+function luuTieuDiem(){
+  const a=document.activeElement;
+  if(!a||!a.dataset||!a.dataset.seq)return null;
+  let s=null,e=null;
+  try{s=a.selectionStart;e=a.selectionEnd}catch(_){}      // input number/date không cho đọc
+  return {seq:a.dataset.seq,f:a.dataset.f,s,e};
+}
+function traTieuDiem(t){
+  if(!t)return;
+  const el=document.querySelector(`#soanBody input[data-seq="${t.seq}"][data-f="${t.f}"]`);
+  if(!el)return;
+  el.focus({preventScroll:true});
+  if(t.s!=null){try{el.setSelectionRange(t.s,t.e)}catch(_){}}
+}
 function dsSeq(){
   return $('onlyFilled').checked
     ? Object.keys(D.rows).map(Number).sort((a,b)=>a-b)
@@ -453,6 +498,8 @@ function veSoan(epLai){
   const start=Math.max(0,Math.floor(sc.scrollTop/ROW_H)-6);
   const end=Math.min(list.length,start+Math.ceil(vh/ROW_H)+12);
   if(!epLai&&start===vStart&&end===vEnd)return;   // cùng khung nhìn thì khỏi dựng lại (giữ con trỏ đang gõ)
+  if(dangGo()&&!epLai)return;                     // đang gõ thì hoãn, tránh mất focus làm bàn phím nháy
+  const tieuDiem=luuTieuDiem();
   vStart=start;vEnd=end;
 
   let html=start>0?`<tr class="spacer"><td colspan="10" style="height:${start*ROW_H}px"></td></tr>`:'';
@@ -460,7 +507,7 @@ function veSoan(epLai){
     const s=list[k],r=D.rows[s];
     const v=f=>esc(r?(r[f]??''):'');
     const i=(f,type)=>`<input data-seq="${s}" data-f="${f}" type="${type||'text'}" value="${v(f)}"
-      ${f==='ktvCat'||f==='ktvSoan'?'list="ktvList"':''}>`;
+      ${f==='ktvCat'||f==='ktvSoan'?'list="ktvList"':f==='giaSo'?'list="giaList"':f==='bsDoc'?'list="bsList"':''}>`;
     html+=`<tr class="${sel.has(s)?'sel ':''}${dirty.has(s)?'dirty ':''}${r?'':'blank'}" data-seq="${s}">
       <td class="chk"><input type="checkbox" ${sel.has(s)?'checked':''} onclick="chonDong(${s},${k},event)"></td>
       <td class="pad code">${maCua(s)}</td>
@@ -472,6 +519,7 @@ function veSoan(epLai){
   if(con>0)html+=`<tr class="spacer"><td colspan="10" style="height:${con*ROW_H}px"></td></tr>`;
   if(!list.length)html='<tr><td colspan="10" class="empty">Chưa có mã nào được nhập trong sổ này.</td></tr>';
   $('soanBody').innerHTML=html;
+  traTieuDiem(tieuDiem);                          // trả con trỏ về đúng ô, giữ bàn phím không đóng
 
   const daNhap=Object.keys(D.rows).length;
   $('soanFoot').innerHTML=`Đầu mã <b>${D.prefix}</b> · sổ trải ${D.soDong} dòng · <b>${daNhap}</b> mã đã nhập
@@ -538,9 +586,10 @@ async function luuNgay(){
   const gui=new Set(dirty);dirty=new Set();capNhatSave();
   try{
     const j=await post(window.SLIDE.save,{prefix:D.prefix,rows});
+    veGiaList();
     $('saveState').className='saveState ok';$('saveState').textContent='Đã lưu';
     setTimeout(()=>{if(!dirty.size)$('saveState').textContent=''},1800);
-    if(j.removed)await taiSoan();
+    if(j.removed&&!dangGo())await taiSoan();   // đang gõ thì đừng tải lại, sẽ mất ô đang nhập
   }catch(e){gui.forEach(s=>dirty.add(s));capNhatSave();toast('Lưu thất bại: '+e.message,true)}
 }
 function apBulk(){
@@ -618,6 +667,12 @@ async function taiDoc(){
   if(curGia)veDoc();
 }
 function chonGia(g){curGia=g;docSel=new Set();taiDoc()}
+/** Mở giá bằng cách gõ số — không phải giá nào cũng có sẵn thẻ ở dưới. */
+function moGiaGo(){
+  const g=$('giaGo').value.trim();
+  if(!g)return toast('Nhập số giá',true);
+  chonGia(g);
+}
 function veDoc(){
   $('docTitle').textContent=`Giá ${curGia} — ${docRows.length} mã tiêu bản`;
   $('docBody').innerHTML=docRows.map(r=>`<tr class="${docSel.has(r.code)?'sel':''}">
@@ -931,7 +986,13 @@ $('hmTt').addEventListener('change',taiHmmd);
 $('mkMaBn').addEventListener('change',traBn);
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 window.addEventListener('beforeunload',e=>{if(dirty.size){e.preventDefault();e.returnValue=''}});
-window.addEventListener('resize',()=>veSoan(true));
+/* Bàn phím ảo bật/tắt cũng phát ra resize — đang gõ thì bỏ qua, khỏi nháy */
+let rsTimer=null;
+window.addEventListener('resize',()=>{
+  if(dangGo())return;
+  clearTimeout(rsTimer);rsTimer=setTimeout(()=>{doCaoDong();veSoan(true)},160);
+});
+doCaoDong();
 taiSoan().catch(e=>alert('Lỗi tải dữ liệu: '+e.message));
 </script>
 </body>
