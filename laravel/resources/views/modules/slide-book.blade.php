@@ -12,11 +12,19 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 Inter,"Segoe UI",system-ui,sans-serif}
 button,input,select,textarea{font:inherit}button{cursor:pointer}
-.shell{padding:16px 20px 40px;max-width:1760px}
-.breadcrumb{font-size:10.5px;color:var(--muted);margin-bottom:4px}.breadcrumb b{color:var(--text)}
-.head{display:flex;align-items:flex-start;gap:14px;margin-bottom:10px}
-.head h1{font-size:21px;margin:0}.head p{margin:2px 0 0;color:var(--muted);font-size:11px;max-width:820px}
+.shell{padding:11px 16px 14px;max-width:1760px}
+.breadcrumb{font-size:10.5px;color:var(--muted);margin-bottom:2px}.breadcrumb b{color:var(--text)}
+.head{display:flex;align-items:baseline;gap:12px;margin-bottom:7px;flex-wrap:wrap}
+.head h1{font-size:17px;margin:0;line-height:1.25}
+.head p{margin:0;color:var(--muted);font-size:10.5px}
 .head .right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* hướng dẫn dài gập lại, mở ra khi cần — khỏi ăn chỗ của bảng mỗi lần vào trang */
+.hd{font-size:10.5px;color:var(--muted)}
+.hd summary{cursor:pointer;color:var(--primary);font-weight:800;list-style:none}
+.hd summary::-webkit-details-marker{display:none}
+.hd summary:before{content:"？ ";font-weight:700}
+.hd[open] summary:before{content:"× "}
+.hd .n{background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-top:6px;line-height:1.65;max-width:1000px}
 .btn{height:32px;padding:0 12px;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:9px;
  font-size:11px;font-weight:750;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
 .btn:hover{border-color:#bdc8d4}.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -24,23 +32,27 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .btn.green{background:var(--green);border-color:var(--green);color:#fff}
 .btn.red{background:#fff;color:var(--red);border-color:#f1c7c3}
 .btn.sm{height:27px;padding:0 9px;font-size:10px;border-radius:7px}
-.tabs{display:flex;gap:6px;background:#e8eef4;padding:4px;border-radius:12px;margin-bottom:12px;flex-wrap:wrap}
-.tab{height:32px;padding:0 14px;border:0;background:transparent;border-radius:9px;font-size:11.5px;font-weight:800;color:#5b6b7d;
+.tabs{display:flex;gap:5px;background:#e8eef4;padding:3px;border-radius:11px;margin-bottom:8px;flex-wrap:wrap}
+.tab{height:29px;padding:0 12px;border:0;background:transparent;border-radius:8px;font-size:11.5px;font-weight:800;color:#5b6b7d;
  display:inline-flex;align-items:center;gap:6px}
 .tab.on{background:#fff;box-shadow:0 2px 7px rgba(15,23,42,.1);color:var(--primary)}
 .view{display:none}.view.on{display:block}
-.panel{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:12px}
-.pbar{padding:10px 12px;border-bottom:1px solid var(--line);background:#fbfcfd;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.panel{background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;margin-bottom:9px}
+.pbar{padding:7px 10px;border-bottom:1px solid var(--line);background:#fbfcfd;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .pbar h2{font-size:12.5px;margin:0}.pbar .push{margin-left:auto}
-.pbar input,.pbar select{height:31px;border:1px solid var(--line);border-radius:8px;padding:0 9px;font-size:10.5px;background:#fff}
+.pbar input,.pbar select{height:29px;border:1px solid var(--line);border-radius:8px;padding:0 9px;font-size:10.5px;background:#fff}
 .hint{font-size:9.5px;color:var(--muted)}
-.lbl{font-size:9px;font-weight:800;color:#475569;display:grid;gap:3px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:12px}
-.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer}
+/* nhãn nằm cạnh ô nhập cho thấp, thay vì xếp trên làm thanh công cụ cao gấp đôi */
+.lbl{font-size:9px;font-weight:800;color:#475569;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:7px;margin-bottom:9px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:11px;padding:7px 10px;cursor:pointer;
+ display:flex;align-items:baseline;gap:7px}
 .tile.on{border-color:var(--primary);box-shadow:0 0 0 2px #d3eaee}
-.tile .k{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
-.tile .v{font-size:21px;font-weight:800;line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
-.twrap{overflow:auto;max-height:calc(100vh - 320px)}
+.tile .k{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800;line-height:1.3}
+.tile .v{font-size:16px;font-weight:800;line-height:1.15;margin-left:auto;font-variant-numeric:tabular-nums}
+/* ô tra tiến trình lúc chưa nhập mã thì đừng chiếm cả khoảng trống to */
+#traBox .empty{padding:12px}
+.twrap{overflow:auto;max-height:calc(100vh - 250px)}
 table{width:100%;border-collapse:separate;border-spacing:0}
 th{position:sticky;top:0;z-index:3;background:#f8fafc;padding:8px 9px;border-bottom:1px solid var(--line);
  text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;color:#728197;white-space:nowrap}
@@ -56,10 +68,10 @@ tr.blank td{background:#fcfdfe}
 .b-ihc{background:var(--purple-soft);color:var(--purple)}.b-hc{background:var(--amber-soft);color:var(--amber)}
 .b-xong{background:var(--green-soft);color:var(--green)}.b-off{background:#f1f5f9;color:#64748b}
 /* lưới sổ soạn — chỉ đọc, dữ liệu vào sổ qua popup khởi tạo phiên */
-.grid-t{min-width:1260px;table-layout:fixed}
+.grid-t{min-width:1010px;table-layout:fixed}
 .grid-t td{padding:5px 9px;height:var(--rowh)}   /* chiều cao cố định để cuộn ảo tính đúng vị trí */
 .grid-t tr.spacer td{padding:0;border:0;background:#fff}
-#gridScroll{max-height:calc(100vh - 300px);max-height:calc(100dvh - 300px)}
+#gridScroll{max-height:calc(100vh - 218px);max-height:calc(100dvh - 218px)}
 /* hai cột đầu ghim lại để kéo ngang vẫn thấy mã tiêu bản */
 .grid-t .chk{width:32px;text-align:center;padding:0;position:sticky;left:0;z-index:2}
 .grid-t .chk input{width:14px;height:14px;accent-color:var(--primary)}
@@ -125,11 +137,11 @@ tr.blank td{background:#fcfdfe}
 .tl-i .w{font-size:9.5px;color:var(--muted)}
 /* hội chẩn */
 .hc-wrap{display:grid;grid-template-columns:290px 1fr}
-.hc-list{border-right:1px solid var(--line);max-height:calc(100vh - 300px);overflow:auto}
+.hc-list{border-right:1px solid var(--line);max-height:calc(100vh - 250px);overflow:auto}
 .hc-item{padding:10px 12px;border-bottom:1px solid var(--line2);cursor:pointer}
 .hc-item:hover{background:#fbfdfe}.hc-item.on{background:var(--soft);box-shadow:inset 3px 0 0 var(--primary)}
 .hc-item .c{font-size:11.5px;font-weight:800}.hc-item .s{font-size:9px;color:var(--muted);margin-top:2px}
-.hc-body{padding:14px 16px;max-height:calc(100vh - 300px);overflow:auto}
+.hc-body{padding:14px 16px;max-height:calc(100vh - 250px);overflow:auto}
 .yk{display:grid;gap:7px;margin:10px 0}
 .yk-i{border:1px solid var(--line);border-radius:11px;padding:9px 11px}
 .yk-i .t{display:flex;align-items:center;gap:7px;font-size:10px;margin-bottom:3px}
@@ -191,10 +203,16 @@ tr.blank td{background:#fcfdfe}
 .toast-wrap{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:150}
 .toast{background:#18333d;color:#fff;padding:10px 13px;border-radius:9px;font-size:10.5px;max-width:340px}
 .toast.err{background:#8a1f16}
+/* nút mở menu là nút nổi ở góc trái — chừa chỗ cho nó, không thì đè lên tiêu đề */
+@media(max-width:980px){.breadcrumb,.head{padding-left:44px}}
 @media(max-width:1250px){.tiles{grid-template-columns:repeat(3,1fr)}.hc-wrap{grid-template-columns:1fr}
  .hc-list{border-right:0;border-bottom:1px solid var(--line);max-height:210px}}
-@media(max-width:700px){.shell{padding:12px 10px 30px}.tiles{grid-template-columns:repeat(2,1fr)}
+@media(max-width:700px){.shell{padding:10px 10px 16px}.tiles{grid-template-columns:repeat(2,1fr)}
  .head{flex-wrap:wrap}.f3,.f2{grid-template-columns:1fr}
+ /* màn hẹp: mô tả đã nằm trong Hướng dẫn, và hàng tab kéo ngang thay vì xuống 3 dòng */
+ .head p,.head .right{display:none}
+ .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+ .tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto}
  /* iOS tự phóng to trang khi focus ô có cỡ chữ < 16px — phóng xong lại co về, nhìn như nháy.
     Ép 16px cho mọi ô nhập trên điện thoại để Safari không zoom. */
  :root{--rowh:38px}
@@ -229,15 +247,21 @@ tr.blank td{background:#fcfdfe}
 <div class="shell">
   <div class="breadcrumb">Giải phẫu bệnh › <b>Sổ soạn tiêu bản &amp; hóa mô miễn dịch</b></div>
   <div class="head">
-    <div>
-      <h1>Sổ soạn tiêu bản &amp; hóa mô miễn dịch</h1>
-      <p>Mã tiêu bản gồm 2 số cuối năm + chữ cái + 4 chữ số (26C2472), mỗi mã là duy nhất và có thể có nhiều block, nhiều lam.
-         Sổ ghi theo phiên: bấm <b>Khởi tạo phiên</b> để nhập số block / số tiêu bản cho các mã còn trống, rồi gán giá và kỹ thuật viên.
-         Ngày soạn tự ghi là ngày lưu phiên. Riêng cột <b>Ghi chú</b> luôn gõ thẳng trên lưới được, kể cả mã chưa ra
-         block / tiêu bản — dùng "Nhảy tới mã" để mở đúng dòng rồi ghi lý do.</p>
-    </div>
+    <h1>Sổ soạn tiêu bản &amp; hóa mô miễn dịch</h1>
+    <p>Mã 26C2472 = 2 số cuối năm + chữ cái + 4 chữ số · sổ ghi theo phiên · ngày soạn lấy theo ngày lưu phiên.</p>
     <div class="right"><span class="hint" id="whoAmI"></span></div>
   </div>
+  <details class="hd" id="hdBox"><summary>Hướng dẫn</summary>
+    <div class="n">
+      <b>Sổ soạn</b> — bấm <b>＋ Khởi tạo phiên soạn</b> để nhập số block / số tiêu bản cho các mã còn trống, rồi gán
+      giá và kỹ thuật viên; hoặc <b>📋 Dán từ Excel</b> nếu có sẵn danh sách. Lưới chỉ đọc: mã đã đủ thông tin thì nền
+      mã chuyển xám và bấm được nút <b>✎ Sửa</b>. Riêng cột <b>Ghi chú</b> luôn gõ thẳng trên lưới, kể cả mã chưa ra
+      block / tiêu bản — dùng ô <b>Nhảy tới mã</b> để mở đúng dòng rồi ghi lý do.<br>
+      <b>Bác sĩ đọc theo giá</b> — tích chọn giá rồi <b>✋ Nhận</b>, cả giá tự gán tên bác sĩ và chuyển sang
+      <i>đã nhận</i>. Mã đi qua ba trạng thái: chưa đọc → đã nhận → đã đọc. Nhập kết quả xong bấm
+      <b>🏁 Hoàn tất</b> để chốt ca vào lịch sử và trả mã về sổ soạn dùng lại.
+    </div>
+  </details>
 
   <div class="tabs">
     <button class="tab on" data-v="soan" onclick="go('soan')">🔬 Sổ soạn tiêu bản</button>
@@ -273,7 +297,12 @@ tr.blank td{background:#fcfdfe}
         <button class="btn sm" onclick="boChon()">Bỏ chọn</button>
         <span class="hint">Dùng khi cần sửa lại giá / KTV của phiên đã lưu.</span>
       </div>
-      <div class="twrap" id="gridScroll"><table class="grid-t"><thead><tr>
+      <div class="twrap" id="gridScroll"><table class="grid-t">
+        <!-- cột số cho hẹp, phần rộng dồn cho tên người và ghi chú -->
+        <colgroup><col style="width:32px"><col style="width:92px"><col style="width:70px"><col style="width:78px">
+          <col style="width:92px"><col style="width:56px"><col style="width:124px"><col style="width:124px">
+          <col style="width:124px"><col><col style="width:74px"></colgroup>
+        <thead><tr>
         <th class="chk"><input type="checkbox" id="chkAll" onclick="chonHet(this.checked)"></th>
         <th class="code">Mã tiêu bản</th><th>Số block</th><th>Số tiêu bản</th><th>Ngày soạn</th><th>Giá</th>
         <th>KTV cắt</th><th>KTV soạn</th><th>BS đọc</th><th>Ghi chú</th><th class="act">Thao tác</th>
@@ -294,9 +323,6 @@ tr.blank td{background:#fcfdfe}
                onkeydown="if(event.key==='Enter'){event.preventDefault();moGiaGo()}">
         <button class="btn sm" onclick="moGiaGo()">Mở giá</button>
       </div>
-      <div class="pbar" style="border-bottom:0;padding-top:0"><span class="hint">
-        Tích vào ô ở góc thẻ để chọn giá cần nhận — nhận xong cả giá tự gán tên bác sĩ và chuyển sang
-        <b>đã nhận</b>. Bấm vào thân thẻ để mở danh sách mã của giá đó.</span></div>
       <div class="racks" id="racks"></div>
     </div>
     <div class="panel" id="docPanel" style="display:none">
@@ -309,9 +335,6 @@ tr.blank td{background:#fcfdfe}
         <button class="btn sm" onclick="doiTt('chua')">↩ Chưa đọc</button>
         <button class="btn sm green" onclick="hoanTat()">🏁 Hoàn tất &amp; lưu lịch sử</button>
       </div>
-      <div class="pbar" style="border-bottom:0;padding-bottom:0"><span class="hint">
-        Mã <b>đã đọc</b> và <b>đã nhập kết quả</b> mới hoàn tất được. Hoàn tất là chốt ca vào lịch sử ở tab
-        Hóa mô miễn dịch, đồng thời xóa dòng đó khỏi sổ soạn để mã tiêu bản quay lại danh sách mã trống.</span></div>
       <div class="twrap"><table><thead><tr>
         <th class="chk"><input type="checkbox" id="chkAllDoc" onclick="chonHetDoc(this.checked)"></th>
         <th>Mã tiêu bản</th><th class="ctr">Block</th><th class="ctr">Lam</th>
@@ -701,6 +724,11 @@ function veSoan(epLai){
   // ô tích đầu bảng nằm ngoài tbody nên phải tự đồng bộ, không thì lệch với vùng đang chọn
   $('chkAll').checked=daNhap>0&&sel.size>=daNhap;
   capNhatSave();
+
+  // khung bảng đang rỗng thì thấp, dựng xong mới cao lên — dựng lại một lần cho kín màn hình
+  if(sc.clientHeight>vh+8&&!veSoan.lai){
+    veSoan.lai=1;veSoan(true);veSoan.lai=0;
+  }
 }
 let rafId=null;
 function onCuon(){if(rafId)return;rafId=requestAnimationFrame(()=>{rafId=null;veSoan()})}
