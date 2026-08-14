@@ -35,7 +35,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .pbar input,.pbar select{height:31px;border:1px solid var(--line);border-radius:8px;padding:0 9px;font-size:10.5px;background:#fff}
 .hint{font-size:9.5px;color:var(--muted)}
 .lbl{font-size:9px;font-weight:800;color:#475569;display:grid;gap:3px}
-.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:12px}
 .tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer}
 .tile.on{border-color:var(--primary);box-shadow:0 0 0 2px #d3eaee}
 .tile .k{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
@@ -213,6 +213,7 @@ tr.blank td{background:#fcfdfe}
   reader:"{{ route('slide.reader') }}", mark:"{{ route('slide.mark') }}", take:"{{ route('slide.take') }}",
   status:"{{ route('slide.status') }}", trace:"{{ route('slide.trace') }}",
   finish:"{{ route('slide.finish') }}", history:"{{ route('slide.history') }}",
+  historyExport:"{{ route('slide.history.export') }}",
   ihc:"{{ route('slide.ihc') }}", ihcSave:"{{ route('slide.ihc.save') }}",
   ihcStep:"{{ route('slide.ihc.step', ['ihc' => '__ID__']) }}",
   consult:"{{ route('slide.consult') }}", cOpen:"{{ route('slide.consult.open') }}",
@@ -346,7 +347,8 @@ tr.blank td{background:#fcfdfe}
       <div class="pbar"><h2>Lịch sử mã đã hoàn tất</h2>
         <span class="hint">Ca đã đọc xong và được chốt — mã tiêu bản đã trả về sổ soạn để dùng lại.</span>
         <span class="push"></span>
-        <input id="lsQ" placeholder="Tìm mã, bệnh nhân, giá, bác sĩ, kết quả..." style="width:260px">
+        <input id="lsQ" placeholder="Tìm mã, bệnh nhân, giá, bác sĩ, kết quả, ghi chú..." style="width:260px">
+        <a class="btn sm" id="lsXuat" href="{{ route('slide.history.export') }}">⇩ Xuất Excel</a>
         <span class="hint" id="lsCount"></span>
       </div>
       <div class="twrap"><table><thead><tr>
@@ -563,8 +565,8 @@ const PANELS={
  'Gan':['HepPar-1','Arginase-1','Glypican-3','AFP'],
  'Không rõ nguồn gốc':['CK7','CK20','TTF-1','CDX2','P63'],
 };
-const TT={soan:['soan','Đã soạn'],doc:['doc','Bác sĩ đã đọc'],ihc:['ihc','Đang hóa mô'],
-  hc:['hc','Đang hội chẩn'],xong:['xong','Đã xong']};
+const TT={chuaSoan:['off','Chưa ra tiêu bản'],soan:['soan','Đã soạn'],nhan:['hc','BS đã nhận'],
+  doc:['doc','Bác sĩ đã đọc'],ihc:['ihc','Đang hóa mô'],hc:['hc','Đang hội chẩn'],xong:['xong','Đã xong']};
 
 let D={rows:{},from:1,to:250,prefix:'',dauMa:[],me:'',ktv:[]};
 let dirty=new Set(), sel=new Set(), lastIdx=-1, saveTimer=null;
@@ -696,6 +698,8 @@ function veSoan(epLai){
     · đang dựng dòng ${list.length?list[start]:0}–${list.length?list[end-1]:0}`;
   $('bulkBar').classList.toggle('off',!sel.size);
   $('bulkCount').textContent=`Đang chọn ${sel.size} dòng`;
+  // ô tích đầu bảng nằm ngoài tbody nên phải tự đồng bộ, không thì lệch với vùng đang chọn
+  $('chkAll').checked=daNhap>0&&sel.size>=daNhap;
   capNhatSave();
 }
 let rafId=null;
@@ -1185,6 +1189,7 @@ async function taiLichSu(){
   const q=$('lsQ').value.trim();
   const d=await get(window.SLIDE.history+(q?'?q='+encodeURIComponent(q):''));
   LS=d.rows||[];
+  $('lsXuat').href=window.SLIDE.historyExport+(q?'?q='+encodeURIComponent(q):'');   // xuất đúng phần đang lọc
   $('lsBody').innerHTML=d.rows.length?d.rows.map(h=>`<tr>
     <td class="main">${esc(h.code)}</td>
     <td class="ctr">${h.lan>1?`<span class="badge b-hc">lượt ${h.lan}</span>`:h.lan}</td>
@@ -1354,8 +1359,7 @@ function veChiTietLs(h){
 async function taiTinhTrang(){
   const q=$('ttQ').value.trim(),tt=window.__tt||'';
   const d=await get(`${window.SLIDE.status}?q=${encodeURIComponent(q)}&tt=${encodeURIComponent(tt)}`);
-  $('ttTiles').innerHTML=[['soan','Đã soạn'],['doc','Bác sĩ đã đọc'],['ihc','Đang hóa mô'],
-    ['hc','Đang hội chẩn'],['xong','Đã xong']].map(([k,l])=>`<div class="tile ${tt===k?'on':''}"
+  $('ttTiles').innerHTML=Object.entries(TT).map(([k,v])=>[k,v[1]]).map(([k,l])=>`<div class="tile ${tt===k?'on':''}"
     onclick="window.__tt='${tt===k?'':k}';taiTinhTrang()"><div class="k">${l}</div><div class="v">${d.dem[k]||0}</div></div>`).join('');
   $('ttBody').innerHTML=d.rows.length?d.rows.map(r=>{const s=TT[r.trangThai]||TT.soan;
     return `<tr><td class="main">${esc(r.code)}</td><td class="ctr">${r.soBlock??'—'}</td><td class="ctr">${r.soTieuBan??'—'}</td>
@@ -1473,6 +1477,9 @@ $('jump').addEventListener('change',e=>{
   nhayToi(n);
 });
 $('ttQ').addEventListener('input',()=>{clearTimeout(window.__tq);window.__tq=setTimeout(taiTinhTrang,320)});
+/* gõ mã rồi Enter là chạy luôn, khỏi phải với chuột sang nút */
+$('traCode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();xemTien()}});
+$('hcCode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();moHc()}});
 $('hmTt').addEventListener('change',taiHmmd);
 $('lsQ').addEventListener('input',()=>{clearTimeout(window.__lsq);window.__lsq=setTimeout(taiLichSu,320)});
 $('mkMaBn').addEventListener('change',traBn);

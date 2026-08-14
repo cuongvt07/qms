@@ -564,22 +564,54 @@ class SlideBookController extends Controller
         ];
     }
 
-    /** Lịch sử các lượt đã hoàn tất — nằm trong tab Sổ hóa mô miễn dịch. */
-    public function historyState(Request $request): JsonResponse
+    /** Dòng lịch sử khớp từ khóa tìm — dùng chung cho màn xem và bản xuất Excel. */
+    private function timLichSu(string $q)
     {
-        $q = trim((string) $request->query('q', ''));
-
-        $rows = SlideHistory::orderByDesc('ngay_chot')->orderByDesc('id')
+        return SlideHistory::orderByDesc('ngay_chot')->orderByDesc('id')
             ->when($q !== '', fn ($b) => $b->where(fn ($w) => $w
                 ->where('code', 'like', "%{$q}%")
                 ->orWhere('benh_nhan', 'like', "%{$q}%")
                 ->orWhere('ma_bn', 'like', "%{$q}%")
                 ->orWhere('gia_so', $q)
                 ->orWhere('bs_doc', 'like', "%{$q}%")
-                ->orWhere('ket_qua', 'like', "%{$q}%")))
+                ->orWhere('ktv_soan', 'like', "%{$q}%")
+                ->orWhere('ghi_chu', 'like', "%{$q}%")
+                ->orWhere('ket_qua', 'like', "%{$q}%")));
+    }
+
+    /** Lịch sử các lượt đã hoàn tất — nằm trong tab Sổ hóa mô miễn dịch. */
+    public function historyState(Request $request): JsonResponse
+    {
+        $rows = $this->timLichSu(trim((string) $request->query('q', '')))
             ->limit(400)->get()->map(fn ($h) => $this->goiLichSu($h))->all();
 
         return response()->json(['rows' => $rows, 'tong' => SlideHistory::count()]);
+    }
+
+    public function exportHistory(Request $request)
+    {
+        $q    = trim((string) $request->query('q', ''));
+        $rows = $this->timLichSu($q)->get()->map(fn ($h) => [
+            $h->code, (int) $h->lan, $h->so_block, $h->so_tieu_ban,
+            $h->ngay_soan?->format('d/m/Y') ?? '', $h->gia_so ?? '',
+            $h->ktv_cat ?? '', $h->ktv_soan ?? '', $h->bs_doc ?? '',
+            $h->ngay_nhan?->format('d/m/Y') ?? '', $h->ngay_doc?->format('d/m/Y') ?? '',
+            $h->ket_qua ?? '', $h->ma_bn ?? '', $h->benh_nhan ?? '', $h->khoa ?? '', $h->vi_tri ?? '',
+            implode(', ', $h->markers ?? []), $h->ket_luan_hoi_chan ?? '', $h->ghi_chu ?? '',
+            $h->ngay_chot?->format('d/m/Y') ?? '', $h->nguoi_chot ?? '',
+        ])->all();
+
+        return XlsxWriter::taiVe('lich-su-tieu-ban-da-hoan-tat.xlsx', [[
+            'name'   => 'Lịch sử hoàn tất',
+            'title'  => 'LỊCH SỬ MÃ TIÊU BẢN ĐÃ HOÀN TẤT',
+            'note'   => ['Xuất ngày ' . now()->format('d/m/Y H:i') . ' · ' . count($rows) . ' lượt'
+                . ($q !== '' ? ' · lọc theo "' . $q . '"' : '')],
+            'header' => ['Mã tiêu bản', 'Lượt', 'Số block', 'Số tiêu bản', 'Ngày soạn', 'Giá', 'KTV cắt',
+                'KTV soạn', 'BS đọc', 'Ngày nhận', 'Ngày đọc', 'Kết quả / đánh giá', 'Mã BN', 'Bệnh nhân',
+                'Khoa', 'Vị trí lấy mẫu', 'Marker HMMD', 'Kết luận hội chẩn', 'Ghi chú', 'Ngày hoàn tất', 'Người chốt'],
+            'widths' => [14, 6, 9, 10, 12, 7, 14, 14, 16, 12, 12, 40, 12, 22, 12, 20, 30, 34, 22, 13, 16],
+            'rows'   => $rows,
+        ]]);
     }
 
     /** ===== Hóa mô miễn dịch ===== */
@@ -966,23 +998,28 @@ class SlideBookController extends Controller
         $hc   = SlideConsult::whereIn('slide_code', $rows->pluck('code'))->get()->keyBy('slide_code');
 
         $out = [];
-        $dem = ['soan' => 0, 'doc' => 0, 'ihc' => 0, 'hc' => 0, 'xong' => 0];
+        $dem = ['chuaSoan' => 0, 'soan' => 0, 'nhan' => 0, 'doc' => 0, 'ihc' => 0, 'hc' => 0, 'xong' => 0];
         foreach ($rows as $r) {
             $h  = $ihc->get($r->code);
             $c  = $hc->get($r->code);
             $st = 'soan';
-            if ($c && ! $c->ket_luan) {
+            if ($r->so_block === null && $r->so_tieu_ban === null) {
+                $st = 'chuaSoan';                       // mới ghi lý do, chưa ra tiêu bản
+            } elseif ($c && ! $c->ket_luan) {
                 $st = 'hc';
             } elseif ($h && $h->contains(fn ($x) => $x->trang_thai !== 'doc')) {
                 $st = 'ihc';
             } elseif ($h) {
                 $st = 'xong';
-            } elseif ($r->da_doc) {
+            } elseif ($r->trang_thai_doc === 'doc') {
                 $st = 'doc';
+            } elseif ($r->trang_thai_doc === 'nhan') {
+                $st = 'nhan';
             }
             $dem[$st]++;
 
             $hay = mb_strtolower($r->code . ' ' . $r->gia_so . ' ' . $r->bs_doc . ' ' . $r->ktv_soan . ' '
+                . $r->ktv_cat . ' ' . $r->ket_qua . ' ' . $r->ghi_chu . ' '
                 . ($h ? $h->pluck('benh_nhan')->implode(' ') . ' ' . $h->pluck('markers')->flatten()->implode(' ') : ''));
             if ($q !== '' && ! str_contains($hay, mb_strtolower($q))) {
                 continue;
