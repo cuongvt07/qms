@@ -57,8 +57,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/so-tieu-ban', [\App\Http\Controllers\SlideBookController::class, 'page'])->name('slide.page');
     Route::get('/qms/so-tieu-ban/du-lieu', [\App\Http\Controllers\SlideBookController::class, 'state'])->name('slide.state');
     Route::post('/qms/so-tieu-ban/luu', [\App\Http\Controllers\SlideBookController::class, 'saveRows'])->name('slide.save');
+    Route::get('/qms/so-tieu-ban/phien/ma-trong', [\App\Http\Controllers\SlideBookController::class, 'sessionCandidates'])->name('slide.session.ma');
+    Route::post('/qms/so-tieu-ban/phien', [\App\Http\Controllers\SlideBookController::class, 'saveSession'])->name('slide.session.save');
     Route::get('/qms/so-tieu-ban/doc', [\App\Http\Controllers\SlideBookController::class, 'readerState'])->name('slide.reader');
     Route::post('/qms/so-tieu-ban/danh-dau-doc', [\App\Http\Controllers\SlideBookController::class, 'markRead'])->name('slide.mark');
+    Route::post('/qms/so-tieu-ban/doc/nhan-gia', [\App\Http\Controllers\SlideBookController::class, 'takeRacks'])->name('slide.take');
+    Route::post('/qms/so-tieu-ban/hoan-tat', [\App\Http\Controllers\SlideBookController::class, 'finishSlides'])->name('slide.finish');
+    Route::get('/qms/so-tieu-ban/lich-su', [\App\Http\Controllers\SlideBookController::class, 'historyState'])->name('slide.history');
     Route::get('/qms/so-tieu-ban/tinh-trang', [\App\Http\Controllers\SlideBookController::class, 'statusState'])->name('slide.status');
     Route::get('/qms/so-tieu-ban/tien-trinh', [\App\Http\Controllers\SlideBookController::class, 'trace'])->name('slide.trace');
     Route::get('/qms/so-tieu-ban/hmmd', [\App\Http\Controllers\SlideBookController::class, 'ihcState'])->name('slide.ihc');

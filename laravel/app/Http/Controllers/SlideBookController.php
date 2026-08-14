@@ -6,6 +6,7 @@ use App\Models\IhcMarker;
 use App\Models\SlideConsult;
 use App\Models\SlideConsultImage;
 use App\Models\SlideConsultNote;
+use App\Models\SlideHistory;
 use App\Models\SlideIhc;
 use App\Models\SlidePatient;
 use App\Models\SlideRecord;
@@ -87,6 +88,8 @@ class SlideBookController extends Controller
             'bsDoc'     => $r->bs_doc ?? '',
             'ketQua'    => $r->ket_qua ?? '',
             'daDoc'     => (bool) $r->da_doc,
+            'ttDoc'     => $r->trang_thai_doc ?: 'chua',
+            'ngayNhan'  => $r->ngay_nhan?->toDateString() ?? '',
             'ngayDoc'   => $r->ngay_doc?->toDateString() ?? '',
             'ghiChu'    => $r->ghi_chu ?? '',
         ];
@@ -210,18 +213,138 @@ class SlideBookController extends Controller
         return response()->json(['ok' => true, 'saved' => $luu, 'removed' => $xoa]);
     }
 
+    /** Mã còn trống của một đầu mã (chưa nhập số block / số tiêu bản) để khởi tạo phiên soạn. */
+    public function sessionCandidates(Request $request): JsonResponse
+    {
+        [$yy, $letter] = $this->tachDauMa($request->query('prefix'));
+        $n  = min(max((int) $request->query('n', 10), 1), 200);
+        $tu = (int) $request->query('tu', 0);
+
+        $daSoan = array_flip(
+            SlideRecord::where('yy', $yy)->where('letter', $letter)
+                ->where(fn ($q) => $q->whereNotNull('so_block')->orWhereNotNull('so_tieu_ban'))
+                ->pluck('seq')->all()
+        );
+
+        $ma = [];
+        for ($s = max(1, $tu); $s <= self::SO_DONG && count($ma) < $n; $s++) {
+            if (isset($daSoan[$s])) {
+                continue;                       // mã đã soạn rồi thì bỏ qua, phiên chỉ lấy mã trống
+            }
+            $ma[] = ['seq' => $s, 'code' => self::taoMa($yy, $letter, $s)];
+        }
+
+        // mã trống đầu tiên của sổ — phiên mới mặc định bắt đầu từ đây
+        $dau = 1;
+        while ($dau <= self::SO_DONG && isset($daSoan[$dau])) {
+            $dau++;
+        }
+
+        return response()->json([
+            'prefix'  => sprintf('%02d%s', $yy, $letter),
+            'ma'      => $ma,
+            'dauTien' => $dau,
+            'daSoan'  => count($daSoan),
+            'gia'     => SlideRecord::whereNotNull('gia_so')->where('gia_so', '!=', '')
+                ->orderByDesc('id')->pluck('gia_so')->unique()->take(18)->values()->all(),
+            'ktv'     => \App\Models\QmsStaff::where('active', true)->orderBy('id')->pluck('name')->all(),
+            'me'      => $this->me(),
+            'today'   => now()->toDateString(),
+        ]);
+    }
+
+    /**
+     * Lưu một phiên soạn: một loạt mã trống được nhập số block / số tiêu bản,
+     * rồi gán chung giá và kỹ thuật viên. Ngày soạn luôn là ngày bấm lưu.
+     */
+    public function saveSession(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'prefix'           => 'required|string',
+            'rows'             => 'required|array|min:1',
+            'rows.*.seq'       => 'required|integer|min:1|max:' . self::SO_DONG,
+            'rows.*.soBlock'   => 'nullable|integer|min:0|max:9999',
+            'rows.*.soTieuBan' => 'nullable|integer|min:0|max:9999',
+            'giaSo'            => 'required|string|max:20',
+            'ktvCat'           => 'nullable|string|max:120',
+            'ktvSoan'          => 'required|string|max:120',
+            'ghiChu'           => 'nullable|string',
+        ]);
+        [$yy, $letter] = $this->tachDauMa($data['prefix']);
+
+        $dong = [];
+        foreach ($data['rows'] as $r) {
+            $b = $r['soBlock'] ?? null;
+            $t = $r['soTieuBan'] ?? null;
+            if ($b === null && $t === null) {
+                continue;                       // dòng để trống trong popup thì không ghi xuống sổ
+            }
+            $dong[(int) $r['seq']] = ['so_block' => $b, 'so_tieu_ban' => $t];
+        }
+        if (! $dong) {
+            return response()->json(['ok' => false,
+                'errors' => ['Chưa nhập số block / số tiêu bản cho mã nào']], 422);
+        }
+
+        // hai người cùng mở phiên có thể trùng mã — chặn lại thay vì đè lên phiên của người kia
+        $codes = array_map(fn ($s) => self::taoMa($yy, $letter, $s), array_keys($dong));
+        $trung = SlideRecord::whereIn('code', $codes)
+            ->where(fn ($q) => $q->whereNotNull('so_block')->orWhereNotNull('so_tieu_ban'))
+            ->pluck('code')->all();
+        if ($trung) {
+            return response()->json(['ok' => false, 'errors' => [
+                'Các mã sau vừa có người soạn, mở lại phiên để lấy mã khác: ' . implode(', ', array_slice($trung, 0, 12)),
+            ]], 422);
+        }
+
+        $chung = [
+            'ngay_soan' => now()->toDateString(),
+            'gia_so'    => trim($data['giaSo']),
+            'ktv_cat'   => trim((string) ($data['ktvCat'] ?? '')) ?: null,
+            'ktv_soan'  => trim($data['ktvSoan']),
+        ];
+        if (($ghiChu = trim((string) ($data['ghiChu'] ?? ''))) !== '') {
+            $chung['ghi_chu'] = $ghiChu;
+        }
+
+        foreach ($dong as $seq => $v) {
+            SlideRecord::updateOrCreate(
+                ['code' => self::taoMa($yy, $letter, $seq)],
+                $v + $chung + ['yy' => $yy, 'letter' => $letter, 'seq' => $seq]
+            );
+        }
+
+        $ds     = array_keys($dong);
+        sort($ds);
+        $prefix = sprintf('%02d%s', $yy, $letter);
+        $tu     = self::taoMa($yy, $letter, $ds[0]);
+        $den    = self::taoMa($yy, $letter, end($ds));
+        ActivityLogger::log('slide_book', sprintf('Phiên soạn %s: %d mã (%s – %s), giá %s, KTV soạn %s',
+            $prefix, count($ds), $tu, $den, $chung['gia_so'], $chung['ktv_soan']));
+
+        return response()->json(['ok' => true, 'n' => count($ds), 'tu' => $tu, 'den' => $den, 'seqDau' => $ds[0]]);
+    }
+
     /** ===== Màn bác sĩ đọc: gom theo giá ===== */
     public function readerState(Request $request): JsonResponse
     {
         $gia = trim((string) $request->query('gia', ''));
 
         $giaList = SlideRecord::whereNotNull('gia_so')->where('gia_so', '!=', '')
-            ->selectRaw('gia_so, COUNT(*) n, SUM(da_doc = 1) daDoc, MAX(ngay_soan) ngaySoan')
+            ->selectRaw("gia_so, COUNT(*) n,
+                SUM(trang_thai_doc = 'chua') chua,
+                SUM(trang_thai_doc = 'nhan') nhan,
+                SUM(trang_thai_doc = 'doc') doc,
+                MAX(ngay_soan) ngaySoan,
+                GROUP_CONCAT(DISTINCT NULLIF(bs_doc, '') ORDER BY bs_doc SEPARATOR ', ') bs")
             ->groupBy('gia_so')->orderByRaw('CAST(gia_so AS UNSIGNED), gia_so')->get()
             ->map(fn ($r) => [
                 'gia'      => $r->gia_so,
                 'n'        => (int) $r->n,
-                'daDoc'    => (int) $r->daDoc,
+                'chua'     => (int) $r->chua,
+                'nhan'     => (int) $r->nhan,
+                'doc'      => (int) $r->doc,
+                'bs'       => (string) ($r->bs ?? ''),
                 'ngaySoan' => $r->ngaySoan ? substr((string) $r->ngaySoan, 0, 10) : '',
             ])->all();
 
@@ -251,31 +374,212 @@ class SlideBookController extends Controller
         ]);
     }
 
-    /** Tích chọn nhiều mã rồi đánh dấu đã đọc kết quả (hoặc bỏ đánh dấu). */
+    /**
+     * Bác sĩ nhận một hay nhiều giá về đọc: cả giá được gán tên bác sĩ
+     * và chuyển sang "đã nhận". Mã nào đã đọc xong thì giữ nguyên người đã đọc.
+     */
+    public function takeRacks(Request $request): JsonResponse
+    {
+        $d = $request->validate([
+            'gia'   => 'required|array|min:1',
+            'gia.*' => 'string|max:20',
+            'bs'    => 'required|string|max:120',
+        ]);
+        $bs = trim($d['bs']);
+
+        $nhan = $boQua = 0;
+        foreach (SlideRecord::whereIn('gia_so', $d['gia'])->get() as $r) {
+            if ($r->trang_thai_doc === 'doc') {
+                $boQua++;
+                continue;
+            }
+            $r->datTrangThaiDoc('nhan', $bs);
+            $r->save();
+            $nhan++;
+        }
+        ActivityLogger::log('slide_book', sprintf('BS %s nhận giá %s — %d mã tiêu bản',
+            $bs, implode(', ', $d['gia']), $nhan));
+
+        return response()->json(['ok' => true, 'n' => $nhan, 'boQua' => $boQua]);
+    }
+
+    /** Tích chọn nhiều mã rồi chuyển trạng thái đọc: chưa đọc / đã nhận / đã đọc. */
     public function markRead(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'codes'   => 'required|array|min:1',
-            'codes.*' => 'string',
-            'daDoc'   => 'boolean',
-            'bsDoc'   => 'nullable|string|max:120',
+            'codes'     => 'required|array|min:1',
+            'codes.*'   => 'string',
+            'trangThai' => 'required|in:chua,nhan,doc',
+            'bsDoc'     => 'nullable|string|max:120',
         ]);
-        $daDoc = (bool) ($data['daDoc'] ?? true);
-        $bs    = trim((string) ($data['bsDoc'] ?? '')) ?: null;
+        $bs = trim((string) ($data['bsDoc'] ?? '')) ?: null;
 
         $n = 0;
         foreach (SlideRecord::whereIn('code', $data['codes'])->get() as $r) {
-            $r->da_doc   = $daDoc;
-            $r->ngay_doc = $daDoc ? now()->toDateString() : null;
-            if ($bs) {
-                $r->bs_doc = $bs;
-            }
+            $r->datTrangThaiDoc($data['trangThai'], $bs);
             $r->save();
             $n++;
         }
-        ActivityLogger::log('slide_book', ($daDoc ? 'Đánh dấu đã đọc' : 'Bỏ đánh dấu đọc') . " {$n} mã tiêu bản");
+        $ten = ['chua' => 'chưa đọc', 'nhan' => 'đã nhận', 'doc' => 'đã đọc kết quả'][$data['trangThai']];
+        ActivityLogger::log('slide_book', "Chuyển {$n} mã tiêu bản sang trạng thái {$ten}");
 
         return response()->json(['ok' => true, 'n' => $n]);
+    }
+
+    /**
+     * Chốt các mã đã đọc xong: chụp cả ca vào lịch sử, dọn phiếu hóa mô / hội chẩn
+     * đi kèm rồi xóa dòng trong sổ soạn để mã quay về danh sách mã trống, dùng lại cho ca sau.
+     */
+    public function finishSlides(Request $request): JsonResponse
+    {
+        $d = $request->validate(['codes' => 'required|array|min:1', 'codes.*' => 'string|max:12']);
+        $me = $this->me();
+
+        $xong = $vuong = [];
+        foreach ($d['codes'] as $c) {
+            $code = strtoupper(trim($c));
+            $r    = SlideRecord::where('code', $code)->first();
+
+            if (! $r) {
+                $vuong[] = "{$code}: không còn trong sổ soạn";
+                continue;
+            }
+            if ($r->trang_thai_doc !== 'doc') {
+                $vuong[] = "{$code}: chưa ở trạng thái đã đọc";
+                continue;
+            }
+            if (trim((string) $r->ket_qua) === '') {
+                $vuong[] = "{$code}: bác sĩ chưa nhập kết quả";
+                continue;
+            }
+
+            // còn việc dở dang thì không cho chốt, kẻo xóa mất phiếu đang chạy
+            $ihc = SlideIhc::where('slide_code', $code)->get();
+            if ($ihc->contains(fn ($h) => $h->trang_thai !== 'doc')) {
+                $vuong[] = "{$code}: phiếu hóa mô miễn dịch chưa đọc kết quả";
+                continue;
+            }
+            $hc = SlideConsult::where('slide_code', $code)->first();
+            if ($hc && ! $hc->ket_luan) {
+                $vuong[] = "{$code}: phiên hội chẩn chưa chốt kết luận";
+                continue;
+            }
+
+            $h0 = $ihc->last();
+            $bn = SlidePatient::find($r->patient_id ?? $h0?->patient_id);
+
+            // phiếu hóa mô và phiên hội chẩn sắp bị xóa nên phải chép nguyên văn vào lịch sử
+            $sHmmd = $ihc->map(fn ($h) => [
+                'markers'     => $h->markers ?? [],
+                'benhNhan'    => $h->benh_nhan, 'namSinh' => $h->nam_sinh, 'doiTuong' => $h->doi_tuong,
+                'khoa'        => $h->khoa, 'viTri' => $h->vi_tri, 'cdLamSang' => $h->cd_lam_sang,
+                'soBlock'     => $h->so_block, 'bsChiDinh' => $h->bs_chi_dinh,
+                'ngayChiDinh' => $h->ngay_chi_dinh?->toDateString(),
+                'ngayLayMau'  => $h->ngay_lay_mau?->toDateString(),
+                'ngayNhanMau' => $h->ngay_nhan_mau?->toDateString(),
+                'ngayNhuom'   => $h->ngay_nhuom?->toDateString(),
+                'bsDocKq'     => $h->bs_doc_kq, 'ngayDocKq' => $h->ngay_doc_kq?->toDateString(),
+            ])->values()->all();
+
+            $sHoiChan = $hc ? [
+                'ketLuan'  => $hc->ket_luan,
+                'bsChot'   => $hc->bs_chot,
+                'ngayChot' => $hc->ngay_chot?->toDateString(),
+                'yKien'    => $hc->notes()->orderBy('id')->get()->map(fn ($n) => [
+                    'bs' => $n->bs, 'noiDung' => $n->noi_dung, 'luc' => $n->created_at?->format('d/m/Y H:i'),
+                ])->all(),
+            ] : null;
+
+            SlideHistory::create([
+                'code'        => $code,
+                'lan'         => (int) SlideHistory::where('code', $code)->max('lan') + 1,
+                'yy'          => $r->yy, 'letter' => $r->letter, 'seq' => $r->seq,
+                'so_block'    => $r->so_block, 'so_tieu_ban' => $r->so_tieu_ban,
+                'ngay_soan'   => $r->ngay_soan, 'gia_so' => $r->gia_so,
+                'ktv_cat'     => $r->ktv_cat, 'ktv_soan' => $r->ktv_soan,
+                'bs_doc'      => $r->bs_doc, 'ket_qua' => $r->ket_qua,
+                'ngay_nhan'   => $r->ngay_nhan, 'ngay_doc' => $r->ngay_doc, 'ghi_chu' => $r->ghi_chu,
+                'patient_id'  => $bn?->id,
+                'ma_bn'       => $bn?->ma_bn,
+                'benh_nhan'   => $h0?->benh_nhan ?: $bn?->ho_ten,
+                'khoa'        => $h0?->khoa ?: $bn?->khoa,
+                'vi_tri'      => $h0?->vi_tri,
+                'markers'     => $ihc->pluck('markers')->flatten()->filter()->unique()->values()->all() ?: null,
+                'hmmd'        => $sHmmd ?: null,
+                'ngay_doc_hmmd' => $h0?->ngay_doc_kq,
+                'ket_luan_hoi_chan' => $hc?->ket_luan,
+                'hoi_chan'    => $sHoiChan,
+                'nguoi_chot'  => $me,
+                'ngay_chot'   => now()->toDateString(),
+            ]);
+
+            // ảnh hội chẩn (nếu còn) xóa hẳn khỏi ổ đĩa, phiếu đi kèm đã nằm trong lịch sử
+            if ($hc) {
+                foreach ($hc->images()->get() as $a) {
+                    Storage::disk('local')->delete($a->path);
+                }
+                $hc->delete();
+            }
+            SlideIhc::where('slide_code', $code)->delete();
+            $r->delete();
+            $xong[] = $code;
+        }
+
+        if ($xong) {
+            ActivityLogger::log('slide_book', sprintf('Hoàn tất %d mã tiêu bản vào lịch sử: %s',
+                count($xong), implode(', ', array_slice($xong, 0, 20))));
+        }
+
+        return response()->json(['ok' => true, 'n' => count($xong), 'xong' => $xong, 'vuong' => $vuong]);
+    }
+
+    private function goiLichSu(SlideHistory $h): array
+    {
+        return [
+            'id'        => $h->id,
+            'code'      => $h->code,
+            'lan'       => (int) $h->lan,
+            'soBlock'   => $h->so_block,
+            'soTieuBan' => $h->so_tieu_ban,
+            'ngaySoan'  => $h->ngay_soan?->toDateString() ?? '',
+            'giaSo'     => $h->gia_so ?? '',
+            'ktvCat'    => $h->ktv_cat ?? '',
+            'ktvSoan'   => $h->ktv_soan ?? '',
+            'bsDoc'     => $h->bs_doc ?? '',
+            'ketQua'    => $h->ket_qua ?? '',
+            'ngayDoc'   => $h->ngay_doc?->toDateString() ?? '',
+            'ngayChot'  => $h->ngay_chot?->toDateString() ?? '',
+            'nguoiChot' => $h->nguoi_chot ?? '',
+            'maBn'      => $h->ma_bn ?? '',
+            'benhNhan'  => $h->benh_nhan ?? '',
+            'khoa'      => $h->khoa ?? '',
+            'viTri'     => $h->vi_tri ?? '',
+            'markers'   => $h->markers ?? [],
+            'ketLuanHoiChan' => $h->ket_luan_hoi_chan ?? '',
+            'ghiChu'    => $h->ghi_chu ?? '',
+            'ngayNhan'  => $h->ngay_nhan?->toDateString() ?? '',
+            'ngayDocHmmd' => $h->ngay_doc_hmmd?->toDateString() ?? '',
+            'hmmd'      => $h->hmmd ?? [],
+            'hoiChan'   => $h->hoi_chan,
+        ];
+    }
+
+    /** Lịch sử các lượt đã hoàn tất — nằm trong tab Sổ hóa mô miễn dịch. */
+    public function historyState(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $rows = SlideHistory::orderByDesc('ngay_chot')->orderByDesc('id')
+            ->when($q !== '', fn ($b) => $b->where(fn ($w) => $w
+                ->where('code', 'like', "%{$q}%")
+                ->orWhere('benh_nhan', 'like', "%{$q}%")
+                ->orWhere('ma_bn', 'like', "%{$q}%")
+                ->orWhere('gia_so', $q)
+                ->orWhere('bs_doc', 'like', "%{$q}%")
+                ->orWhere('ket_qua', 'like', "%{$q}%")))
+            ->limit(400)->get()->map(fn ($h) => $this->goiLichSu($h))->all();
+
+        return response()->json(['rows' => $rows, 'tong' => SlideHistory::count()]);
     }
 
     /** ===== Hóa mô miễn dịch ===== */
@@ -564,12 +868,16 @@ class SlideBookController extends Controller
         $code = strtoupper(trim((string) $request->query('code', '')));
         $r    = $code !== '' ? SlideRecord::where('code', $code)->first() : null;
 
+        // mã đã hoàn tất thì dòng trong sổ soạn không còn, chỉ còn các lượt trong lịch sử
+        $lichSu = $code === '' ? [] : SlideHistory::where('code', $code)->orderBy('lan')
+            ->get()->map(fn ($h) => $this->goiLichSu($h))->all();
+
         if (! $r) {
             // gợi ý các mã gần đúng để bấm thẳng
             $goiY = $code === '' ? [] : SlideRecord::where('code', 'like', $code . '%')
                 ->orderBy('code')->limit(12)->pluck('code')->all();
 
-            return response()->json(['found' => false, 'goiY' => $goiY]);
+            return response()->json(['found' => false, 'goiY' => $goiY, 'lichSu' => $lichSu, 'ma' => $code]);
         }
 
         $ihc = SlideIhc::where('slide_code', $code)->orderBy('id')->get();
@@ -581,6 +889,12 @@ class SlideBookController extends Controller
                 'loai' => 'soan', 'ngay' => $r->ngay_soan->toDateString(), 'tieuDe' => 'Soạn tiêu bản',
                 'chiTiet' => trim(sprintf('%s block · %s lam · giá %s', $r->so_block ?? '—', $r->so_tieu_ban ?? '—', $r->gia_so ?: '—')),
                 'nguoi' => trim(($r->ktv_cat ? 'Cắt: ' . $r->ktv_cat . ' · ' : '') . ($r->ktv_soan ? 'Soạn: ' . $r->ktv_soan : '')),
+            ];
+        }
+        if ($r->ngay_nhan) {
+            $moc[] = [
+                'loai' => 'doc', 'ngay' => $r->ngay_nhan->toDateString(), 'tieuDe' => 'Bác sĩ nhận giá về đọc',
+                'chiTiet' => 'Giá ' . ($r->gia_so ?: '—'), 'nguoi' => $r->bs_doc ?? '',
             ];
         }
         if ($r->da_doc || $r->ket_qua) {
@@ -636,6 +950,7 @@ class SlideBookController extends Controller
                 'benhNhan' => $h->benh_nhan ?? '', 'khoa' => $h->khoa ?? '', 'viTri' => $h->vi_tri ?? '',
             ])->all(),
             'hoiChan' => $c ? $this->goiHoiChan($c) : null,
+            'lichSu'  => $lichSu,
             'moc'     => $moc,
         ]);
     }
@@ -716,7 +1031,11 @@ class SlideBookController extends Controller
                 $r->code, $r->so_block, $r->so_tieu_ban,
                 $r->ngay_soan?->format('d/m/Y') ?? '', $r->gia_so ?? '',
                 $r->ktv_cat ?? '', $r->ktv_soan ?? '', $r->bs_doc ?? '',
-                $r->ket_qua ?? '', $r->da_doc ? 'Đã đọc ' . ($r->ngay_doc?->format('d/m/Y') ?? '') : '',
+                $r->ket_qua ?? '',
+                [
+                    'nhan' => 'Đã nhận ' . ($r->ngay_nhan?->format('d/m/Y') ?? ''),
+                    'doc'  => 'Đã đọc ' . ($r->ngay_doc?->format('d/m/Y') ?? ''),
+                ][$r->trang_thai_doc] ?? 'Chưa đọc',
                 $h ? $h->pluck('markers')->flatten()->unique()->implode(', ') : '',
                 $r->ghi_chu ?? '',
             ];

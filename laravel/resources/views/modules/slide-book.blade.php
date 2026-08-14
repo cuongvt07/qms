@@ -55,19 +55,31 @@ tr.blank td{background:#fcfdfe}
 .b-soan{background:var(--blue-soft);color:var(--blue)}.b-doc{background:var(--green-soft);color:var(--green)}
 .b-ihc{background:var(--purple-soft);color:var(--purple)}.b-hc{background:var(--amber-soft);color:var(--amber)}
 .b-xong{background:var(--green-soft);color:var(--green)}.b-off{background:#f1f5f9;color:#64748b}
-/* lưới sổ soạn */
-.grid-t{min-width:1180px;table-layout:fixed}
-.grid-t td{padding:0;height:var(--rowh)}   /* chiều cao cố định để cuộn ảo tính đúng vị trí */
-.grid-t td.pad{padding:5px 9px}
+/* lưới sổ soạn — chỉ đọc, dữ liệu vào sổ qua popup khởi tạo phiên */
+.grid-t{min-width:1260px;table-layout:fixed}
+.grid-t td{padding:5px 9px;height:var(--rowh)}   /* chiều cao cố định để cuộn ảo tính đúng vị trí */
 .grid-t tr.spacer td{padding:0;border:0;background:#fff}
-.grid-t td input{height:calc(var(--rowh) - 2px)}
 #gridScroll{max-height:calc(100vh - 300px);max-height:calc(100dvh - 300px)}
-.grid-t td input{width:100%;height:29px;border:1px solid transparent;border-radius:0;padding:0 8px;
- font-size:10.5px;background:transparent;color:var(--text)}
-.grid-t td input:hover{border-color:var(--line)}
-.grid-t td input:focus{border-color:var(--primary);background:#fff;outline:2px solid #d6ecef;position:relative;z-index:2}
-.grid-t .chk{width:32px;text-align:center}.grid-t .chk input{width:14px;height:14px;accent-color:var(--primary)}
-.grid-t .code{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* hai cột đầu ghim lại để kéo ngang vẫn thấy mã tiêu bản */
+.grid-t .chk{width:32px;text-align:center;padding:0;position:sticky;left:0;z-index:2}
+.grid-t .chk input{width:14px;height:14px;accent-color:var(--primary)}
+.grid-t .code{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+ position:sticky;left:32px;z-index:2;box-shadow:1px 0 0 var(--line2)}
+.grid-t th.chk,.grid-t th.code{z-index:5}
+.grid-t td.cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* mã đã đủ thông tin thì khóa lại, muốn đổi phải qua nút Sửa */
+.grid-t td.code.xong{background:#e9eef4;color:#5b6b7d}
+/* ghi chú luôn gõ được, kể cả mã chưa ra block / tiêu bản — để ghi lý do */
+.grid-t td.note{padding:3px 6px}
+/* ô nhập phải thấp hơn dòng, không thì dòng cao thêm 1px và cuộn ảo trôi dần */
+.grid-t td.note input{width:100%;height:calc(var(--rowh) - 10px);border:1px solid transparent;border-radius:6px;
+ padding:0 7px;font-size:10.5px;background:transparent;color:var(--text)}
+.grid-t td.note input:hover{border-color:var(--line);background:#fff}
+.grid-t td.note input:focus{border-color:var(--primary);background:#fff;outline:2px solid #d6ecef;position:relative;z-index:3}
+.grid-t td.note input::placeholder{color:#a9b4c2}
+.grid-t .act{width:78px;text-align:center;padding:0}
+/* nút phải thấp hơn chiều cao dòng, không thì cuộn ảo tính lệch vị trí */
+.grid-t .act .btn{height:22px;padding:0 8px;font-size:9.5px;border-radius:6px}
 .bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 12px;background:var(--soft);border-bottom:1px solid #cbe6ea}
 .bulk.off{display:none}.bulk b{font-size:11px;color:var(--primary2)}
 .bulk input{height:29px;border:1px solid #bfe0e5;border-radius:7px;padding:0 8px;font-size:10.5px;background:#fff}
@@ -78,8 +90,13 @@ tr.blank td{background:#fcfdfe}
 .rack{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:3px}
 .rack:hover{border-color:#a9c6cc;box-shadow:0 4px 14px rgba(15,23,42,.07)}
 .rack.on{border-color:var(--primary);box-shadow:0 0 0 2px #cfe8ec}
+.rack.pick{border-color:var(--primary);background:var(--soft);box-shadow:0 0 0 2px #cfe8ec}
+.rack{position:relative}
+.rack .tick{position:absolute;right:9px;top:9px;display:flex;padding:3px}
+.rack .tick input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
 .rack .no{font-size:19px;font-weight:800;line-height:1.1}.rack .no small{font-size:9.5px;color:var(--muted);margin-left:3px}
 .rack .m{font-size:9.5px;color:var(--muted)}
+.rack .st{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
 /* marker */
 .mk-chips{display:flex;gap:5px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:5px;background:var(--purple-soft);color:var(--purple);
@@ -145,6 +162,30 @@ tr.blank td{background:#fcfdfe}
 .f{display:grid;gap:4px;margin-bottom:10px}.f label{font-size:9px;font-weight:800;color:#475569}
 .f input,.f select,.f textarea{border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:11px;background:#fff;width:100%}
 .f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* popup khởi tạo phiên soạn */
+.steps{display:flex;gap:8px;margin-bottom:13px}
+.step{flex:1;border:1px solid var(--line);border-radius:11px;padding:8px 11px;background:#fbfcfd}
+.step.on{border-color:var(--primary);background:var(--soft)}
+.step .k{font-size:8.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.step .t{font-size:11px;font-weight:800;margin-top:2px}.step.on .t{color:var(--primary2)}
+.ph-wrap{max-height:44vh;overflow:auto;border:1px solid var(--line);border-radius:11px}
+.ph-t td{padding:4px 8px;height:auto}
+.ph-t td.ma{font-weight:800;font-variant-numeric:tabular-nums;font-size:11.5px;white-space:nowrap}
+.ph-t input{width:100%;height:31px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font-size:11px;background:#fff}
+.ph-t input:focus{border-color:var(--primary);outline:2px solid #d6ecef}
+.ph-t .del{width:26px;height:26px;border:0;border-radius:7px;background:#f1f5f9;color:var(--red);font-size:13px;line-height:1}
+.ph-sum{background:var(--soft);border:1px solid #cbe6ea;border-radius:11px;padding:10px 12px;margin-bottom:12px;font-size:11px;line-height:1.7}
+.ph-sum b{font-size:12px}
+.ph-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
+.ph-err{color:var(--red);font-size:10px;font-weight:800;margin-right:auto;align-self:center}
+/* chi tiết một lượt đã hoàn tất */
+.ls-sec{border-top:1px solid var(--line2);margin-top:9px;padding-top:9px}
+.ls-sec h4{margin:0 0 5px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ls-kv{font-size:11px;line-height:1.65}
+.dan-box{border:1px dashed #c5dde2;background:#f8fbfc;border-radius:11px;padding:11px 12px;margin-bottom:11px}
+.dan-box textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:8px 9px;
+ font-family:ui-monospace,Consolas,monospace;font-size:10.5px;background:#fff;resize:vertical}
+.dan-box textarea:focus{border-color:var(--primary);outline:2px solid #d6ecef}
 #lightbox{position:fixed;inset:0;background:rgba(9,16,24,.9);display:none;align-items:center;justify-content:center;z-index:140;padding:20px}
 #lightbox.show{display:flex}#lightbox img{max-width:100%;max-height:100%;border-radius:8px}
 .toast-wrap{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:150}
@@ -156,17 +197,22 @@ tr.blank td{background:#fcfdfe}
  .head{flex-wrap:wrap}.f3,.f2{grid-template-columns:1fr}
  /* iOS tự phóng to trang khi focus ô có cỡ chữ < 16px — phóng xong lại co về, nhìn như nháy.
     Ép 16px cho mọi ô nhập trên điện thoại để Safari không zoom. */
- :root{--rowh:44px}
- .grid-t td input,.f input,.f select,.f textarea,.pbar input,.pbar select,
- .bulk input,.yk-add input,.yk-add textarea{font-size:16px}
+ :root{--rowh:38px}
+ .ph-t input,.f input,.f select,.f textarea,.pbar input,.pbar select,
+ .bulk input,.yk-add input,.yk-add textarea,.dan-box textarea,.grid-t td.note input{font-size:16px}
  #gridScroll{max-height:calc(100dvh - 240px)}
- .grid-t td.pad.code{font-size:12px}}
+ .grid-t td.code{font-size:12px}
+ .steps{flex-direction:column}
+ /* điện thoại: để cả popup cuộn một mạch, tránh cuộn lồng trong bảng mã */
+ .ph-wrap{max-height:none;overflow:visible}}
 </style>
 <link rel="stylesheet" href="{{ asset('css/qms-shell.css') }}?v=9">
 <script>window.SLIDE={
   state:"{{ route('slide.state') }}", save:"{{ route('slide.save') }}",
-  reader:"{{ route('slide.reader') }}", mark:"{{ route('slide.mark') }}",
+  phienMa:"{{ route('slide.session.ma') }}", phienLuu:"{{ route('slide.session.save') }}",
+  reader:"{{ route('slide.reader') }}", mark:"{{ route('slide.mark') }}", take:"{{ route('slide.take') }}",
   status:"{{ route('slide.status') }}", trace:"{{ route('slide.trace') }}",
+  finish:"{{ route('slide.finish') }}", history:"{{ route('slide.history') }}",
   ihc:"{{ route('slide.ihc') }}", ihcSave:"{{ route('slide.ihc.save') }}",
   ihcStep:"{{ route('slide.ihc.step', ['ihc' => '__ID__']) }}",
   consult:"{{ route('slide.consult') }}", cOpen:"{{ route('slide.consult.open') }}",
@@ -185,7 +231,9 @@ tr.blank td{background:#fcfdfe}
     <div>
       <h1>Sổ soạn tiêu bản &amp; hóa mô miễn dịch</h1>
       <p>Mã tiêu bản gồm 2 số cuối năm + chữ cái + 4 chữ số (26C2472), mỗi mã là duy nhất và có thể có nhiều block, nhiều lam.
-         Sổ chia theo đầu mã; ngày soạn và người soạn tự điền theo ngày nhập và tài khoản đang đăng nhập.</p>
+         Sổ ghi theo phiên: bấm <b>Khởi tạo phiên</b> để nhập số block / số tiêu bản cho các mã còn trống, rồi gán giá và kỹ thuật viên.
+         Ngày soạn tự ghi là ngày lưu phiên. Riêng cột <b>Ghi chú</b> luôn gõ thẳng trên lưới được, kể cả mã chưa ra
+         block / tiêu bản — dùng "Nhảy tới mã" để mở đúng dòng rồi ghi lý do.</p>
     </div>
     <div class="right"><span class="hint" id="whoAmI"></span></div>
   </div>
@@ -205,13 +253,14 @@ tr.blank td{background:#fcfdfe}
         <label class="lbl">Đầu mã<select id="prefix" style="width:150px"></select></label>
         <label class="lbl">Nhảy tới mã<input id="jump" placeholder="VD: 2472" style="width:110px"></label>
         <label class="lbl" style="align-self:end"><span style="display:flex;gap:5px;align-items:center;height:31px">
-          <input type="checkbox" id="onlyFilled" style="width:14px;height:14px;accent-color:var(--primary)">
+          <input type="checkbox" id="onlyFilled" checked style="width:14px;height:14px;accent-color:var(--primary)">
           <span class="hint" style="font-weight:800">Chỉ hiện dòng đã nhập</span></span></label>
         <span class="push"></span>
-        <button class="btn sm" onclick="moDan()">📋 Dán từ Excel</button>
+        <button class="btn sm" onclick="moPhien(true)">📋 Dán từ Excel</button>
         <a class="btn sm" id="btnXuat" href="#">⇩ Xuất Excel</a>
         <span class="saveState" id="saveState"></span>
-        <button class="btn sm primary" id="btnSave" onclick="luuNgay()">Lưu</button>
+        <button class="btn sm" id="btnSave" onclick="luuNgay()" style="display:none">Lưu</button>
+        <button class="btn sm primary" onclick="moPhien()">＋ Khởi tạo phiên soạn</button>
       </div>
       <div class="bulk off" id="bulkBar">
         <b id="bulkCount"></b>
@@ -219,13 +268,14 @@ tr.blank td{background:#fcfdfe}
         <label class="lbl">KTV cắt<input id="bCat" list="ktvList" style="width:130px"></label>
         <label class="lbl">KTV soạn<input id="bSoan" list="ktvList" style="width:130px"></label>
         <label class="lbl">BS đọc<input id="bBs" list="bsList" style="width:130px"></label>
-        <button class="btn sm primary" onclick="apBulk()">Áp cho dòng đã chọn</button>
+        <button class="btn sm primary" onclick="apBulk()">Sửa cho dòng đã chọn</button>
         <button class="btn sm" onclick="boChon()">Bỏ chọn</button>
+        <span class="hint">Dùng khi cần sửa lại giá / KTV của phiên đã lưu.</span>
       </div>
       <div class="twrap" id="gridScroll"><table class="grid-t"><thead><tr>
         <th class="chk"><input type="checkbox" id="chkAll" onclick="chonHet(this.checked)"></th>
-        <th>Mã tiêu bản</th><th>Số block</th><th>Số tiêu bản</th><th>Ngày soạn</th><th>Giá</th>
-        <th>KTV cắt</th><th>KTV soạn</th><th>BS đọc</th><th>Ghi chú</th>
+        <th class="code">Mã tiêu bản</th><th>Số block</th><th>Số tiêu bản</th><th>Ngày soạn</th><th>Giá</th>
+        <th>KTV cắt</th><th>KTV soạn</th><th>BS đọc</th><th>Ghi chú</th><th class="act">Thao tác</th>
       </tr></thead><tbody id="soanBody"></tbody></table></div>
       <div class="pbar"><span class="hint" id="soanFoot"></span></div>
     </div>
@@ -234,22 +284,33 @@ tr.blank td{background:#fcfdfe}
   <!-- ===== 2. Bác sĩ đọc theo giá ===== -->
   <section class="view" id="v-doc">
     <div class="panel">
-      <div class="pbar"><h2>Chọn giá tiêu bản</h2>
-        <input id="giaGo" list="giaList" placeholder="Gõ số giá rồi Enter" style="width:170px"
+      <div class="pbar"><h2>Nhận giá về đọc</h2>
+        <label class="lbl">Bác sĩ đọc<input id="bsNhan" list="bsList" placeholder="Tên bác sĩ" style="width:180px"></label>
+        <button class="btn sm primary" onclick="nhanGia()">✋ Nhận các giá đã chọn</button>
+        <button class="btn sm" onclick="boChonGia()">Bỏ chọn giá</button>
+        <span class="push"></span>
+        <input id="giaGo" list="giaList" placeholder="Gõ số giá rồi Enter" style="width:160px"
                onkeydown="if(event.key==='Enter'){event.preventDefault();moGiaGo()}">
         <button class="btn sm" onclick="moGiaGo()">Mở giá</button>
-        <span class="hint">Bấm vào thẻ bên dưới, hoặc gõ thẳng số giá vào ô trên.</span></div>
+      </div>
+      <div class="pbar" style="border-bottom:0;padding-top:0"><span class="hint">
+        Tích vào ô ở góc thẻ để chọn giá cần nhận — nhận xong cả giá tự gán tên bác sĩ và chuyển sang
+        <b>đã nhận</b>. Bấm vào thân thẻ để mở danh sách mã của giá đó.</span></div>
       <div class="racks" id="racks"></div>
     </div>
     <div class="panel" id="docPanel" style="display:none">
       <div class="pbar">
         <h2 id="docTitle"></h2>
         <span class="push"></span>
-        <label class="lbl">BS đọc<input id="bsAll" list="bsList" placeholder="Tên bác sĩ" style="width:170px"></label>
-        <button class="btn sm" onclick="dienBs()">Điền cho cả giá</button>
-        <button class="btn sm primary" onclick="danhDau(true)">✓ Đã đọc kết quả</button>
-        <button class="btn sm" onclick="danhDau(false)">Bỏ đánh dấu</button>
+        <label class="lbl">BS đọc<input id="bsAll" list="bsList" placeholder="Tên bác sĩ" style="width:150px"></label>
+        <button class="btn sm" onclick="doiTt('nhan')">Đã nhận</button>
+        <button class="btn sm primary" onclick="doiTt('doc')">✓ Đã đọc</button>
+        <button class="btn sm" onclick="doiTt('chua')">↩ Chưa đọc</button>
+        <button class="btn sm green" onclick="hoanTat()">🏁 Hoàn tất &amp; lưu lịch sử</button>
       </div>
+      <div class="pbar" style="border-bottom:0;padding-bottom:0"><span class="hint">
+        Mã <b>đã đọc</b> và <b>đã nhập kết quả</b> mới hoàn tất được. Hoàn tất là chốt ca vào lịch sử ở tab
+        Hóa mô miễn dịch, đồng thời xóa dòng đó khỏi sổ soạn để mã tiêu bản quay lại danh sách mã trống.</span></div>
       <div class="twrap"><table><thead><tr>
         <th class="chk"><input type="checkbox" id="chkAllDoc" onclick="chonHetDoc(this.checked)"></th>
         <th>Mã tiêu bản</th><th class="ctr">Block</th><th class="ctr">Lam</th>
@@ -279,6 +340,21 @@ tr.blank td{background:#fcfdfe}
         <th>Vị trí lấy mẫu</th><th>Chẩn đoán lâm sàng</th><th class="ctr">SL block</th><th>Marker chỉ định</th>
         <th>BS đọc KQ</th><th>Lấy mẫu</th><th>Nhận mẫu</th><th>Đọc KQ</th><th></th>
       </tr></thead><tbody id="hmBody"></tbody></table></div>
+    </div>
+
+    <div class="panel">
+      <div class="pbar"><h2>Lịch sử mã đã hoàn tất</h2>
+        <span class="hint">Ca đã đọc xong và được chốt — mã tiêu bản đã trả về sổ soạn để dùng lại.</span>
+        <span class="push"></span>
+        <input id="lsQ" placeholder="Tìm mã, bệnh nhân, giá, bác sĩ, kết quả..." style="width:260px">
+        <span class="hint" id="lsCount"></span>
+      </div>
+      <div class="twrap"><table><thead><tr>
+        <th>Mã tiêu bản</th><th class="ctr">Lượt</th><th class="ctr">Block</th><th class="ctr">Lam</th>
+        <th>Ngày soạn</th><th class="ctr">Giá</th><th>KTV soạn</th><th>BS đọc</th>
+        <th style="min-width:260px">Kết quả / đánh giá</th><th>Bệnh nhân</th><th>Marker HMMD</th>
+        <th>Hoàn tất</th><th></th>
+      </tr></thead><tbody id="lsBody"></tbody></table></div>
     </div>
   </section>
 
@@ -324,6 +400,115 @@ tr.blank td{background:#fcfdfe}
 <datalist id="giaList"></datalist>
 <datalist id="bsList"></datalist>
 
+<!-- popup xem lại toàn bộ một lượt đã hoàn tất -->
+<div class="mbg" id="lsModal"><div class="mdl" style="width:min(720px,100%)">
+  <div class="mdl-h"><div><h2>Chi tiết ca đã hoàn tất</h2><p id="lsSub"></p></div>
+    <button class="x" onclick="dongM('lsModal')">×</button></div>
+  <div class="mdl-b" id="lsBox"></div>
+  <div class="mdl-f"><button class="btn" onclick="dongM('lsModal')">Đóng</button></div>
+</div></div>
+
+<!-- popup sửa một mã tiêu bản — chỉ mở được khi mã đã đủ thông tin -->
+<div class="mbg" id="suaModal"><div class="mdl" style="width:min(680px,100%)">
+  <div class="mdl-h"><div><h2 id="suaTitle">Sửa mã tiêu bản</h2><p id="suaSub"></p></div>
+    <button class="x" onclick="dongM('suaModal')">×</button></div>
+  <div class="mdl-b">
+    <div class="f3">
+      <div class="f"><label>Số block</label><input id="suBlock" type="number" min="0" inputmode="numeric"></div>
+      <div class="f"><label>Số tiêu bản</label><input id="suLam" type="number" min="0" inputmode="numeric"></div>
+      <div class="f"><label>Ngày soạn</label><input id="suNgay" type="date"></div>
+    </div>
+    <div class="f3">
+      <div class="f"><label>Giá số</label><input id="suGia" list="giaList"></div>
+      <div class="f"><label>KTV cắt</label><input id="suCat" list="ktvList"></div>
+      <div class="f"><label>KTV soạn</label><input id="suSoan" list="ktvList"></div>
+    </div>
+    <div class="f2">
+      <div class="f"><label>BS đọc</label><input id="suBs" list="bsList"></div>
+      <div class="f"><label>Ghi chú</label><input id="suGhiChu"></div>
+    </div>
+    <div class="hint">Kết quả đọc và trạng thái đã đọc sửa ở tab <b>Bác sĩ đọc theo giá</b>.
+      Xóa trắng hết các ô sẽ gỡ mã khỏi sổ, trừ khi mã đó đã có hóa mô miễn dịch hoặc hội chẩn.</div>
+  </div>
+  <div class="mdl-f"><span class="ph-err" id="suErr"></span>
+    <button class="btn" onclick="dongM('suaModal')">Hủy</button>
+    <button class="btn primary" onclick="luuSua()">Lưu thay đổi</button></div>
+</div></div>
+
+<!-- popup khởi tạo phiên soạn: bước 1 số block/số tiêu bản, bước 2 giá + KTV -->
+<div class="mbg" id="phienModal"><div class="mdl" style="width:min(900px,100%)">
+  <div class="mdl-h"><div><h2 id="phTitle">Khởi tạo phiên soạn</h2><p id="phSub"></p></div>
+    <button class="x" onclick="dongM('phienModal')">×</button></div>
+  <div class="mdl-b">
+    <div class="steps">
+      <div class="step on" id="phStep1"><div class="k">Giai đoạn 1</div><div class="t">Số block &amp; số tiêu bản</div></div>
+      <div class="step" id="phStep2"><div class="k">Giai đoạn 2</div><div class="t">Giá và kỹ thuật viên</div></div>
+    </div>
+
+    <!-- ---- giai đoạn 1 ---- -->
+    <div id="phB1">
+      <div class="f3">
+        <div class="f"><label>Bắt đầu từ mã</label><input id="phTu" placeholder="VD: 2472 hoặc 26C2472"></div>
+        <div class="f"><label>Số mã trong phiên</label><input id="phN" type="number" min="1" max="200" value="10"></div>
+        <div class="f" style="align-self:end"><button class="btn" onclick="dungDsPhien()">↻ Dựng lại danh sách</button></div>
+      </div>
+
+      <!-- dán từ Excel: chỉ nạp số block / số tiêu bản vào chính danh sách của phiên -->
+      <div class="ph-row" style="margin:0 0 10px">
+        <button class="btn sm" id="btnDan" onclick="moKhungDan()">📋 Dán từ Excel</button>
+        <span class="hint">Chỉ lấy hai cột số block / số tiêu bản, mã nào đã soạn hoặc đã có giá thì bỏ qua.</span>
+      </div>
+      <div class="dan-box" id="phDan" style="display:none">
+        <div class="f2">
+          <div class="f"><label>Cột đầu tiên trong vùng dán là</label>
+            <select id="danMode" onchange="veDanGoiY()">
+              <option value="ma">Mã tiêu bản (26C2472) hoặc số thứ tự (2472)</option>
+              <option value="seq">Số block — điền liên tiếp từ một mã</option>
+            </select></div>
+          <div class="f" id="danStartWrap" style="display:none"><label>Bắt đầu từ mã</label>
+            <input id="danStart" placeholder="VD: 2472 hoặc 26C2472"></div>
+        </div>
+        <div class="f"><label>Thứ tự cột</label><div class="hint" id="danCols"></div></div>
+        <textarea id="danBox"></textarea>
+        <div class="ph-row">
+          <button class="btn sm primary" onclick="danVaoPhien()">Đưa vào phiên</button>
+          <button class="btn sm" onclick="dongKhungDan()">Đóng khung dán</button>
+          <span class="hint" id="danKq"></span>
+        </div>
+      </div>
+
+      <div class="ph-wrap"><table class="ph-t"><thead><tr>
+        <th>Mã tiêu bản</th><th style="width:170px">Số block</th><th style="width:170px">Số tiêu bản</th><th style="width:46px"></th>
+      </tr></thead><tbody id="phBody"></tbody></table></div>
+      <div class="ph-row"><button class="btn sm" onclick="themMaPhien()">＋ Thêm mã tiếp theo</button>
+        <button class="btn sm" onclick="boDongTrong()">Bỏ các dòng còn trống</button>
+        <span class="hint" id="phDem"></span></div>
+      <div class="hint" style="margin-top:7px">Chỉ liệt kê các mã của đầu mã này chưa có số block / số tiêu bản.
+        Mã nào để trống cả hai ô sẽ không được ghi vào sổ. Bấm Enter để nhảy sang ô kế tiếp.</div>
+    </div>
+
+    <!-- ---- giai đoạn 2 ---- -->
+    <div id="phB2" style="display:none">
+      <div class="ph-sum" id="phSum"></div>
+      <div class="f3">
+        <div class="f"><label>Giá số *</label><input id="phGia" list="giaList" placeholder="VD: 20"></div>
+        <div class="f"><label>KTV cắt</label><input id="phCat" list="ktvList" placeholder="Tên kỹ thuật viên"></div>
+        <div class="f"><label>KTV soạn *</label><input id="phSoan" list="ktvList" placeholder="Tên kỹ thuật viên"></div>
+      </div>
+      <div class="hint" style="margin-bottom:6px">Giá đang dùng gần đây — bấm để chọn nhanh:</div>
+      <div class="panels" id="phGiaNhanh"></div>
+      <div class="f"><label>Ghi chú chung cho cả phiên (tùy chọn)</label><input id="phGhiChu"></div>
+      <div class="hint">Ngày soạn ghi tự động là <b id="phNgay"></b>.</div>
+    </div>
+  </div>
+  <div class="mdl-f">
+    <span class="ph-err" id="phErr"></span>
+    <button class="btn" id="phBack" onclick="phQuayLai()" style="display:none">← Quay lại</button>
+    <button class="btn" onclick="dongM('phienModal')">Hủy</button>
+    <button class="btn primary" id="phNext" onclick="phTiep()">Tiếp tục →</button>
+  </div>
+</div></div>
+
 <!-- popup chỉ định marker + thông tin bệnh nhân -->
 <div class="mbg" id="mkModal"><div class="mdl">
   <div class="mdl-h"><div><h2>Chỉ định hóa mô miễn dịch</h2><p id="mkSub"></p></div>
@@ -360,30 +545,6 @@ tr.blank td{background:#fcfdfe}
     <button class="btn primary" id="mkSaveBtn" onclick="luuMk()">Lưu chỉ định</button></div>
 </div></div>
 
-<!-- popup dán từ Excel -->
-<div class="mbg" id="danModal"><div class="mdl">
-  <div class="mdl-h"><div><h2>Dán từ Excel</h2>
-    <p>Sao chép vùng ô trong Excel rồi dán vào ô bên dưới. Ngày soạn và người soạn vẫn tự điền.</p></div>
-    <button class="x" onclick="dongM('danModal')">×</button></div>
-  <div class="mdl-b">
-    <div class="f2">
-      <div class="f"><label>Cột đầu tiên trong vùng dán là</label>
-        <select id="danMode" onchange="veDanGoiY()">
-          <option value="ma">Mã tiêu bản (26C2472) hoặc số thứ tự (2472)</option>
-          <option value="seq">Số block — điền liên tiếp từ một mã</option>
-        </select></div>
-      <div class="f" id="danStartWrap" style="display:none"><label>Bắt đầu từ mã</label>
-        <input id="danStart" placeholder="VD: 2472 hoặc 26C2472"></div>
-    </div>
-    <div class="f"><label>Thứ tự cột</label>
-      <div class="hint" id="danCols"></div></div>
-    <div class="f"><textarea id="danBox" style="min-height:180px;font-family:ui-monospace,Consolas,monospace;font-size:10.5px"></textarea></div>
-    <div class="hint">Dòng nào để trống cột nào thì cột đó giữ nguyên giá trị cũ. Mã không thuộc đầu mã đang mở sẽ bị bỏ qua.</div>
-  </div>
-  <div class="mdl-f"><button class="btn" onclick="dongM('danModal')">Hủy</button>
-    <button class="btn primary" onclick="danVao()">Đưa vào sổ</button></div>
-</div></div>
-
 <datalist id="dtList"><option value="BHYT"><option value="Dịch vụ"><option value="Giám định"></datalist>
 <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
 <div class="toast-wrap" id="toastWrap"></div>
@@ -407,8 +568,8 @@ const TT={soan:['soan','Đã soạn'],doc:['doc','Bác sĩ đã đọc'],ihc:['i
 
 let D={rows:{},from:1,to:250,prefix:'',dauMa:[],me:'',ktv:[]};
 let dirty=new Set(), sel=new Set(), lastIdx=-1, saveTimer=null;
-let docRows=[], docSel=new Set(), curGia='';
-let MK=[], mkPick=[], mkEditId=null;
+let docRows=[], docSel=new Set(), curGia='', docGia=[], giaSel=new Set();
+let MK=[], mkPick=[], mkEditId=null, LS=[];
 let hcCur=null, hcDs=[];
 
 const $=id=>document.getElementById(id);
@@ -432,7 +593,7 @@ function go(v){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   if(v==='doc')taiDoc();
-  if(v==='hmmd')taiHmmd();
+  if(v==='hmmd'){taiHmmd();taiLichSu()}
   if(v==='tra')taiTinhTrang();
   if(v==='hoichan')taiHc();
 }
@@ -468,7 +629,7 @@ function doCaoDong(){
   if(v>0)ROW_H=v;
 }
 let vStart=-1,vEnd=-1;
-/** Đang đặt con trỏ trong một ô của lưới? Lúc đó tuyệt đối không dựng lại tbody. */
+/** Con trỏ đang nằm trong ô ghi chú của lưới? Lúc đó đừng dựng lại tbody, sẽ mất chỗ đang gõ. */
 function dangGo(){
   const a=document.activeElement;
   return !!(a&&a.dataset&&a.dataset.seq&&a.closest&&a.closest('#soanBody'));
@@ -477,7 +638,7 @@ function luuTieuDiem(){
   const a=document.activeElement;
   if(!a||!a.dataset||!a.dataset.seq)return null;
   let s=null,e=null;
-  try{s=a.selectionStart;e=a.selectionEnd}catch(_){}      // input number/date không cho đọc
+  try{s=a.selectionStart;e=a.selectionEnd}catch(_){}
   return {seq:a.dataset.seq,f:a.dataset.f,s,e};
 }
 function traTieuDiem(t){
@@ -492,34 +653,43 @@ function dsSeq(){
     ? Object.keys(D.rows).map(Number).sort((a,b)=>a-b)
     : Array.from({length:D.soDong||9999},(_,i)=>i+1);
 }
+/* Mã coi là đủ thông tin khi có hết các cột trừ ghi chú — lúc đó mới cho bấm Sửa. */
+const DU_COT=['soBlock','soTieuBan','ngaySoan','giaSo','ktvCat','ktvSoan','bsDoc'];
+const duDl=r=>!!r&&DU_COT.every(f=>String(r[f]??'').trim()!=='');
 function veSoan(epLai){
   const list=dsSeq(), sc=$('gridScroll');
   const vh=sc.clientHeight||620;
   const start=Math.max(0,Math.floor(sc.scrollTop/ROW_H)-6);
   const end=Math.min(list.length,start+Math.ceil(vh/ROW_H)+12);
-  if(!epLai&&start===vStart&&end===vEnd)return;   // cùng khung nhìn thì khỏi dựng lại (giữ con trỏ đang gõ)
-  if(dangGo()&&!epLai)return;                     // đang gõ thì hoãn, tránh mất focus làm bàn phím nháy
+  if(!epLai&&start===vStart&&end===vEnd)return;   // cùng khung nhìn thì khỏi dựng lại
+  if(dangGo()&&!epLai)return;                     // đang gõ ghi chú thì hoãn, tránh mất ô đang nhập
   const tieuDiem=luuTieuDiem();
   vStart=start;vEnd=end;
 
-  let html=start>0?`<tr class="spacer"><td colspan="10" style="height:${start*ROW_H}px"></td></tr>`:'';
+  const m='<span class="sub">—</span>';
+  let html=start>0?`<tr class="spacer"><td colspan="11" style="height:${start*ROW_H}px"></td></tr>`:'';
   for(let k=start;k<end;k++){
     const s=list[k],r=D.rows[s];
-    const v=f=>esc(r?(r[f]??''):'');
-    const i=(f,type)=>`<input data-seq="${s}" data-f="${f}" type="${type||'text'}" value="${v(f)}"
-      ${f==='ktvCat'||f==='ktvSoan'?'list="ktvList"':f==='giaSo'?'list="giaList"':f==='bsDoc'?'list="bsList"':''}>`;
+    const v=f=>esc(r?(r[f]??''):'')||m;
+    const du=duDl(r);
     html+=`<tr class="${sel.has(s)?'sel ':''}${dirty.has(s)?'dirty ':''}${r?'':'blank'}" data-seq="${s}">
-      <td class="chk"><input type="checkbox" ${sel.has(s)?'checked':''} onclick="chonDong(${s},${k},event)"></td>
-      <td class="pad code">${maCua(s)}</td>
-      <td>${i('soBlock','number')}</td><td>${i('soTieuBan','number')}</td>
-      <td>${i('ngaySoan','date')}</td><td>${i('giaSo')}</td>
-      <td>${i('ktvCat')}</td><td>${i('ktvSoan')}</td><td>${i('bsDoc')}</td><td>${i('ghiChu')}</td></tr>`;
+      <td class="chk">${r?`<input type="checkbox" ${sel.has(s)?'checked':''} onclick="chonDong(${s},${k},event)">`:''}</td>
+      <td class="code${du?' xong':''}">${maCua(s)}</td>
+      <td class="num ctr">${v('soBlock')}</td><td class="num ctr">${v('soTieuBan')}</td>
+      <td>${r?(viDate(r.ngaySoan)||m):m}</td><td class="ctr">${v('giaSo')}</td>
+      <td class="cell">${v('ktvCat')}</td><td class="cell">${v('ktvSoan')}</td>
+      <td class="cell">${v('bsDoc')}</td>
+      <td class="note"><input data-seq="${s}" data-f="ghiChu" value="${r?esc(r.ghiChu??''):''}"
+        placeholder="Lý do / ghi chú…"></td>
+      <td class="act"><button class="btn sm" onclick="moSua(${s})" ${du?'':'disabled'}
+        title="${du?'Sửa lại thông tin mã này':'Mã chưa đủ thông tin — hoàn tất qua phiên soạn và màn bác sĩ đọc đã'}">✎ Sửa</button></td></tr>`;
   }
   const con=list.length-end;
-  if(con>0)html+=`<tr class="spacer"><td colspan="10" style="height:${con*ROW_H}px"></td></tr>`;
-  if(!list.length)html='<tr><td colspan="10" class="empty">Chưa có mã nào được nhập trong sổ này.</td></tr>';
+  if(con>0)html+=`<tr class="spacer"><td colspan="11" style="height:${con*ROW_H}px"></td></tr>`;
+  if(!list.length)html=`<tr><td colspan="11" class="empty">Chưa có mã nào được nhập trong sổ này.<br>
+    Bấm <b>＋ Khởi tạo phiên soạn</b> để bắt đầu.</td></tr>`;
   $('soanBody').innerHTML=html;
-  traTieuDiem(tieuDiem);                          // trả con trỏ về đúng ô, giữ bàn phím không đóng
+  traTieuDiem(tieuDiem);                          // trả con trỏ về đúng ô ghi chú đang gõ
 
   const daNhap=Object.keys(D.rows).length;
   $('soanFoot').innerHTML=`Đầu mã <b>${D.prefix}</b> · sổ trải ${D.soDong} dòng · <b>${daNhap}</b> mã đã nhập
@@ -531,14 +701,15 @@ function veSoan(epLai){
 let rafId=null;
 function onCuon(){if(rafId)return;rafId=requestAnimationFrame(()=>{rafId=null;veSoan()})}
 function nhayToi(seq){
-  $('gridScroll').scrollTop=Math.max(0,(seq-1)*ROW_H-ROW_H*3);
+  const i=dsSeq().indexOf(seq);                  // lọc "chỉ hiện dòng đã nhập" làm lệch vị trí dòng
+  $('gridScroll').scrollTop=Math.max(0,(i<0?seq-1:i)*ROW_H-ROW_H*3);
   veSoan(true);
 }
 function capNhatSave(){
   const el=$('saveState');
   el.className='saveState'+(dirty.size?' dirty':'');
   el.textContent=dirty.size?`${dirty.size} dòng chưa lưu`:'';
-  $('btnSave').disabled=!dirty.size;
+  $('btnSave').style.display=dirty.size?'inline-flex':'none';
 }
 function chonDong(seq,idx,e){
   if(e.shiftKey&&lastIdx>=0){                 // giữ Shift để quét cả dải, kể cả phần chưa dựng
@@ -558,7 +729,21 @@ function datO(seq,f,val){
   D.rows[seq]??={seq,soBlock:'',soTieuBan:'',ngaySoan:'',giaSo:'',ktvCat:'',ktvSoan:'',bsDoc:'',ghiChu:''};
   D.rows[seq][f]=val;dirty.add(seq);
 }
-/* nhập số block / số tiêu bản thì ngày soạn + người soạn tự điền */
+/* Ghi chú gõ thẳng trên lưới: mã chưa ra block / tiêu bản vẫn ghi được lý do.
+   Dòng chỉ có ghi chú vẫn nằm trong sổ, và mã vẫn được coi là trống ở phiên soạn. */
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(!el.dataset||!el.dataset.seq||el.dataset.f!=='ghiChu')return;
+  datO(Number(el.dataset.seq),'ghiChu',el.value);
+  capNhatSave();
+  clearTimeout(saveTimer);saveTimer=setTimeout(luuNgay,1200);
+});
+document.addEventListener('change',e=>{                 // rời ô thì ghi ngay, khỏi chờ hết giờ chờ
+  const el=e.target;
+  if(el.dataset&&el.dataset.seq&&el.dataset.f==='ghiChu'){clearTimeout(saveTimer);luuNgay()}
+});
+
+/* có số block / số tiêu bản thì ngày soạn + người soạn tự điền */
 function tuDien(seq){
   const r=D.rows[seq];if(!r)return;
   if(r.soBlock!==''&&r.soBlock!=null||r.soTieuBan!==''&&r.soTieuBan!=null){
@@ -566,20 +751,6 @@ function tuDien(seq){
     if(!r.ktvSoan)r.ktvSoan=D.me;
   }
 }
-document.addEventListener('input',e=>{
-  const el=e.target;if(!el.dataset||!el.dataset.seq||!el.dataset.f)return;
-  const seq=Number(el.dataset.seq);
-  datO(seq,el.dataset.f,el.value);
-  if(el.dataset.f==='soBlock'||el.dataset.f==='soTieuBan'){
-    tuDien(seq);
-    const tr=el.closest('tr');
-    const d=tr.querySelector('[data-f=ngaySoan]'),k=tr.querySelector('[data-f=ktvSoan]');
-    if(d&&!d.value)d.value=D.rows[seq].ngaySoan||'';
-    if(k&&!k.value)k.value=D.rows[seq].ktvSoan||'';
-  }
-  capNhatSave();
-  clearTimeout(saveTimer);saveTimer=setTimeout(luuNgay,1200);
-});
 async function luuNgay(){
   if(!dirty.size)return;
   const rows=[...dirty].map(s=>({seq:s,...(D.rows[s]||{})}));
@@ -603,20 +774,6 @@ function apBulk(){
   toast(`Đã áp cho <b>${sel.size}</b> mã tiêu bản`);
 }
 
-/* dán từ Excel — cột hay dùng nhất là số block + số tiêu bản */
-const COT_MA =['Mã tiêu bản','Số block','Số tiêu bản','Giá','KTV cắt','KTV soạn','BS đọc','Ghi chú'];
-const COT_SEQ=['Số block','Số tiêu bản','Giá','KTV cắt','KTV soạn','BS đọc','Ghi chú'];
-const F_SAU=['soBlock','soTieuBan','giaSo','ktvCat','ktvSoan','bsDoc','ghiChu'];
-function moDan(){
-  $('danBox').value='';$('danStart').value='';$('danMode').value='ma';
-  veDanGoiY();$('danModal').classList.add('show');setTimeout(()=>$('danBox').focus(),60);
-}
-function veDanGoiY(){
-  const m=$('danMode').value;
-  $('danStartWrap').style.display=m==='seq'?'grid':'none';
-  $('danCols').innerHTML=(m==='ma'?COT_MA:COT_SEQ).map((c,i)=>`<b>${i+1}.</b> ${c}`).join(' &nbsp;·&nbsp; ');
-  $('danBox').placeholder=m==='ma'?'2472\t2\t3\t20\tĐức\tHuệ':'2\t3\t20\tĐức\tHuệ';
-}
 /** "26C2472" hoặc "2472" -> số thứ tự, null nếu khác đầu mã đang mở */
 function raSeq(v){
   const s=String(v||'').trim().toUpperCase();
@@ -625,46 +782,293 @@ function raSeq(v){
   if(!m)return null;
   return m[1]===D.prefix?Number(m[2]):null;
 }
-function danVao(){
-  const mode=$('danMode').value;
-  const lines=$('danBox').value.split(/\r?\n/).map(l=>l.replace(/\s+$/,'')).filter(l=>l.trim());
-  if(!lines.length)return toast('Chưa có nội dung để dán',true);
-  let seq=null;
-  if(mode==='seq'){
-    seq=raSeq($('danStart').value);
-    if(!seq)return toast('Nhập mã bắt đầu hợp lệ thuộc đầu mã '+D.prefix,true);
-  }
-  let n=0,boQua=0,dau=null;
-  lines.forEach(l=>{
-    const c=l.split('\t').map(x=>x.trim());
-    let s,val;
-    if(mode==='ma'){s=raSeq(c[0]);val=c.slice(1)}
-    else{s=seq++;val=c}
-    if(!s||s<1||s>9999){boQua++;return}
-    F_SAU.forEach((f,i)=>{if(val[i]!==undefined&&val[i]!=='')datO(s,f,val[i])});
-    tuDien(s);
-    dau??=s;n++;
-  });
-  dongM('danModal');
+
+/* ===== Sửa một mã đã đủ thông tin ===== */
+let suaSeq=null;
+function moSua(seq){
+  const r=D.rows[seq];
+  if(!duDl(r))return toast('Mã này chưa đủ thông tin để sửa',true);
+  suaSeq=seq;
+  $('suaSub').textContent=`Mã ${maCua(seq)} — sửa xong lưu thẳng vào sổ`;
+  $('suBlock').value=r.soBlock??'';$('suLam').value=r.soTieuBan??'';
+  $('suNgay').value=r.ngaySoan||'';$('suGia').value=r.giaSo||'';
+  $('suCat').value=r.ktvCat||'';$('suSoan').value=r.ktvSoan||'';
+  $('suBs').value=r.bsDoc||'';$('suGhiChu').value=r.ghiChu||'';
+  $('suErr').textContent='';
+  $('suaModal').classList.add('show');
+  setTimeout(()=>$('suBlock').focus(),60);
+}
+async function luuSua(){
+  if(!suaSeq)return;
+  const v={soBlock:$('suBlock').value.trim(),soTieuBan:$('suLam').value.trim(),ngaySoan:$('suNgay').value,
+    giaSo:$('suGia').value.trim(),ktvCat:$('suCat').value.trim(),ktvSoan:$('suSoan').value.trim(),
+    bsDoc:$('suBs').value.trim(),ghiChu:$('suGhiChu').value.trim()};
+  const ma=maCua(suaSeq);
+  Object.entries(v).forEach(([f,x])=>datO(suaSeq,f,x));
+  suaSeq=null;
+  dongM('suaModal');
   veSoan(true);
-  if(dau!==null)nhayToi(dau);                    // cuộn thẳng tới dòng vừa dán
-  luuNgay();
-  toast(`Đã đưa <b>${n}</b> dòng vào sổ ${D.prefix}${boQua?` · bỏ qua ${boQua} dòng sai mã`:''}`);
+  await luuNgay();
+  veGiaList();
+  toast(`Đã lưu thay đổi cho <b>${ma}</b>`);
 }
 
-/* ===== 2. Bác sĩ đọc ===== */
+/* ===== Khởi tạo phiên soạn — một popup, hai giai đoạn ===== */
+/* Giai đoạn 1: các mã trống của đầu mã đang mở, nhập số block + số tiêu bản.
+   Giai đoạn 2: giá và kỹ thuật viên áp chung cho cả phiên; ngày soạn là ngày lưu. */
+let PH={ma:[],buoc:1,gia:[],today:''};
+const coSo=x=>String(x.soBlock??'').trim()!==''||String(x.soTieuBan??'').trim()!=='';
+
+async function moPhien(danNgay){
+  PH={ma:[],buoc:1,gia:[],today:D.today||''};
+  ['phTu','phGia','phCat','phSoan','phGhiChu'].forEach(i=>$(i).value='');
+  $('phN').value=10;$('phErr').textContent='';
+  $('danMode').value='ma';dongKhungDan();
+  $('phSub').textContent=`Đầu mã ${D.prefix} — chỉ lấy những mã chưa có số block / số tiêu bản`;
+  $('phBody').innerHTML='<tr><td colspan="4" class="empty">Đang lấy danh sách mã trống…</td></tr>';
+  $('phienModal').classList.add('show');
+  phBuoc(1);
+  await napMaTrong(0,danNgay?0:10,true);         // vào thẳng khung dán thì khỏi trải sẵn dòng trống
+  if(danNgay)return moKhungDan();
+  const o=$('phBody').querySelector('input');if(o)o.focus();
+}
+/** Lấy mã trống từ máy chủ: thay cả danh sách, hoặc nối thêm vào cuối. */
+async function napMaTrong(tu,n,thay){
+  try{
+    const xin=Math.max(1,n||10);                 // n=0: chỉ lấy giá/KTV/mã trống đầu tiên, không trải dòng
+    const d=await get(`${window.SLIDE.phienMa}?prefix=${encodeURIComponent(D.prefix)}&tu=${tu||0}&n=${xin}`);
+    PH.gia=d.gia||[];PH.today=d.today||'';
+    if(thay){
+      PH.ma=n===0?[]:(d.ma||[]).map(x=>({seq:x.seq,code:x.code,soBlock:'',soTieuBan:''}));
+      if(!$('phTu').value&&d.dauTien)$('phTu').value=d.prefix+pad4(d.dauTien);
+    }else{
+      const co=new Set(PH.ma.map(x=>x.seq));
+      (d.ma||[]).forEach(x=>{if(!co.has(x.seq))PH.ma.push({seq:x.seq,code:x.code,soBlock:'',soTieuBan:''})});
+      PH.ma.sort((a,b)=>a.seq-b.seq);
+    }
+    if(d.me&&!$('phSoan').value)$('phSoan').value=d.me;
+    $('phNgay').textContent=viDate(d.today)||'hôm nay';
+    $('giaList').innerHTML=PH.gia.map(g=>`<option value="${esc(g)}">`).join('');
+    $('phGiaNhanh').innerHTML=PH.gia.length?PH.gia.map(g=>`<button class="pnl" onclick="chonGiaPhien('${esc(g)}')">Giá ${esc(g)}</button>`).join('')
+      :'<span class="hint">Chưa có giá nào trong sổ — nhập số giá mới ở ô trên.</span>';
+    vePhBody();
+  }catch(e){toast('Không lấy được danh sách mã trống: '+e.message,true)}
+}
+function vePhBody(){
+  $('phBody').innerHTML=PH.ma.length?PH.ma.map((x,i)=>`<tr>
+    <td class="ma">${x.code}</td>
+    <td><input data-ph="${i}" data-phf="soBlock" type="number" min="0" inputmode="numeric" value="${esc(x.soBlock)}"></td>
+    <td><input data-ph="${i}" data-phf="soTieuBan" type="number" min="0" inputmode="numeric" value="${esc(x.soTieuBan)}"></td>
+    <td class="ctr"><button class="del" title="Bỏ mã này khỏi phiên" onclick="boMaPhien(${i})">×</button></td></tr>`).join('')
+    :'<tr><td colspan="4" class="empty">Đầu mã này không còn mã trống — chọn đầu mã khác.</td></tr>';
+  demPhien();
+}
+function demPhien(){
+  $('phDem').innerHTML=`Đã nhập <b>${PH.ma.filter(coSo).length}</b>/${PH.ma.length} mã trong phiên`;
+}
+function boMaPhien(i){PH.ma.splice(i,1);vePhBody()}
+async function themMaPhien(){
+  await napMaTrong(PH.ma.length?PH.ma[PH.ma.length-1].seq+1:0,1,false);
+}
+async function dungDsPhien(){
+  const n=Math.min(Math.max(Number($('phN').value)||10,1),200);
+  $('phN').value=n;
+  const v=$('phTu').value.trim();
+  const tu=v?raSeq(v):0;
+  if(v&&!tu)return toast('Mã bắt đầu phải thuộc đầu mã '+D.prefix,true);
+  await napMaTrong(tu||0,n,true);
+}
+function chonGiaPhien(g){$('phGia').value=g;$('phErr').textContent=''}
+function boDongTrong(){
+  const n=PH.ma.length;
+  PH.ma=PH.ma.filter(coSo);
+  vePhBody();
+  if(n>PH.ma.length)toast(`Đã bỏ ${n-PH.ma.length} dòng chưa nhập khỏi phiên`);
+}
+
+/* ---- Dán từ Excel: chỉ nạp số block / số tiêu bản vào danh sách của phiên ---- */
+const COT_MA =['Mã tiêu bản','Số block','Số tiêu bản'];
+const COT_SEQ=['Số block','Số tiêu bản'];
+function moKhungDan(){
+  $('phDan').style.display='block';$('btnDan').style.display='none';
+  $('danBox').value='';$('danKq').textContent='';
+  $('danStart').value=$('danStart').value||$('phTu').value;
+  veDanGoiY();setTimeout(()=>$('danBox').focus(),60);
+}
+function dongKhungDan(){$('phDan').style.display='none';$('btnDan').style.display='inline-flex'}
+function veDanGoiY(){
+  const m=$('danMode').value;
+  $('danStartWrap').style.display=m==='seq'?'grid':'none';
+  $('danCols').innerHTML=(m==='ma'?COT_MA:COT_SEQ).map((c,i)=>`<b>${i+1}.</b> ${c}`).join(' &nbsp;·&nbsp; ')
+    +' &nbsp;— các cột khác trong vùng dán sẽ bị bỏ qua.';
+  $('danBox').placeholder=m==='ma'?'2472\t2\t3\n2473\t1\t2':'2\t3\n1\t2';
+}
+/** Mã đã soạn rồi (có số block / số tiêu bản) hoặc đã gán giá thì phiên không được đè lên. */
+function daCoDl(seq){
+  const r=D.rows[seq];
+  if(!r)return false;
+  const co=v=>String(v??'').trim()!=='';
+  return co(r.soBlock)||co(r.soTieuBan)||co(r.giaSo);
+}
+function danVaoPhien(){
+  const mode=$('danMode').value;
+  const lines=$('danBox').value.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length)return toast('Chưa có nội dung để dán',true);
+  const so=v=>{const s=String(v??'').trim();return /^\d{1,4}$/.test(s)?s:''};
+
+  let them=0,sai=0,nhay=0;const boQua=[];
+  const dat=(seq,b,t)=>{
+    if(!seq||seq<1||seq>9999){sai++;return}
+    if(daCoDl(seq)){boQua.push(maCua(seq));return}
+    if(b===''&&t==='')return;
+    let x=PH.ma.find(y=>y.seq===seq);
+    if(!x){x={seq,code:maCua(seq),soBlock:'',soTieuBan:''};PH.ma.push(x)}
+    if(b!=='')x.soBlock=b;
+    if(t!=='')x.soTieuBan=t;
+    them++;
+  };
+
+  if(mode==='ma'){
+    lines.forEach(l=>{const c=l.split('\t').map(x=>x.trim());dat(raSeq(c[0]),so(c[1]),so(c[2]))});
+  }else{
+    let s=raSeq($('danStart').value);
+    if(!s)return toast('Nhập mã bắt đầu hợp lệ thuộc đầu mã '+D.prefix,true);
+    // mã đã soạn trong sổ, hoặc vừa nhập ở ngay phiên này, đều phải nhảy qua
+    const daCo=x=>{
+      if(daCoDl(x))return true;
+      const y=PH.ma.find(z=>z.seq===x);
+      return !!y&&coSo(y);
+    };
+    lines.forEach(l=>{
+      const c=l.split('\t').map(x=>x.trim());
+      while(s<=9999&&daCo(s)){s++;nhay++}
+      dat(s,so(c[0]),so(c[1]));s++;
+    });
+  }
+
+  PH.ma.sort((a,b)=>a.seq-b.seq);
+  vePhBody();
+  const kq=[`đã nạp <b>${them}</b> mã`];
+  if(boQua.length)kq.push(`bỏ qua ${boQua.length} mã đã có dữ liệu (${boQua.slice(0,6).join(', ')}${boQua.length>6?'…':''})`);
+  if(nhay)kq.push(`nhảy qua ${nhay} mã đã có dữ liệu`);
+  if(sai)kq.push(`${sai} dòng sai mã`);
+  $('danKq').innerHTML=kq.join(' · ');
+  toast('Dán vào phiên: '+kq.join(' · '));
+  if(them)$('danBox').value='';
+}
+function phBuoc(b){
+  PH.buoc=b;
+  $('phB1').style.display=b===1?'block':'none';
+  $('phB2').style.display=b===2?'block':'none';
+  $('phStep1').classList.toggle('on',b===1);
+  $('phStep2').classList.toggle('on',b===2);
+  $('phBack').style.display=b===2?'inline-flex':'none';
+  $('phNext').textContent=b===1?'Tiếp tục →':'✓ Hoàn thành & lưu phiên';
+  $('phTitle').textContent=b===1?'Khởi tạo phiên — số block & số tiêu bản':'Khởi tạo phiên — giá và kỹ thuật viên';
+  $('phErr').textContent='';
+  if(b===2){veTomTat();setTimeout(()=>$('phGia').focus(),60)}
+}
+function phTiep(){PH.buoc===1?sangB2():luuPhien()}
+function phQuayLai(){phBuoc(1)}
+function sangB2(){
+  if(!PH.ma.filter(coSo).length)return $('phErr').textContent='Nhập số block hoặc số tiêu bản cho ít nhất một mã';
+  if(!$('phSoan').value)$('phSoan').value=D.me||'';
+  phBuoc(2);
+}
+function veTomTat(){
+  const ds=PH.ma.filter(coSo);
+  const b=ds.reduce((t,x)=>t+(Number(x.soBlock)||0),0);
+  const l=ds.reduce((t,x)=>t+(Number(x.soTieuBan)||0),0);
+  $('phSum').innerHTML=`<b>${ds.length} mã tiêu bản</b> · ${ds[0].code} → ${ds[ds.length-1].code}
+    · tổng ${b} block · ${l} tiêu bản
+    <div class="hint" style="margin-top:4px">${ds.map(x=>`${x.code} <b>${x.soBlock||0}/${x.soTieuBan||0}</b>`).join(' &nbsp;·&nbsp; ')}</div>`;
+}
+async function luuPhien(){
+  const ds=PH.ma.filter(coSo);
+  if(!ds.length)return phBuoc(1);
+  const gia=$('phGia').value.trim(),soan=$('phSoan').value.trim();
+  if(!gia){$('phErr').textContent='Chọn hoặc nhập số giá';return $('phGia').focus()}
+  if(!soan){$('phErr').textContent='Nhập tên KTV soạn';return $('phSoan').focus()}
+  const so=v=>{const s=String(v??'').trim();return s===''?null:Number(s)};
+  $('phNext').disabled=true;$('phErr').textContent='';
+  try{
+    const j=await post(window.SLIDE.phienLuu,{prefix:D.prefix,giaSo:gia,ktvSoan:soan,
+      ktvCat:$('phCat').value.trim()||null,ghiChu:$('phGhiChu').value.trim()||null,
+      rows:ds.map(x=>({seq:x.seq,soBlock:so(x.soBlock),soTieuBan:so(x.soTieuBan)}))});
+    dongM('phienModal');
+    await taiSoan();
+    nhayToi(j.seqDau);
+    toast(`Đã lưu phiên <b>${j.n}</b> mã (${j.tu} – ${j.den}) · giá ${esc(gia)} · KTV soạn ${esc(soan)}`);
+  }catch(e){$('phErr').textContent=e.message}
+  finally{$('phNext').disabled=false}
+}
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(!el.dataset||el.dataset.ph===undefined||!el.dataset.phf)return;
+  const x=PH.ma[Number(el.dataset.ph)];
+  if(x){x[el.dataset.phf]=el.value;demPhien()}
+});
+/* Enter chạy dọc các ô như trên sổ giấy; hết ô cuối thì sang giai đoạn 2 */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!$('phienModal').classList.contains('show'))return;
+  const t=e.target;
+  if(t.tagName==='TEXTAREA')return;
+  e.preventDefault();
+  if(PH.buoc!==1)return phTiep();
+  if(t.id==='phTu'||t.id==='phN')return dungDsPhien();
+  if(t.closest&&t.closest('#phDan'))return danVaoPhien();
+  if(t.dataset&&t.dataset.ph!==undefined){
+    const inps=[...$('phBody').querySelectorAll('input')];
+    const i=inps.indexOf(t);
+    if(i>=0&&i+1<inps.length)return inps[i+1].focus();
+  }
+  phTiep();
+});
+
+/* ===== 2. Bác sĩ đọc: nhận giá rồi chuyển trạng thái từng mã ===== */
+/* Một mã đi qua ba trạng thái: chưa đọc → đã nhận → đã đọc. */
+const TTD={chua:['b-off','chưa đọc'],nhan:['b-hc','đã nhận'],doc:['b-doc','đã đọc']};
 async function taiDoc(){
   const d=await get(window.SLIDE.reader+(curGia?'?gia='+encodeURIComponent(curGia):''));
   $('bsList').innerHTML=(d.bs||[]).map(x=>`<option value="${esc(x)}">`).join('');
-  $('racks').innerHTML=d.giaList.length?d.giaList.map(r=>`<div class="rack ${curGia===r.gia?'on':''}"
-    onclick="chonGia('${esc(r.gia)}')">
-    <div class="no">Giá ${esc(r.gia)}<small>${r.n} mã</small></div>
-    <div class="m">Soạn ${viDate(r.ngaySoan)||'—'}</div>
-    <div class="m">${r.daDoc>=r.n?'đã đọc hết':`còn ${r.n-r.daDoc} mã chưa đọc`}</div></div>`).join('')
-    :'<div class="empty">Chưa có giá nào. Sang tab Sổ soạn để nhập giá cho tiêu bản.</div>';
+  if(!$('bsNhan').value)$('bsNhan').value=d.me||'';
+  docGia=d.giaList||[];
   docRows=d.rows||[];
+  // hoàn tất hết cả giá thì giá đó biến mất, quay về màn chọn giá cho khỏi treo bảng rỗng
+  if(curGia&&!docGia.some(g=>g.gia===curGia)){curGia='';docRows=[];docSel=new Set()}
+  veRacks();
   $('docPanel').style.display=curGia?'block':'none';
   if(curGia)veDoc();
+}
+function veRacks(){
+  $('racks').innerHTML=docGia.length?docGia.map(r=>`<div class="rack ${curGia===r.gia?'on':''} ${giaSel.has(r.gia)?'pick':''}"
+    onclick="chonGia('${esc(r.gia)}')">
+    <label class="tick" title="Chọn giá này để nhận" onclick="event.stopPropagation()">
+      <input type="checkbox" ${giaSel.has(r.gia)?'checked':''} onchange="tickGia('${esc(r.gia)}')"></label>
+    <div class="no">Giá ${esc(r.gia)}<small>${r.n} mã</small></div>
+    <div class="m">Soạn ${viDate(r.ngaySoan)||'—'}</div>
+    <div class="m">${r.bs?esc(r.bs):'chưa có bác sĩ nhận'}</div>
+    <div class="st">
+      ${r.chua?`<span class="badge b-off">${r.chua} chưa đọc</span>`:''}
+      ${r.nhan?`<span class="badge b-hc">${r.nhan} đã nhận</span>`:''}
+      ${r.doc?`<span class="badge b-doc">${r.doc} đã đọc</span>`:''}
+    </div></div>`).join('')
+    :'<div class="empty">Chưa có giá nào. Sang tab Sổ soạn để nhập giá cho tiêu bản.</div>';
+}
+function tickGia(g){giaSel.has(g)?giaSel.delete(g):giaSel.add(g);veRacks()}
+function boChonGia(){giaSel=new Set();veRacks()}
+/** Nhận giá: cả giá được gán tên bác sĩ và chuyển sang "đã nhận". */
+async function nhanGia(){
+  const bs=$('bsNhan').value.trim();
+  if(!giaSel.size)return toast('Tích chọn ít nhất một giá ở thẻ bên dưới',true);
+  if(!bs)return toast('Nhập tên bác sĩ nhận đọc',true);
+  try{
+    const j=await post(window.SLIDE.take,{gia:[...giaSel],bs});
+    const ds=[...giaSel].join(', ');giaSel=new Set();
+    await taiDoc();
+    toast(`BS <b>${esc(bs)}</b> đã nhận giá ${esc(ds)} — ${j.n} mã tiêu bản`
+      +(j.boQua?` · ${j.boQua} mã đã đọc xong nên giữ nguyên`:''));
+  }catch(e){toast('Không nhận được giá: '+e.message,true)}
 }
 function chonGia(g){curGia=g;docSel=new Set();taiDoc()}
 /** Mở giá bằng cách gõ số — không phải giá nào cũng có sẵn thẻ ở dưới. */
@@ -687,9 +1091,12 @@ function veDoc(){
       :`<button class="btn sm" onclick="moMk('${r.code}')">＋ Chỉ định</button>`}</td>
     <td class="ctr">${r.hoiChan?`<span class="badge ${r.hoiChan==='chot'?'b-xong':'b-hc'}">${r.hoiChan==='chot'?'đã chốt':'đang mở'}</span>`
       :`<button class="btn sm" onclick="moHcTu('${r.code}')">Mở</button>`}</td>
-    <td class="ctr">${r.daDoc?`<span class="badge b-doc">đã đọc ${viDate(r.ngayDoc)}</span>`:'<span class="badge b-off">chưa đọc</span>'}</td>
+    <td class="ctr">${(t=>`<span class="badge ${t[0]}">${t[1]}${r.ttDoc==='doc'&&r.ngayDoc?' '+viDate(r.ngayDoc):
+      r.ttDoc==='nhan'&&r.ngayNhan?' '+viDate(r.ngayNhan):''}</span>`)(TTD[r.ttDoc]||TTD.chua)}</td>
   </tr>`).join('')||'<tr><td colspan="9" class="empty">Giá này chưa có mã nào.</td></tr>';
-  $('docFoot').textContent=`Đang chọn ${docSel.size} mã · ${docRows.filter(r=>r.daDoc).length}/${docRows.length} mã đã đọc`;
+  const dem=t=>docRows.filter(r=>(r.ttDoc||'chua')===t).length;
+  $('docFoot').innerHTML=`Đang chọn <b>${docSel.size}</b> mã · ${dem('chua')} chưa đọc
+    · ${dem('nhan')} đã nhận · ${dem('doc')} đã đọc`;
   $('chkAllDoc').checked=docRows.length>0&&docSel.size===docRows.length;
 }
 function chonDoc(code){docSel.has(code)?docSel.delete(code):docSel.add(code);veDoc()}
@@ -710,19 +1117,37 @@ async function luuDoc(){
     toast('Đã lưu kết quả đọc');await taiDoc();
   }catch(e){toast('Lưu thất bại: '+e.message,true)}
 }
-function dienBs(){
-  const bs=$('bsAll').value.trim();
-  if(!bs)return toast('Nhập tên bác sĩ trước',true);
-  docRows.forEach(r=>r.bsDoc=bs);veDoc();
-  toast(`Đã điền <b>${esc(bs)}</b> cho ${docRows.length} mã — bấm “Lưu kết quả đã nhập” để ghi lại`);
-}
-async function danhDau(on){
-  if(!docSel.size)return toast('Tích chọn ít nhất một mã',true);
+/**
+ * Chốt ca: mã đã đọc + đã có kết quả thì đẩy vào lịch sử, dòng trong sổ soạn bị xóa
+ * để mã tiêu bản quay lại danh sách mã trống cho ca sau.
+ */
+async function hoanTat(){
+  if(!docSel.size)return toast('Tích chọn mã đã đọc xong để hoàn tất',true);
+  const ds=docRows.filter(r=>docSel.has(r.code));
+  const chuaDu=ds.filter(r=>r.ttDoc!=='doc'||!String(r.ketQua||'').trim());
+  if(chuaDu.length)return toast(`Chưa hoàn tất được: ${chuaDu.length} mã chưa đọc xong hoặc chưa nhập kết quả `
+    +`(${chuaDu.slice(0,5).map(r=>esc(r.code)).join(', ')}${chuaDu.length>5?'…':''})`,true);
+  if(!confirm(`Hoàn tất ${ds.length} mã tiêu bản?\n\n`
+    +`Cả ca được lưu vào lịch sử ở tab Hóa mô miễn dịch, sau đó dòng trong sổ soạn bị xóa `
+    +`để mã quay lại danh sách mã trống. Phiếu hóa mô và hội chẩn của các mã này cũng được dọn theo.`))return;
   try{
-    await luuDoc0();
-    const j=await post(window.SLIDE.mark,{codes:[...docSel],daDoc:on,bsDoc:$('bsAll').value.trim()||null});
+    await luuDoc0();                               // ghi nốt kết quả vừa gõ rồi mới chốt
+    const j=await post(window.SLIDE.finish,{codes:[...docSel]});
+    docSel=new Set();
+    await taiDoc();
+    if(j.n)toast(`Đã hoàn tất <b>${j.n}</b> mã và trả mã về sổ soạn`);
+    if(j.vuong.length)toast('Chưa chốt được: '+j.vuong.map(esc).join(' · '),true);
+  }catch(e){toast('Không hoàn tất được: '+e.message,true)}
+}
+
+/** Đổi trạng thái đọc cho các mã đang tích chọn (chọn tất cả bằng ô ở đầu bảng). */
+async function doiTt(tt){
+  if(!docSel.size)return toast('Tích chọn ít nhất một mã tiêu bản',true);
+  try{
+    await luuDoc0();                               // giữ kết quả vừa gõ trước khi đổi trạng thái
+    const j=await post(window.SLIDE.mark,{codes:[...docSel],trangThai:tt,bsDoc:$('bsAll').value.trim()||null});
     docSel=new Set();await taiDoc();
-    toast(on?`Đã đánh dấu <b>${j.n}</b> mã là đã đọc kết quả`:`Đã bỏ đánh dấu ${j.n} mã`);
+    toast(`Đã chuyển <b>${j.n}</b> mã sang <b>${TTD[tt][1]}</b>`);
   }catch(e){toast('Không ghi được: '+e.message,true)}
 }
 async function luuDoc0(){
@@ -754,6 +1179,33 @@ async function taiHmmd(){
         :'<span class="badge b-xong">xong</span>'}
       <button class="btn sm" onclick="moMk('${esc(h.code)}')">Sửa</button></div></td></tr>`).join('')
     :'<tr><td colspan="15" class="empty">Chưa có chỉ định hóa mô miễn dịch nào.</td></tr>';
+}
+/* Lịch sử các lượt đã hoàn tất, nằm ngay dưới sổ hóa mô miễn dịch */
+async function taiLichSu(){
+  const q=$('lsQ').value.trim();
+  const d=await get(window.SLIDE.history+(q?'?q='+encodeURIComponent(q):''));
+  LS=d.rows||[];
+  $('lsBody').innerHTML=d.rows.length?d.rows.map(h=>`<tr>
+    <td class="main">${esc(h.code)}</td>
+    <td class="ctr">${h.lan>1?`<span class="badge b-hc">lượt ${h.lan}</span>`:h.lan}</td>
+    <td class="ctr">${h.soBlock??'—'}</td><td class="ctr">${h.soTieuBan??'—'}</td>
+    <td>${viDate(h.ngaySoan)||'—'}</td><td class="ctr">${esc(h.giaSo)||'—'}</td>
+    <td>${esc(h.ktvSoan)||'—'}</td><td>${esc(h.bsDoc)||'—'}</td>
+    <td>${esc(h.ketQua)||'<span class="sub">—</span>'}
+      ${h.ketLuanHoiChan?`<div class="sub">Hội chẩn: ${esc(h.ketLuanHoiChan)}</div>`:''}</td>
+    <td>${esc(h.benhNhan)||'<span class="sub">—</span>'}${h.maBn?`<div class="sub">${esc(h.maBn)}</div>`:''}</td>
+    <td><div class="mk-chips">${h.markers.map(m=>`<span class="chip ro">${esc(m)}</span>`).join('')}</div></td>
+    <td>${viDate(h.ngayChot)}<div class="sub">${esc(h.nguoiChot)}</div></td>
+    <td class="ctr"><button class="btn sm" onclick="xemLs(${h.id})">Chi tiết</button></td></tr>`).join('')
+    :'<tr><td colspan="13" class="empty">Chưa có ca nào được hoàn tất.</td></tr>';
+  $('lsCount').textContent=`${d.rows.length}/${d.tong} lượt`;
+}
+/** Toàn bộ ca của một lượt: sổ soạn, kết quả, phiếu hóa mô, hội chẩn. */
+function xemLs(id){
+  const h=LS.find(x=>x.id===id);if(!h)return;
+  $('lsSub').textContent=`${h.code} — lượt ${h.lan} · hoàn tất ${viDate(h.ngayChot)}`;
+  $('lsBox').innerHTML=veChiTietLs(h);
+  $('lsModal').classList.add('show');
 }
 async function buoc(id,b){
   try{await post(window.SLIDE.ihcStep.replace('__ID__',id),{buoc:b});await taiHmmd();toast('Đã cập nhật bước')}
@@ -833,7 +1285,11 @@ async function xemTien(){
   if(!code)return;
   const d=await get(window.SLIDE.trace+'?code='+encodeURIComponent(code));
   if(!d.found){
-    $('traBox').innerHTML=`<div class="empty">Không tìm thấy mã <b>${esc(code)}</b>.
+    const ls=d.lichSu||[];
+    $('traBox').innerHTML=ls.length
+      ? `<div class="warn-anh">Mã <b>${esc(code)}</b> đã hoàn tất và được trả về sổ soạn để dùng lại —
+           dưới đây là các lượt đã lưu trong lịch sử.</div>${veLichSuMa(ls)}`
+      : `<div class="empty">Không tìm thấy mã <b>${esc(code)}</b>.
       ${d.goiY&&d.goiY.length?'<div style="margin-top:8px">Có phải: '+d.goiY.map(c=>`<button class="btn sm" onclick="$('traCode').value='${c}';xemTien()">${c}</button>`).join(' ')+'</div>':''}</div>`;
     return;
   }
@@ -858,7 +1314,42 @@ async function xemTien(){
       <div><div class="b">${esc(m.tieuDe)}</div>
         ${m.chiTiet?`<div class="c">${esc(m.chiTiet)}</div>`:''}
         ${m.nguoi?`<div class="w">${esc(m.nguoi)}</div>`:''}</div></div>`).join('')
-      ||'<div class="empty">Mã này chưa có mốc nào.</div>'}</div>`;
+      ||'<div class="empty">Mã này chưa có mốc nào.</div>'}</div>
+    ${(d.lichSu||[]).length?`<div style="margin-top:12px">${veLichSuMa(d.lichSu)}</div>`:''}`;
+}
+/** Các lượt trước của một mã — mã được dùng lại nên có thể có nhiều lượt. */
+function veLichSuMa(ls){
+  return `<div style="font-size:12px;font-weight:800;margin-bottom:7px">Lịch sử ${ls.length} lượt đã hoàn tất của mã này</div>`
+    +ls.map(h=>`<div class="yk-i" style="margin-bottom:8px">${veChiTietLs(h)}</div>`).join('');
+}
+/** Toàn bộ những gì đã lưu của một lượt — phiếu hóa mô và hội chẩn bị xóa khi chốt nên chỉ còn ở đây. */
+function veChiTietLs(h){
+  const d=v=>viDate(v)||'—', t=v=>esc(v)||'—';
+  const ph=(h.hmmd||[]).map((x,i)=>`<div class="ls-kv" style="margin-top:${i?8:0}px">
+    <div class="mk-chips" style="margin-bottom:4px">${(x.markers||[]).map(m=>`<span class="chip ro">${esc(m)}</span>`).join('')
+      ||'<span class="sub">không có marker</span>'}</div>
+    <div>Chỉ định: <b>${t(x.bsChiDinh)}</b>${x.ngayChiDinh?' · '+d(x.ngayChiDinh):''}${x.soBlock?' · '+x.soBlock+' block':''}</div>
+    ${x.cdLamSang?`<div>Chẩn đoán lâm sàng: ${esc(x.cdLamSang)}</div>`:''}
+    ${x.viTri?`<div>Vị trí lấy mẫu: ${esc(x.viTri)}</div>`:''}
+    <div>Lấy mẫu ${d(x.ngayLayMau)} · nhận mẫu ${d(x.ngayNhanMau)} · nhuộm ${d(x.ngayNhuom)}
+      · đọc KQ ${d(x.ngayDocKq)}${x.bsDocKq?' ('+esc(x.bsDocKq)+')':''}</div></div>`).join('');
+  const hc=h.hoiChan;
+  return `<div class="t"><b>Lượt ${h.lan} — ${esc(h.code)}</b>
+      <span class="badge b-xong">hoàn tất ${d(h.ngayChot)}</span><span class="d">${t(h.nguoiChot)}</span></div>
+    <div class="ls-kv">${h.soBlock??'—'} block · ${h.soTieuBan??'—'} lam · giá ${t(h.giaSo)}
+      · soạn ${d(h.ngaySoan)} · KTV cắt ${t(h.ktvCat)} · KTV soạn ${t(h.ktvSoan)}</div>
+    <div class="ls-kv">BS đọc <b>${t(h.bsDoc)}</b> · nhận giá ${d(h.ngayNhan)} · đọc ${d(h.ngayDoc)}</div>
+    ${h.ketQua?`<div class="ls-sec"><h4>Kết quả / đánh giá của bác sĩ</h4>
+      <div class="ls-kv">${esc(h.ketQua)}</div></div>`:''}
+    ${h.benhNhan||h.maBn?`<div class="ls-sec"><h4>Bệnh nhân</h4><div class="ls-kv">${t(h.benhNhan)}
+      ${h.maBn?' · mã BN '+esc(h.maBn):''}${h.khoa?' · '+esc(h.khoa):''}${h.viTri?' · '+esc(h.viTri):''}</div></div>`:''}
+    ${ph?`<div class="ls-sec"><h4>Hóa mô miễn dịch — ${(h.hmmd||[]).length} phiếu</h4>${ph}</div>`:''}
+    ${hc?`<div class="ls-sec"><h4>Hội chẩn</h4>
+      ${hc.ketLuan?`<div class="ls-kv"><b>Kết luận:</b> ${esc(hc.ketLuan)}</div>
+        <div class="sub">Chốt bởi ${t(hc.bsChot)} ngày ${d(hc.ngayChot)}</div>`:''}
+      ${(hc.yKien||[]).map(y=>`<div class="ls-kv" style="margin-top:6px"><b>${esc(y.bs)}</b>
+        <span class="sub">${esc(y.luc||'')}</span><div>${esc(y.noiDung)}</div></div>`).join('')}</div>`:''}
+    ${h.ghiChu?`<div class="ls-sec"><h4>Ghi chú</h4><div class="ls-kv">${esc(h.ghiChu)}</div></div>`:''}`;
 }
 async function taiTinhTrang(){
   const q=$('ttQ').value.trim(),tt=window.__tt||'';
@@ -983,10 +1474,11 @@ $('jump').addEventListener('change',e=>{
 });
 $('ttQ').addEventListener('input',()=>{clearTimeout(window.__tq);window.__tq=setTimeout(taiTinhTrang,320)});
 $('hmTt').addEventListener('change',taiHmmd);
+$('lsQ').addEventListener('input',()=>{clearTimeout(window.__lsq);window.__lsq=setTimeout(taiLichSu,320)});
 $('mkMaBn').addEventListener('change',traBn);
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 window.addEventListener('beforeunload',e=>{if(dirty.size){e.preventDefault();e.returnValue=''}});
-/* Bàn phím ảo bật/tắt cũng phát ra resize — đang gõ thì bỏ qua, khỏi nháy */
+/* Bàn phím ảo bật/tắt cũng phát ra resize — đang gõ ghi chú thì bỏ qua, khỏi nháy */
 let rsTimer=null;
 window.addEventListener('resize',()=>{
   if(dangGo())return;
