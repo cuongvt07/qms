@@ -180,10 +180,10 @@ tr.blank td{background:#fcfdfe}
 .step.on{border-color:var(--primary);background:var(--soft)}
 .step .k{font-size:8.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .step .t{font-size:11px;font-weight:800;margin-top:2px}.step.on .t{color:var(--primary2)}
-.ph-wrap{max-height:44vh;overflow:auto;border:1px solid var(--line);border-radius:11px}
-.ph-t td{padding:4px 8px;height:auto}
+.ph-wrap{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:11px}
+.ph-t td{padding:3px 8px;height:auto}
 .ph-t td.ma{font-weight:800;font-variant-numeric:tabular-nums;font-size:11.5px;white-space:nowrap}
-.ph-t input{width:100%;height:31px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font-size:11px;background:#fff}
+.ph-t input{width:100%;height:27px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font-size:11px;background:#fff}
 .ph-t input:focus{border-color:var(--primary);outline:2px solid #d6ecef}
 .ph-t .del{width:26px;height:26px;border:0;border-radius:7px;background:#f1f5f9;color:var(--red);font-size:13px;line-height:1}
 .ph-sum{background:var(--soft);border:1px solid #cbe6ea;border-radius:11px;padding:10px 12px;margin-bottom:12px;font-size:11px;line-height:1.7}
@@ -474,7 +474,7 @@ tr.blank td{background:#fcfdfe}
     <div id="phB1">
       <div class="f3">
         <div class="f"><label>Bắt đầu từ mã</label><input id="phTu" placeholder="VD: 2472 hoặc 26C2472"></div>
-        <div class="f"><label>Số mã trong phiên</label><input id="phN" type="number" min="1" max="200" value="10"></div>
+        <div class="f"><label>Số mã mới hiện sẵn</label><input id="phN" type="number" min="1" max="500" value="50"></div>
         <div class="f" style="align-self:end"><button class="btn" onclick="dungDsPhien()">↻ Dựng lại danh sách</button></div>
       </div>
 
@@ -505,11 +505,10 @@ tr.blank td{background:#fcfdfe}
       <div class="ph-wrap"><table class="ph-t"><thead><tr>
         <th>Mã tiêu bản</th><th style="width:170px">Số block</th><th style="width:170px">Số tiêu bản</th><th style="width:46px"></th>
       </tr></thead><tbody id="phBody"></tbody></table></div>
-      <div class="ph-row"><button class="btn sm" onclick="themMaPhien()">＋ Thêm mã tiếp theo</button>
+      <div class="ph-row"><button class="btn sm" onclick="themMaPhien(10)">＋ Thêm 10 mã</button>
         <button class="btn sm" onclick="boDongTrong()">Bỏ các dòng còn trống</button>
         <span class="hint" id="phDem"></span></div>
-      <div class="hint" style="margin-top:7px">Chỉ liệt kê các mã của đầu mã này chưa có số block / số tiêu bản.
-        Mã nào để trống cả hai ô sẽ không được ghi vào sổ. Bấm Enter để nhảy sang ô kế tiếp.</div>
+      <div class="hint" style="margin-top:7px" id="phGiaiThich"></div>
     </div>
 
     <!-- ---- giai đoạn 2 ---- -->
@@ -852,24 +851,24 @@ let PH={ma:[],buoc:1,gia:[],today:''};
 const coSo=x=>String(x.soBlock??'').trim()!==''||String(x.soTieuBan??'').trim()!=='';
 
 async function moPhien(danNgay){
-  PH={ma:[],buoc:1,gia:[],today:D.today||''};
+  PH={ma:[],buoc:1,gia:[],today:D.today||'',xenGiua:0};
   ['phTu','phGia','phCat','phSoan','phGhiChu'].forEach(i=>$(i).value='');
-  $('phN').value=10;$('phErr').textContent='';
+  $('phN').value=50;$('phErr').textContent='';
   $('danMode').value='ma';dongKhungDan();
   $('phSub').textContent=`Đầu mã ${D.prefix} — chỉ lấy những mã chưa có số block / số tiêu bản`;
   $('phBody').innerHTML='<tr><td colspan="4" class="empty">Đang lấy danh sách mã trống…</td></tr>';
   $('phienModal').classList.add('show');
   phBuoc(1);
-  await napMaTrong(0,danNgay?0:10,true);         // vào thẳng khung dán thì khỏi trải sẵn dòng trống
+  await napMaTrong(0,danNgay?0:50,true);         // vào thẳng khung dán thì khỏi trải sẵn dòng trống
   if(danNgay)return moKhungDan();
   const o=$('phBody').querySelector('input');if(o)o.focus();
 }
 /** Lấy mã trống từ máy chủ: thay cả danh sách, hoặc nối thêm vào cuối. */
 async function napMaTrong(tu,n,thay){
   try{
-    const xin=Math.max(1,n||10);                 // n=0: chỉ lấy giá/KTV/mã trống đầu tiên, không trải dòng
+    const xin=Math.max(1,n||50);                 // n=0: chỉ lấy giá/KTV/mã trống đầu tiên, không trải dòng
     const d=await get(`${window.SLIDE.phienMa}?prefix=${encodeURIComponent(D.prefix)}&tu=${tu||0}&n=${xin}`);
-    PH.gia=d.gia||[];PH.today=d.today||'';
+    PH.gia=d.gia||[];PH.today=d.today||'';PH.xenGiua=d.xenGiua||0;
     if(thay){
       PH.ma=n===0?[]:(d.ma||[]).map(x=>({seq:x.seq,code:x.code,soBlock:'',soTieuBan:''}));
       if(!$('phTu').value&&d.dauTien)$('phTu').value=d.prefix+pad4(d.dauTien);
@@ -878,6 +877,10 @@ async function napMaTrong(tu,n,thay){
       (d.ma||[]).forEach(x=>{if(!co.has(x.seq))PH.ma.push({seq:x.seq,code:x.code,soBlock:'',soTieuBan:''})});
       PH.ma.sort((a,b)=>a.seq-b.seq);
     }
+    $('phGiaiThich').innerHTML=(d.xenGiua
+      ? `Đang hiện <b>tất cả ${d.xenGiua} mã còn trống xen giữa</b> các mã đã soạn, kèm dải mã mới tiếp theo. `
+      : `Đầu mã này chưa có mã trống xen giữa, đang hiện dải mã mới tiếp theo. `)
+      +`Gõ tới dòng cuối là tự thêm dòng mới, không phải bấm gì. Mã để trống cả hai ô sẽ không ghi vào sổ.`;
     if(d.me&&!$('phSoan').value)$('phSoan').value=d.me;
     $('phNgay').textContent=viDate(d.today)||'hôm nay';
     $('giaList').innerHTML=PH.gia.map(g=>`<option value="${esc(g)}">`).join('');
@@ -899,11 +902,19 @@ function demPhien(){
   $('phDem').innerHTML=`Đã nhập <b>${PH.ma.filter(coSo).length}</b>/${PH.ma.length} mã trong phiên`;
 }
 function boMaPhien(i){PH.ma.splice(i,1);vePhBody()}
-async function themMaPhien(){
-  await napMaTrong(PH.ma.length?PH.ma[PH.ma.length-1].seq+1:0,1,false);
+/** Nối thêm mã trống tiếp theo — tính ngay tại chỗ từ sổ đang mở, khỏi hỏi máy chủ. */
+function themMaPhien(k){
+  const co=new Set(PH.ma.map(y=>y.seq));
+  let s=PH.ma.length?PH.ma[PH.ma.length-1].seq+1:1, them=0;
+  while(s<=(D.soDong||9999)&&them<(k||1)){
+    if(!daCoDl(s)&&!co.has(s)){PH.ma.push({seq:s,code:maCua(s),soBlock:'',soTieuBan:''});them++}
+    s++;
+  }
+  if(them)vePhBody();
+  return them;
 }
 async function dungDsPhien(){
-  const n=Math.min(Math.max(Number($('phN').value)||10,1),200);
+  const n=Math.min(Math.max(Number($('phN').value)||50,1),500);
   $('phN').value=n;
   const v=$('phTu').value.trim();
   const tu=v?raSeq(v):0;
@@ -1037,9 +1048,31 @@ async function luuPhien(){
 document.addEventListener('input',e=>{
   const el=e.target;
   if(!el.dataset||el.dataset.ph===undefined||!el.dataset.phf)return;
-  const x=PH.ma[Number(el.dataset.ph)];
-  if(x){x[el.dataset.phf]=el.value;demPhien()}
+  const i=Number(el.dataset.ph), x=PH.ma[i];
+  if(!x)return;
+  x[el.dataset.phf]=el.value;
+  demPhien();
+  // gõ tới dòng cuối thì tự nối thêm dòng, khỏi phải bấm "Thêm mã"
+  if(i===PH.ma.length-1&&coSo(x)){
+    const o=luuOPhien();
+    if(themMaPhien(5))traOPhien(o);
+  }
 });
+/** Dựng lại bảng làm mất chỗ đang gõ, nên phải nhớ và trả con trỏ về đúng ô. */
+function luuOPhien(){
+  const a=document.activeElement;
+  if(!a||!a.dataset||a.dataset.ph===undefined)return null;
+  let s=null,e=null;
+  try{s=a.selectionStart;e=a.selectionEnd}catch(_){}
+  return {i:a.dataset.ph,f:a.dataset.phf,s,e};
+}
+function traOPhien(t){
+  if(!t)return;
+  const el=document.querySelector(`#phBody input[data-ph="${t.i}"][data-phf="${t.f}"]`);
+  if(!el)return;
+  el.focus({preventScroll:true});
+  if(t.s!=null){try{el.setSelectionRange(t.s,t.e)}catch(_){}}
+}
 /* Enter chạy dọc các ô như trên sổ giấy; hết ô cuối thì sang giai đoạn 2 */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'||!$('phienModal').classList.contains('show'))return;

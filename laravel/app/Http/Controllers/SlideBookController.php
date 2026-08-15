@@ -213,11 +213,17 @@ class SlideBookController extends Controller
         return response()->json(['ok' => true, 'saved' => $luu, 'removed' => $xoa]);
     }
 
-    /** Mã còn trống của một đầu mã (chưa nhập số block / số tiêu bản) để khởi tạo phiên soạn. */
+    /**
+     * Mã còn trống của một đầu mã để khởi tạo phiên soạn.
+     *
+     * Trả về TẤT CẢ mã trống nằm xen giữa các mã đã soạn (mã bị bỏ dở, mã mới ghi
+     * lý do chưa ra tiêu bản), rồi nối thêm một dải mã mới sau mã lớn nhất — vì
+     * từ đó trở đi mã nào cũng trống, không thể liệt kê hết 9999 dòng.
+     */
     public function sessionCandidates(Request $request): JsonResponse
     {
         [$yy, $letter] = $this->tachDauMa($request->query('prefix'));
-        $n  = min(max((int) $request->query('n', 10), 1), 200);
+        $n  = min(max((int) $request->query('n', 50), 1), 500);
         $tu = (int) $request->query('tu', 0);
 
         $daSoan = array_flip(
@@ -225,13 +231,22 @@ class SlideBookController extends Controller
                 ->where(fn ($q) => $q->whereNotNull('so_block')->orWhereNotNull('so_tieu_ban'))
                 ->pluck('seq')->all()
         );
+        $maxSeq = $daSoan ? max(array_keys($daSoan)) : 0;
 
         $ma = [];
-        for ($s = max(1, $tu); $s <= self::SO_DONG && count($ma) < $n; $s++) {
-            if (isset($daSoan[$s])) {
-                continue;                       // mã đã soạn rồi thì bỏ qua, phiên chỉ lấy mã trống
+        // 1) mọi mã trống xen giữa — hiện hết, không cắt bớt
+        for ($s = max(1, $tu); $s <= $maxSeq && count($ma) < 500; $s++) {
+            if (! isset($daSoan[$s])) {
+                $ma[] = ['seq' => $s, 'code' => self::taoMa($yy, $letter, $s)];
             }
-            $ma[] = ['seq' => $s, 'code' => self::taoMa($yy, $letter, $s)];
+        }
+        $xenGiua = count($ma);
+
+        // 2) dải mã mới tiếp theo
+        for ($s = max($maxSeq + 1, $tu); $s <= self::SO_DONG && count($ma) < $xenGiua + $n; $s++) {
+            if (! isset($daSoan[$s])) {
+                $ma[] = ['seq' => $s, 'code' => self::taoMa($yy, $letter, $s)];
+            }
         }
 
         // mã trống đầu tiên của sổ — phiên mới mặc định bắt đầu từ đây
@@ -243,6 +258,8 @@ class SlideBookController extends Controller
         return response()->json([
             'prefix'  => sprintf('%02d%s', $yy, $letter),
             'ma'      => $ma,
+            'xenGiua' => $xenGiua,
+            'maxSeq'  => $maxSeq,
             'dauTien' => $dau,
             'daSoan'  => count($daSoan),
             'gia'     => SlideRecord::whereNotNull('gia_so')->where('gia_so', '!=', '')
