@@ -57,6 +57,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/qms/so-tieu-ban', [\App\Http\Controllers\SlideBookController::class, 'page'])->name('slide.page');
     Route::get('/qms/so-tieu-ban/du-lieu', [\App\Http\Controllers\SlideBookController::class, 'state'])->name('slide.state');
     Route::post('/qms/so-tieu-ban/luu', [\App\Http\Controllers\SlideBookController::class, 'saveRows'])->name('slide.save');
+    Route::get('/qms/so-tieu-ban/cho-xu-ly', [\App\Http\Controllers\SlideBookController::class, 'pendingState'])->name('slide.pending');
+    Route::post('/qms/so-tieu-ban/cho-xu-ly', [\App\Http\Controllers\SlideBookController::class, 'pendingSave'])->name('slide.pending.save');
     Route::get('/qms/so-tieu-ban/phien/ma-trong', [\App\Http\Controllers\SlideBookController::class, 'sessionCandidates'])->name('slide.session.ma');
     Route::post('/qms/so-tieu-ban/phien', [\App\Http\Controllers\SlideBookController::class, 'saveSession'])->name('slide.session.save');
     Route::get('/qms/so-tieu-ban/doc', [\App\Http\Controllers\SlideBookController::class, 'readerState'])->name('slide.reader');

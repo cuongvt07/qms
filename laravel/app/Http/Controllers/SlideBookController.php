@@ -271,6 +271,95 @@ class SlideBookController extends Controller
     }
 
     /**
+     * Mã bị phiên soạn nhảy qua: nằm giữa dải mã đã soạn nhưng chưa ra tiêu bản.
+     *
+     * Đây là những ca phải xử lý thêm (khử canxi, cắt lại, chờ khoa gửi bù) — sổ đã
+     * đi tiếp nên rất dễ quên. Tính thẳng từ khoảng trống trong sổ, không cần ai đánh dấu.
+     */
+    public function pendingState(): JsonResponse
+    {
+        $hom  = now()->startOfDay();
+        $rows = SlideRecord::orderBy('yy')->orderBy('letter')->orderBy('seq')->get();
+        $out  = [];
+
+        foreach ($rows->groupBy(fn ($r) => sprintf('%02d%s', $r->yy, $r->letter)) as $prefix => $g) {
+            $soan = $g->filter(fn ($r) => $r->so_block !== null || $r->so_tieu_ban !== null)->values();
+            if ($soan->count() < 1) {
+                continue;
+            }
+            // chỉ xét trong dải đã dùng của đầu mã, mã trước mã đầu tiên là chưa cấp chứ không phải bỏ quên
+            $min    = $soan->min('seq');
+            $max    = $soan->max('seq');
+            $daSoan = $soan->keyBy('seq');
+            $coDong = $g->keyBy('seq');
+
+            for ($s = $min; $s <= $max && count($out) < 200; $s++) {
+                if (isset($daSoan[$s])) {
+                    continue;
+                }
+                $r = $coDong[$s] ?? null;
+                // phiên nào đã nhảy qua mã này — lấy ngày soạn của mã kế tiếp
+                $sau = $soan->first(fn ($x) => $x->seq > $s);
+                $tu  = $sau?->ngay_soan;
+
+                $out[] = [
+                    'code'      => $prefix . sprintf('%04d', $s),
+                    'prefix'    => $prefix,
+                    'seq'       => $s,
+                    'lyDo'      => $r?->ghi_chu ?? '',
+                    'ngayHen'   => $r?->ngay_hen?->toDateString() ?? '',
+                    'boQuaTu'   => $tu?->toDateString() ?? '',
+                    'soNgayCho' => $tu ? (int) $tu->diffInDays($hom) : null,
+                    'quaHen'    => (bool) ($r?->ngay_hen && $r->ngay_hen->lt($hom)),
+                    'treHen'    => $r?->ngay_hen && $r->ngay_hen->lt($hom) ? (int) $r->ngay_hen->diffInDays($hom) : null,
+                ];
+            }
+        }
+
+        // quá hẹn lên trước, rồi tới ca chờ lâu nhất
+        usort($out, fn ($a, $b) => [$b['quaHen'], $b['soNgayCho'] ?? -1] <=> [$a['quaHen'], $a['soNgayCho'] ?? -1]);
+
+        return response()->json([
+            'rows'   => $out,
+            'tong'   => count($out),
+            'quaHen' => count(array_filter($out, fn ($x) => $x['quaHen'])),
+        ]);
+    }
+
+    /** Ghi lý do chờ và ngày hẹn ra tiêu bản cho một mã đang bị bỏ trống. */
+    public function pendingSave(Request $request): JsonResponse
+    {
+        $d = $request->validate([
+            'code'    => 'required|string|max:12',
+            'ghiChu'  => 'nullable|string',
+            'ngayHen' => 'nullable|date',
+        ]);
+        $code = strtoupper(trim($d['code']));
+        if (! preg_match('/^(\d{2})([A-Z])(\d{4})$/', $code, $m)) {
+            return response()->json(['ok' => false, 'errors' => ['Mã tiêu bản không hợp lệ']], 422);
+        }
+
+        $r = SlideRecord::firstOrNew(['code' => $code]);
+        $r->fill([
+            'yy' => (int) $m[1], 'letter' => $m[2], 'seq' => (int) $m[3],
+            'ghi_chu'  => trim((string) ($d['ghiChu'] ?? '')) ?: null,
+            'ngay_hen' => $d['ngayHen'] ?: null,
+        ]);
+
+        // xóa hết lý do lẫn ngày hẹn của mã chưa soạn thì gỡ luôn dòng trống khỏi sổ
+        if (! $r->ghi_chu && ! $r->ngay_hen && $r->so_block === null && $r->so_tieu_ban === null) {
+            if ($r->exists) {
+                $r->delete();
+            }
+
+            return response()->json(['ok' => true, 'xoa' => true]);
+        }
+        $r->save();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Lưu một phiên soạn: một loạt mã trống được nhập số block / số tiêu bản,
      * rồi gán chung giá và kỹ thuật viên. Ngày soạn luôn là ngày bấm lưu.
      */

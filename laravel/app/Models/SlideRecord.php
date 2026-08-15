@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class SlideRecord extends Model
 {
     protected $casts = [
-        'ngay_soan' => 'date', 'ngay_doc' => 'date', 'ngay_nhan' => 'date', 'da_doc' => 'boolean',
+        'ngay_soan' => 'date', 'ngay_doc' => 'date', 'ngay_nhan' => 'date', 'ngay_hen' => 'date',
+        'da_doc' => 'boolean',
     ];
 
     protected $fillable = [
-        'code', 'yy', 'letter', 'seq', 'patient_id', 'so_block', 'so_tieu_ban', 'ngay_soan', 'gia_so',
+        'code', 'yy', 'letter', 'seq', 'patient_id', 'so_block', 'so_tieu_ban', 'ngay_soan', 'ngay_hen', 'gia_so',
         'ktv_cat', 'ktv_soan', 'bs_doc', 'ket_qua', 'da_doc', 'trang_thai_doc', 'ngay_nhan', 'ngay_doc', 'ghi_chu',
     ];
 

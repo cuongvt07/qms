@@ -67,6 +67,7 @@ tr.blank td{background:#fcfdfe}
 .b-soan{background:var(--blue-soft);color:var(--blue)}.b-doc{background:var(--green-soft);color:var(--green)}
 .b-ihc{background:var(--purple-soft);color:var(--purple)}.b-hc{background:var(--amber-soft);color:var(--amber)}
 .b-xong{background:var(--green-soft);color:var(--green)}.b-off{background:#f1f5f9;color:#64748b}
+.b-late{background:var(--red-soft);color:var(--red)}
 /* lưới sổ soạn — chỉ đọc, dữ liệu vào sổ qua popup khởi tạo phiên */
 .grid-t{min-width:1010px;table-layout:fixed}
 .grid-t td{padding:5px 9px;height:var(--rowh)}   /* chiều cao cố định để cuộn ảo tính đúng vị trí */
@@ -186,6 +187,9 @@ tr.blank td{background:#fcfdfe}
 .ph-t input{width:100%;height:27px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font-size:11px;background:#fff}
 .ph-t input:focus{border-color:var(--primary);outline:2px solid #d6ecef}
 .ph-t .del{width:26px;height:26px;border:0;border-radius:7px;background:#f1f5f9;color:var(--red);font-size:13px;line-height:1}
+.cho-t tr.qua td{background:var(--red-soft)}
+.cho-t tr.qua td.ma{color:var(--red)}
+.btn.red{font-weight:800}
 .ph-sum{background:var(--soft);border:1px solid #cbe6ea;border-radius:11px;padding:10px 12px;margin-bottom:12px;font-size:11px;line-height:1.7}
 .ph-sum b{font-size:12px}
 .ph-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
@@ -228,6 +232,7 @@ tr.blank td{background:#fcfdfe}
 <script>window.SLIDE={
   state:"{{ route('slide.state') }}", save:"{{ route('slide.save') }}",
   phienMa:"{{ route('slide.session.ma') }}", phienLuu:"{{ route('slide.session.save') }}",
+  cho:"{{ route('slide.pending') }}", choLuu:"{{ route('slide.pending.save') }}",
   reader:"{{ route('slide.reader') }}", mark:"{{ route('slide.mark') }}", take:"{{ route('slide.take') }}",
   status:"{{ route('slide.status') }}", trace:"{{ route('slide.trace') }}",
   finish:"{{ route('slide.finish') }}", history:"{{ route('slide.history') }}",
@@ -281,6 +286,7 @@ tr.blank td{background:#fcfdfe}
           <input type="checkbox" id="onlyFilled" checked style="width:14px;height:14px;accent-color:var(--primary)">
           <span class="hint" style="font-weight:800">Chỉ hiện dòng đã nhập</span></span></label>
         <span class="push"></span>
+        <button class="btn sm" id="btnCho" onclick="moCho()">⏳ Chờ xử lý</button>
         <button class="btn sm" onclick="moPhien(true)">📋 Dán từ Excel</button>
         <a class="btn sm" id="btnXuat" href="#">⇩ Xuất Excel</a>
         <span class="saveState" id="saveState"></span>
@@ -424,6 +430,24 @@ tr.blank td{background:#fcfdfe}
 <datalist id="ktvList"></datalist>
 <datalist id="giaList"></datalist>
 <datalist id="bsList"></datalist>
+
+<!-- popup mã bị phiên soạn nhảy qua, đang chờ xử lý thêm -->
+<div class="mbg" id="choModal"><div class="mdl" style="width:min(880px,100%)">
+  <div class="mdl-h"><div><h2>Mã đang chờ xử lý</h2>
+    <p>Mã nằm giữa dải đã soạn nhưng chưa ra tiêu bản — hệ thống tự dò, không cần đánh dấu.
+       Ghi lý do và ngày hẹn để còn đòi kíp xử lý.</p></div>
+    <button class="x" onclick="dongM('choModal')">×</button></div>
+  <div class="mdl-b">
+    <div class="ph-wrap" style="max-height:52vh"><table class="ph-t cho-t"><thead><tr>
+      <th style="width:96px">Mã tiêu bản</th><th>Lý do chờ</th>
+      <th style="width:130px">Hẹn ra tiêu bản</th><th style="width:120px">Đã chờ</th><th style="width:86px"></th>
+    </tr></thead><tbody id="choBody"></tbody></table></div>
+    <div class="hint" style="margin-top:8px">Mã nào soạn xong thì tự biến khỏi danh sách này.
+      Xóa trắng cả lý do lẫn ngày hẹn thì mã trở lại trống trơn.</div>
+  </div>
+  <div class="mdl-f"><span class="ph-err" id="choKq"></span>
+    <button class="btn" onclick="dongM('choModal')">Đóng</button></div>
+</div></div>
 
 <!-- popup xem lại toàn bộ một lượt đã hoàn tất -->
 <div class="mbg" id="lsModal"><div class="mdl" style="width:min(720px,100%)">
@@ -632,6 +656,7 @@ async function taiSoan(){
   veGiaList();
   $('btnXuat').href=window.SLIDE.export+'?prefix='+encodeURIComponent(D.prefix);
   veDauMa();veSoan(true);
+  demCho();                                      // đếm mã bị bỏ lại, hiện ngay trên nút
 }
 /** Gợi ý giá lấy từ chính các mã đã nhập — gõ giá mới vẫn được, đây chỉ là gợi ý. */
 function veGiaList(){
@@ -812,6 +837,59 @@ function raSeq(v){
   const m=/^(\d{2}[A-Z])(\d{1,4})$/.exec(s);
   if(!m)return null;
   return m[1]===D.prefix?Number(m[2]):null;
+}
+
+/* ===== Mã bị nhảy qua, đang chờ xử lý thêm ===== */
+/* Mã trống nằm giữa dải đã soạn = ca phải xử lý thêm mà sổ đã đi tiếp. Tự dò để khỏi quên. */
+let CHO=[];
+async function demCho(){
+  try{
+    const d=await get(window.SLIDE.cho);
+    CHO=d.rows||[];
+    const b=$('btnCho');
+    b.innerHTML=`⏳ Chờ xử lý${d.tong?` (${d.tong})`:''}`;
+    b.classList.toggle('red',d.quaHen>0);
+    b.title=d.tong?`${d.tong} mã chưa ra tiêu bản${d.quaHen?` · ${d.quaHen} mã quá hẹn`:''}`
+      :'Không có mã nào bị bỏ lại';
+  }catch(e){}
+}
+async function moCho(){
+  $('choKq').textContent='';
+  $('choBody').innerHTML='<tr><td colspan="5" class="empty">Đang dò…</td></tr>';
+  $('choModal').classList.add('show');
+  await demCho();
+  veCho();
+}
+function veCho(){
+  $('choBody').innerHTML=CHO.length?CHO.map(x=>`<tr class="${x.quaHen?'qua':''}">
+    <td class="ma">${esc(x.code)}</td>
+    <td><input data-cho="${esc(x.code)}" data-chof="lyDo" value="${esc(x.lyDo)}" placeholder="VD: chờ khử canxi, khoa gửi bù mẫu…"></td>
+    <td><input data-cho="${esc(x.code)}" data-chof="ngayHen" type="date" value="${esc(x.ngayHen)}"></td>
+    <td class="ctr">${x.quaHen
+      ?`<span class="badge b-late">quá hẹn ${x.treHen} ngày</span>`
+      :x.soNgayCho==null?'<span class="sub">—</span>':`<span class="badge b-off">${x.soNgayCho} ngày</span>`}
+      ${x.boQuaTu?`<div class="sub">bỏ qua từ ${viDate(x.boQuaTu)}</div>`:''}</td>
+    <td class="ctr"><button class="btn sm primary" onclick="soanNgay('${esc(x.code)}')">Soạn ngay</button></td></tr>`).join('')
+    :'<tr><td colspan="5" class="empty">Không có mã nào bị bỏ lại giữa chừng.</td></tr>';
+}
+/** Gõ lý do / ngày hẹn thì ghi luôn, khỏi nút lưu. */
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(!el.dataset||!el.dataset.cho||!el.dataset.chof)return;
+  const x=CHO.find(y=>y.code===el.dataset.cho);   // theo mã, không theo vị trí — danh sách có thể tự làm mới
+  if(!x)return;
+  x[el.dataset.chof]=el.value;
+  post(window.SLIDE.choLuu,{code:x.code,ghiChu:x.lyDo,ngayHen:x.ngayHen||null})
+    .then(()=>{$('choKq').style.color='var(--green)';$('choKq').textContent=`Đã ghi cho ${x.code}`;
+      demCho().then(()=>{taiSoan().catch(()=>{})})})
+    .catch(err=>{$('choKq').style.color='var(--red)';$('choKq').textContent='Không ghi được: '+err.message});
+});
+/** Mở thẳng phiên soạn bắt đầu từ mã đang chờ. */
+async function soanNgay(code){
+  dongM('choModal');
+  await moPhien();
+  $('phTu').value=code;$('phN').value=5;
+  await dungDsPhien();
 }
 
 /* ===== Sửa một mã đã đủ thông tin ===== */
