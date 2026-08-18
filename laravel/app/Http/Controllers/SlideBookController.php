@@ -563,11 +563,6 @@ class SlideBookController extends Controller
                 $vuong[] = "{$code}: chưa ở trạng thái đã đọc";
                 continue;
             }
-            if (trim((string) $r->ket_qua) === '') {
-                $vuong[] = "{$code}: bác sĩ chưa nhập kết quả";
-                continue;
-            }
-
             // còn việc dở dang thì không cho chốt, kẻo xóa mất phiếu đang chạy
             $ihc = SlideIhc::where('slide_code', $code)->get();
             if ($ihc->contains(fn ($h) => $h->trang_thai !== 'doc')) {
@@ -646,6 +641,21 @@ class SlideBookController extends Controller
         }
 
         return response()->json(['ok' => true, 'n' => count($xong), 'xong' => $xong, 'vuong' => $vuong]);
+    }
+
+    /** Chốt cả giá: mọi mã trong giá đã ở trạng thái đã đọc thì đưa hết vào lịch sử. */
+    public function finishRacks(Request $request): JsonResponse
+    {
+        $d = $request->validate(['gia' => 'required|array|min:1', 'gia.*' => 'string|max:20']);
+
+        $codes = SlideRecord::whereIn('gia_so', $d['gia'])->where('trang_thai_doc', 'doc')
+            ->orderBy('yy')->orderBy('letter')->orderBy('seq')->pluck('code')->all();
+        if (! $codes) {
+            return response()->json(['ok' => false,
+                'errors' => ['Giá này chưa có mã nào ở trạng thái đã đọc']], 422);
+        }
+
+        return $this->finishSlides(new Request(['codes' => $codes]));
     }
 
     private function goiLichSu(SlideHistory $h): array
@@ -883,9 +893,10 @@ class SlideBookController extends Controller
     {
         $code = strtoupper(trim((string) $request->query('code', '')));
 
-        $ds = SlideConsult::orderByDesc('id')->get()->map(fn ($c) => [
+        // ca đã thống nhất kết quả thì rời danh sách, xem ở tab Kết quả hội chẩn
+        $ds = SlideConsult::whereNull('ket_luan')->orderByDesc('id')->get()->map(fn ($c) => [
             'code'    => $c->slide_code,
-            'chot'    => (bool) $c->ket_luan,
+            'chot'    => false,
             'soYKien' => $c->notes()->count(),
             'soAnh'   => $c->images()->count(),
         ])->all();
@@ -897,6 +908,54 @@ class SlideBookController extends Controller
         }
 
         return response()->json(['danhSach' => $ds, 'phien' => $one, 'me' => $this->me()]);
+    }
+
+    /**
+     * Các ca đã thống nhất kết quả hội chẩn — gộp phiên còn trong sổ và ca đã
+     * hoàn tất (kết luận nằm trong lịch sử).
+     */
+    public function consultDone(Request $request): JsonResponse
+    {
+        $q   = trim((string) $request->query('q', ''));
+        $out = [];
+
+        foreach (SlideConsult::whereNotNull('ket_luan')->orderByDesc('ngay_chot')->orderByDesc('id')->get() as $c) {
+            $r = SlideRecord::where('code', $c->slide_code)->first();
+            $out[] = [
+                'code'     => $c->slide_code,
+                'ketLuan'  => $c->ket_luan,
+                'bsChot'   => $c->bs_chot ?? '',
+                'ngayChot' => $c->ngay_chot?->toDateString() ?? '',
+                'soYKien'  => $c->notes()->count(),
+                'giaSo'    => $r?->gia_so ?? '',
+                'ngaySoan' => $r?->ngay_soan?->toDateString() ?? '',
+                'trongSo'  => (bool) $r,
+                'lan'      => null,
+            ];
+        }
+        foreach (SlideHistory::whereNotNull('ket_luan_hoi_chan')->orderByDesc('ngay_chot')->orderByDesc('id')->get() as $h) {
+            $hc = $h->hoi_chan ?? [];
+            $out[] = [
+                'code'     => $h->code,
+                'ketLuan'  => $h->ket_luan_hoi_chan,
+                'bsChot'   => $hc['bsChot'] ?? '',
+                'ngayChot' => $hc['ngayChot'] ?? ($h->ngay_chot?->toDateString() ?? ''),
+                'soYKien'  => count($hc['yKien'] ?? []),
+                'giaSo'    => $h->gia_so ?? '',
+                'ngaySoan' => $h->ngay_soan?->toDateString() ?? '',
+                'trongSo'  => false,
+                'lan'      => (int) $h->lan,
+            ];
+        }
+
+        if ($q !== '') {
+            $tim = mb_strtolower($q);
+            $out = array_values(array_filter($out, fn ($x) => str_contains(
+                mb_strtolower($x['code'] . ' ' . $x['ketLuan'] . ' ' . $x['bsChot'] . ' ' . $x['giaSo']), $tim)));
+        }
+        usort($out, fn ($a, $b) => [$b['ngayChot'], $b['code']] <=> [$a['ngayChot'], $a['code']]);
+
+        return response()->json(['rows' => $out, 'tong' => count($out)]);
     }
 
     /** Mở phiên hội chẩn cho một mã (nếu chưa có). */
@@ -1072,7 +1131,7 @@ class SlideBookController extends Controller
             }
             if ($c->ket_luan) {
                 $moc[] = ['loai' => 'chot', 'ngay' => $c->ngay_chot?->toDateString() ?? '',
-                    'tieuDe' => 'Chốt kết luận hội chẩn', 'chiTiet' => $c->ket_luan, 'nguoi' => $c->bs_chot ?? ''];
+                    'tieuDe' => 'Đã thống nhất kết quả hội chẩn', 'chiTiet' => $c->ket_luan, 'nguoi' => $c->bs_chot ?? ''];
             }
         }
         usort($moc, fn ($a, $b) => ($a['ngay'] ?: '9999') <=> ($b['ngay'] ?: '9999'));

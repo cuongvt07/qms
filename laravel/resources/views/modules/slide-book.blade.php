@@ -103,6 +103,10 @@ tr.blank td{background:#fcfdfe}
 .rack{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:3px}
 .rack:hover{border-color:#a9c6cc;box-shadow:0 4px 14px rgba(15,23,42,.07)}
 .rack.on{border-color:var(--primary);box-shadow:0 0 0 2px #cfe8ec}
+.pbar h2 .so{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
+ background:var(--primary);color:#fff;font-size:10px;margin-right:5px;vertical-align:1px}
+.rack.xong{border-color:#bfe0d0;background:var(--green-soft)}
+.rack .chot{margin-top:6px}
 .rack.pick{border-color:var(--primary);background:var(--soft);box-shadow:0 0 0 2px #cfe8ec}
 .rack{position:relative}
 .rack .tick{position:absolute;right:9px;top:9px;display:flex;padding:3px}
@@ -239,6 +243,7 @@ tr.blank td{background:#fcfdfe}
   phienMa:"{{ route('slide.session.ma') }}", phienLuu:"{{ route('slide.session.save') }}",
   cho:"{{ route('slide.pending') }}", choLuu:"{{ route('slide.pending.save') }}",
   reader:"{{ route('slide.reader') }}", mark:"{{ route('slide.mark') }}", take:"{{ route('slide.take') }}",
+  chotGia:"{{ route('slide.finish.rack') }}", hcXong:"{{ route('slide.consult.done') }}",
   status:"{{ route('slide.status') }}", trace:"{{ route('slide.trace') }}",
   finish:"{{ route('slide.finish') }}", history:"{{ route('slide.history') }}",
   historyExport:"{{ route('slide.history.export') }}",
@@ -279,6 +284,7 @@ tr.blank td{background:#fcfdfe}
     <button class="tab" data-v="hmmd" onclick="go('hmmd')">🧬 Hóa mô miễn dịch</button>
     <button class="tab" data-v="tra" onclick="go('tra')">🔎 Tra cứu &amp; tiến trình</button>
     <button class="tab" data-v="hoichan" onclick="go('hoichan')">👥 Hội chẩn</button>
+    <button class="tab" data-v="hcxong" onclick="go('hcxong')">🤝 Kết quả hội chẩn</button>
   </div>
 
   <!-- ===== 1. Sổ soạn ===== -->
@@ -324,32 +330,42 @@ tr.blank td{background:#fcfdfe}
 
   <!-- ===== 2. Bác sĩ đọc theo giá ===== -->
   <section class="view" id="v-doc">
+    <!-- phần 1: giá kỹ thuật viên đã soạn, bác sĩ chưa nhận -->
     <div class="panel">
-      <div class="pbar"><h2>Nhận giá về đọc</h2>
-        <label class="lbl">Bác sĩ đọc<input id="bsNhan" list="bsList" placeholder="Tên bác sĩ" style="width:180px"></label>
+      <div class="pbar"><h2><span class="so">1</span> Giá đã soạn — chờ nhận</h2>
+        <label class="lbl">Bác sĩ đọc<input id="bsNhan" list="bsList" placeholder="Tên bác sĩ" style="width:170px"></label>
         <button class="btn sm primary" onclick="nhanGia()">✋ Nhận các giá đã chọn</button>
-        <button class="btn sm" onclick="boChonGia()">Bỏ chọn giá</button>
+        <button class="btn sm" onclick="boChonGia()">Bỏ chọn</button>
         <span class="push"></span>
-        <input id="giaGo" list="giaList" placeholder="Gõ số giá rồi Enter" style="width:160px"
+        <input id="giaGo" list="giaList" placeholder="Gõ số giá rồi Enter" style="width:150px"
                onkeydown="if(event.key==='Enter'){event.preventDefault();moGiaGo()}">
         <button class="btn sm" onclick="moGiaGo()">Mở giá</button>
       </div>
-      <div class="racks" id="racks"></div>
+      <div class="racks" id="racks1"></div>
     </div>
+
+    <!-- phần 2: giá bác sĩ đã nhận, đang đọc; đọc xong chốt là giá rời khỏi đây -->
+    <div class="panel">
+      <div class="pbar"><h2><span class="so">2</span> Giá đã nhận — đang đọc</h2>
+        <span class="hint">Đọc xong cả giá thì bấm <b>Chốt cả giá</b> trên thẻ, giá sẽ rời danh sách này.</span>
+      </div>
+      <div class="racks" id="racks2"></div>
+    </div>
+    <!-- phần 3: chi tiết từng mã của giá đang mở -->
     <div class="panel" id="docPanel" style="display:none">
       <div class="pbar">
-        <h2 id="docTitle"></h2>
+        <h2><span class="so">3</span> <span id="docTitle"></span></h2>
         <span class="push"></span>
         <label class="lbl">BS đọc<input id="bsAll" list="bsList" placeholder="Tên bác sĩ" style="width:150px"></label>
         <button class="btn sm" onclick="doiTt('nhan')">Đã nhận</button>
         <button class="btn sm primary" onclick="doiTt('doc')">✓ Đã đọc</button>
         <button class="btn sm" onclick="doiTt('chua')">↩ Chưa đọc</button>
-        <button class="btn sm green" onclick="hoanTat()">🏁 Hoàn tất &amp; lưu lịch sử</button>
+        <button class="btn sm green" onclick="hoanTat()">🏁 Chốt vào lịch sử</button>
       </div>
       <div class="twrap"><table><thead><tr>
         <th class="chk"><input type="checkbox" id="chkAllDoc" onclick="chonHetDoc(this.checked)"></th>
         <th>Mã tiêu bản</th><th class="ctr">Block</th><th class="ctr">Lam</th>
-        <th style="min-width:280px">Kết quả / tình trạng</th><th>BS đọc</th>
+        <th style="min-width:280px">Kết quả / ghi chú (không bắt buộc)</th><th>BS đọc</th>
         <th>Marker HMMD</th><th class="ctr">Hội chẩn</th><th class="ctr">Trạng thái</th>
       </tr></thead><tbody id="docBody"></tbody></table></div>
       <div class="pbar"><span class="hint" id="docFoot"></span>
@@ -431,6 +447,23 @@ tr.blank td{background:#fcfdfe}
     </div>
   </section>
 </div>
+
+  <!-- ===== 6. Kết quả hội chẩn đã thống nhất ===== -->
+  <section class="view" id="v-hcxong">
+    <div class="panel">
+      <div class="pbar"><h2>Ca đã thống nhất kết quả hội chẩn</h2>
+        <span class="hint">Gồm cả ca đã hoàn tất và trả mã về sổ soạn.</span>
+        <span class="push"></span>
+        <input id="hxQ" placeholder="Tìm mã, kết luận, bác sĩ, giá..." style="width:250px">
+        <span class="hint" id="hxCount"></span>
+      </div>
+      <div class="twrap"><table><thead><tr>
+        <th>Mã tiêu bản</th><th class="ctr">Giá</th><th>Ngày soạn</th><th>Ngày thống nhất</th>
+        <th>Người chốt</th><th class="ctr">Ý kiến</th><th style="min-width:320px">Kết luận hội chẩn</th>
+        <th class="ctr">Trong sổ</th><th></th>
+      </tr></thead><tbody id="hxBody"></tbody></table></div>
+    </div>
+  </section>
 
 <datalist id="ktvList"></datalist>
 <datalist id="giaList"></datalist>
@@ -643,6 +676,7 @@ function go(v){
   if(v==='hmmd'){taiHmmd();taiLichSu()}
   if(v==='tra')taiTinhTrang();
   if(v==='hoichan')taiHc();
+  if(v==='hcxong')taiHcXong();
 }
 
 /* ===== 1. Sổ soạn ===== */
@@ -1215,11 +1249,12 @@ async function taiDoc(){
   $('docPanel').style.display=curGia?'block':'none';
   if(curGia)veDoc();
 }
+/* Giá chia hai khối: chờ nhận (còn mã chưa đọc) và đang đọc (đã nhận / đã đọc chưa chốt). */
 function veRacks(){
-  $('racks').innerHTML=docGia.length?docGia.map(r=>`<div class="rack ${curGia===r.gia?'on':''} ${giaSel.has(r.gia)?'pick':''}"
+  const the=(r,nhan)=>`<div class="rack ${curGia===r.gia?'on':''} ${giaSel.has(r.gia)?'pick':''} ${nhan&&r.doc>=r.n?'xong':''}"
     onclick="chonGia('${esc(r.gia)}')">
-    <label class="tick" title="Chọn giá này để nhận" onclick="event.stopPropagation()">
-      <input type="checkbox" ${giaSel.has(r.gia)?'checked':''} onchange="tickGia('${esc(r.gia)}')"></label>
+    ${nhan?'':`<label class="tick" title="Chọn giá này để nhận" onclick="event.stopPropagation()">
+      <input type="checkbox" ${giaSel.has(r.gia)?'checked':''} onchange="tickGia('${esc(r.gia)}')"></label>`}
     <div class="no">Giá ${esc(r.gia)}<small>${r.n} mã</small></div>
     <div class="m">Soạn ${viDate(r.ngaySoan)||'—'}</div>
     <div class="m">${r.bs?esc(r.bs):'chưa có bác sĩ nhận'}</div>
@@ -1227,8 +1262,27 @@ function veRacks(){
       ${r.chua?`<span class="badge b-off">${r.chua} chưa đọc</span>`:''}
       ${r.nhan?`<span class="badge b-hc">${r.nhan} đã nhận</span>`:''}
       ${r.doc?`<span class="badge b-doc">${r.doc} đã đọc</span>`:''}
-    </div></div>`).join('')
-    :'<div class="empty">Chưa có giá nào. Sang tab Sổ soạn để nhập giá cho tiêu bản.</div>';
+    </div>
+    ${nhan&&r.doc>=r.n?`<div class="chot"><button class="btn sm green" style="width:100%"
+      onclick="event.stopPropagation();chotCaGia('${esc(r.gia)}')">🏁 Chốt cả giá</button></div>`:''}
+    </div>`;
+
+  const cho=docGia.filter(r=>r.chua>0), dangDoc=docGia.filter(r=>r.nhan>0||r.doc>0);
+  $('racks1').innerHTML=cho.length?cho.map(r=>the(r,false)).join('')
+    :'<div class="empty">Không còn giá nào chờ nhận.</div>';
+  $('racks2').innerHTML=dangDoc.length?dangDoc.map(r=>the(r,true)).join('')
+    :'<div class="empty">Chưa nhận giá nào — chọn giá ở khối 1 rồi bấm Nhận.</div>';
+}
+/** Đọc xong cả giá: chốt hết vào lịch sử, mã trả về sổ soạn, giá rời khối 2. */
+async function chotCaGia(gia){
+  if(!confirm(`Chốt cả giá ${gia}?\n\nToàn bộ mã đã đọc của giá này được lưu vào lịch sử và trả mã về sổ soạn.`))return;
+  try{
+    const j=await post(window.SLIDE.chotGia,{gia:[gia]});
+    if(curGia===gia){curGia='';docSel=new Set()}
+    await taiDoc();
+    if(j.n)toast(`Đã chốt <b>${j.n}</b> mã của giá ${esc(gia)} vào lịch sử`);
+    if(j.vuong&&j.vuong.length)toast('Chưa chốt được: '+j.vuong.map(esc).join(' · '),true);
+  }catch(e){toast('Không chốt được: '+e.message,true)}
 }
 function tickGia(g){giaSel.has(g)?giaSel.delete(g):giaSel.add(g);veRacks()}
 function boChonGia(){giaSel=new Set();veRacks()}
@@ -1297,12 +1351,12 @@ async function luuDoc(){
  * để mã tiêu bản quay lại danh sách mã trống cho ca sau.
  */
 async function hoanTat(){
-  if(!docSel.size)return toast('Tích chọn mã đã đọc xong để hoàn tất',true);
+  if(!docSel.size)return toast('Tích chọn mã đã đọc xong để chốt',true);
   const ds=docRows.filter(r=>docSel.has(r.code));
-  const chuaDu=ds.filter(r=>r.ttDoc!=='doc'||!String(r.ketQua||'').trim());
-  if(chuaDu.length)return toast(`Chưa hoàn tất được: ${chuaDu.length} mã chưa đọc xong hoặc chưa nhập kết quả `
+  const chuaDu=ds.filter(r=>r.ttDoc!=='doc');
+  if(chuaDu.length)return toast(`Chưa chốt được: ${chuaDu.length} mã chưa ở trạng thái đã đọc `
     +`(${chuaDu.slice(0,5).map(r=>esc(r.code)).join(', ')}${chuaDu.length>5?'…':''})`,true);
-  if(!confirm(`Hoàn tất ${ds.length} mã tiêu bản?\n\n`
+  if(!confirm(`Chốt ${ds.length} mã tiêu bản vào lịch sử?\n\n`
     +`Cả ca được lưu vào lịch sử ở tab Hóa mô miễn dịch, sau đó dòng trong sổ soạn bị xóa `
     +`để mã quay lại danh sách mã trống. Phiếu hóa mô và hội chẩn của các mã này cũng được dọn theo.`))return;
   try{
@@ -1553,7 +1607,7 @@ async function taiHc(){
     <div class="c">${esc(c.code)}</div>
     <div class="s">${c.soYKien} ý kiến${c.soAnh?` · ${c.soAnh} ảnh`:''}</div>
     <div class="s"><span class="badge ${c.chot?'b-xong':'b-hc'}">${c.chot?'đã chốt':'đang mở'}</span></div></div>`).join('')
-    :'<div class="empty" style="padding:24px">Chưa có phiên hội chẩn nào.</div>';
+    :'<div class="empty" style="padding:24px">Không còn ca nào đang hội chẩn.<br>Ca đã thống nhất kết quả nằm ở tab <b>Kết quả hội chẩn</b>.</div>';
   veHc(d.phien,d.me);
 }
 function chonHc(code){hcCur=code;taiHc()}
@@ -1636,6 +1690,24 @@ async function chotHc(){
 }
 function phongTo(url){$('lightboxImg').src=url;$('lightbox').classList.add('show')}
 
+/* ===== 6. Kết quả hội chẩn đã thống nhất ===== */
+async function taiHcXong(){
+  const q=$('hxQ').value.trim();
+  const d=await get(window.SLIDE.hcXong+(q?'?q='+encodeURIComponent(q):''));
+  $('hxBody').innerHTML=d.rows.length?d.rows.map(x=>`<tr>
+    <td class="main">${esc(x.code)}${x.lan?` <span class="badge b-off">lượt ${x.lan}</span>`:''}</td>
+    <td class="ctr">${esc(x.giaSo)||'—'}</td><td>${viDate(x.ngaySoan)||'—'}</td>
+    <td>${viDate(x.ngayChot)||'—'}</td><td>${esc(x.bsChot)||'—'}</td>
+    <td class="ctr">${x.soYKien}</td>
+    <td>${esc(x.ketLuan)}</td>
+    <td class="ctr">${x.trongSo?'<span class="badge b-soan">còn trong sổ</span>'
+      :'<span class="badge b-xong">đã hoàn tất</span>'}</td>
+    <td class="ctr"><button class="btn sm" onclick="$('traCode').value='${esc(x.code)}';go('tra');xemTien()">Tiến trình</button></td>
+  </tr>`).join('')
+    :'<tr><td colspan="9" class="empty">Chưa có ca nào thống nhất kết quả hội chẩn.</td></tr>';
+  $('hxCount').textContent=`${d.rows.length}/${d.tong} ca`;
+}
+
 /* ===== khởi động ===== */
 function dongM(id){$(id).classList.remove('show')}
 $('prefix').addEventListener('change',()=>{sel=new Set();$('gridScroll').scrollTop=0;taiSoan()});
@@ -1657,6 +1729,7 @@ $('traCode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault
 $('hcCode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();moHc()}});
 $('hmTt').addEventListener('change',taiHmmd);
 $('lsQ').addEventListener('input',()=>{clearTimeout(window.__lsq);window.__lsq=setTimeout(taiLichSu,320)});
+$('hxQ').addEventListener('input',()=>{clearTimeout(window.__hxq);window.__hxq=setTimeout(taiHcXong,320)});
 $('mkMaBn').addEventListener('change',traBn);
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 window.addEventListener('beforeunload',e=>{if(dirty.size){e.preventDefault();e.returnValue=''}});

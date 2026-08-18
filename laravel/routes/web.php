@@ -65,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/qms/so-tieu-ban/danh-dau-doc', [\App\Http\Controllers\SlideBookController::class, 'markRead'])->name('slide.mark');
     Route::post('/qms/so-tieu-ban/doc/nhan-gia', [\App\Http\Controllers\SlideBookController::class, 'takeRacks'])->name('slide.take');
     Route::post('/qms/so-tieu-ban/hoan-tat', [\App\Http\Controllers\SlideBookController::class, 'finishSlides'])->name('slide.finish');
+    Route::post('/qms/so-tieu-ban/doc/chot-gia', [\App\Http\Controllers\SlideBookController::class, 'finishRacks'])->name('slide.finish.rack');
+    Route::get('/qms/so-tieu-ban/hoi-chan/da-chot', [\App\Http\Controllers\SlideBookController::class, 'consultDone'])->name('slide.consult.done');
     Route::get('/qms/so-tieu-ban/lich-su', [\App\Http\Controllers\SlideBookController::class, 'historyState'])->name('slide.history');
     Route::get('/qms/so-tieu-ban/lich-su/xuat-excel', [\App\Http\Controllers\SlideBookController::class, 'exportHistory'])->name('slide.history.export');
     Route::get('/qms/so-tieu-ban/tinh-trang', [\App\Http\Controllers\SlideBookController::class, 'statusState'])->name('slide.status');
