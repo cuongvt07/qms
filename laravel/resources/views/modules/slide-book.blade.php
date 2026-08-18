@@ -332,7 +332,7 @@ tr.blank td{background:#fcfdfe}
   <section class="view" id="v-doc">
     <!-- phần 1: giá kỹ thuật viên đã soạn, bác sĩ chưa nhận -->
     <div class="panel">
-      <div class="pbar"><h2><span class="so">1</span> Giá đã soạn — chờ nhận</h2>
+      <div class="pbar"><h2><span class="so">1</span> Giá đã soạn</h2>
         <label class="lbl">Bác sĩ đọc<input id="bsNhan" list="bsList" placeholder="Tên bác sĩ" style="width:170px"></label>
         <button class="btn sm primary" onclick="nhanGia()">✋ Nhận các giá đã chọn</button>
         <button class="btn sm" onclick="boChonGia()">Bỏ chọn</button>
@@ -346,8 +346,8 @@ tr.blank td{background:#fcfdfe}
 
     <!-- phần 2: giá bác sĩ đã nhận, đang đọc; đọc xong chốt là giá rời khỏi đây -->
     <div class="panel">
-      <div class="pbar"><h2><span class="so">2</span> Giá đã nhận — đang đọc</h2>
-        <span class="hint">Đọc xong cả giá thì bấm <b>Chốt cả giá</b> trên thẻ, giá sẽ rời danh sách này.</span>
+      <div class="pbar"><h2><span class="so">2</span> Giá đã nhận</h2>
+        <span class="hint">Bác sĩ bấm <b>✓ Đã đọc xong</b> ở khối 3 là mã được chốt vào lịch sử và giá rời khỏi đây.</span>
       </div>
       <div class="racks" id="racks2"></div>
     </div>
@@ -358,9 +358,9 @@ tr.blank td{background:#fcfdfe}
         <span class="push"></span>
         <label class="lbl">BS đọc<input id="bsAll" list="bsList" placeholder="Tên bác sĩ" style="width:150px"></label>
         <button class="btn sm" onclick="doiTt('nhan')">Đã nhận</button>
-        <button class="btn sm primary" onclick="doiTt('doc')">✓ Đã đọc</button>
+        <button class="btn sm green" onclick="docXong()">✓ Đã đọc xong</button>
         <button class="btn sm" onclick="doiTt('chua')">↩ Chưa đọc</button>
-        <button class="btn sm green" onclick="hoanTat()">🏁 Chốt vào lịch sử</button>
+        <button class="btn sm" onclick="hoanTat()">🏁 Chốt mã còn vướng</button>
       </div>
       <div class="twrap"><table><thead><tr>
         <th class="chk"><input type="checkbox" id="chkAllDoc" onclick="chonHetDoc(this.checked)"></th>
@@ -1252,7 +1252,7 @@ async function taiDoc(){
 }
 /* Giá chia hai khối: chờ nhận (còn mã chưa đọc) và đang đọc (đã nhận / đã đọc chưa chốt). */
 function veRacks(){
-  const the=(r,nhan)=>`<div class="rack ${curGia===r.gia?'on':''} ${giaSel.has(r.gia)?'pick':''} ${nhan&&r.doc>=r.n?'xong':''}"
+  const the=(r,nhan)=>`<div class="rack ${curGia===r.gia?'on':''} ${giaSel.has(r.gia)?'pick':''} ${nhan&&r.doc?'xong':''}"
     onclick="chonGia('${esc(r.gia)}')">
     ${nhan?'':`<label class="tick" title="Chọn giá này để nhận" onclick="event.stopPropagation()">
       <input type="checkbox" ${giaSel.has(r.gia)?'checked':''} onchange="tickGia('${esc(r.gia)}')"></label>`}
@@ -1262,21 +1262,22 @@ function veRacks(){
     <div class="st">
       ${r.chua?`<span class="badge b-off">${r.chua} chưa đọc</span>`:''}
       ${r.nhan?`<span class="badge b-hc">${r.nhan} đã nhận</span>`:''}
-      ${r.doc?`<span class="badge b-doc">${r.doc} đã đọc</span>`:''}
+      ${r.doc?`<span class="badge b-late">${r.doc} đã đọc chờ chốt</span>`:''}
     </div>
-    ${nhan&&r.doc>=r.n?`<div class="chot"><button class="btn sm green" style="width:100%"
-      onclick="event.stopPropagation();chotCaGia('${esc(r.gia)}')">🏁 Chốt cả giá</button></div>`:''}
+    ${nhan&&r.doc?`<div class="chot"><button class="btn sm green" style="width:100%"
+      onclick="event.stopPropagation();chotCaGia('${esc(r.gia)}')">🏁 Chốt ${r.doc} mã còn vướng</button></div>`:''}
     </div>`;
 
-  const cho=docGia.filter(r=>r.chua>0), dangDoc=docGia.filter(r=>r.nhan>0||r.doc>0);
-  $('racks1').innerHTML=cho.length?cho.map(r=>the(r,false)).join('')
-    :'<div class="empty">Không còn giá nào chờ nhận.</div>';
+  // khối 1: mọi giá KTV đã soạn còn trong sổ · khối 2: giá bác sĩ đã nhận
+  const dangDoc=docGia.filter(r=>r.nhan>0||r.doc>0);
+  $('racks1').innerHTML=docGia.length?docGia.map(r=>the(r,false)).join('')
+    :'<div class="empty">Chưa có giá nào. Sang tab Sổ soạn để nhập giá cho tiêu bản.</div>';
   $('racks2').innerHTML=dangDoc.length?dangDoc.map(r=>the(r,true)).join('')
     :'<div class="empty">Chưa nhận giá nào — chọn giá ở khối 1 rồi bấm Nhận.</div>';
 }
 /** Đọc xong cả giá: chốt hết vào lịch sử, mã trả về sổ soạn, giá rời khối 2. */
 async function chotCaGia(gia){
-  if(!confirm(`Chốt cả giá ${gia}?\n\nToàn bộ mã đã đọc của giá này được lưu vào lịch sử và trả mã về sổ soạn.`))return;
+  if(!confirm(`Chốt các mã đã đọc của giá ${gia}?\n\nChúng được lưu vào lịch sử và mã trả về sổ soạn để dùng lại.`))return;
   try{
     const j=await post(window.SLIDE.chotGia,{gia:[gia]});
     if(curGia===gia){curGia='';docSel=new Set()}
@@ -1348,11 +1349,32 @@ async function luuDoc(){
   }catch(e){toast('Lưu thất bại: '+e.message,true)}
 }
 /**
- * Chốt ca: mã đã đọc + đã có kết quả thì đẩy vào lịch sử, dòng trong sổ soạn bị xóa
- * để mã tiêu bản quay lại danh sách mã trống cho ca sau.
+ * Bác sĩ đọc xong: chuyển sang đã đọc rồi chốt luôn vào lịch sử trong một lần bấm,
+ * mã trả về sổ soạn nên giá tự rời khối 2. Kết quả không bắt buộc.
+ */
+async function docXong(){
+  if(!docSel.size)return toast('Tích chọn mã đã đọc xong',true);
+  const ds=docRows.filter(r=>docSel.has(r.code));
+  if(!confirm(`Bác sĩ đã đọc xong ${ds.length} mã tiêu bản?\n\n`
+    +`Các mã này được chốt vào lịch sử ngay và mã tiêu bản trả về sổ soạn để dùng lại. `
+    +`Kết quả không bắt buộc — ca nào cần ghi thì nhập vào ô Kết quả trước khi bấm.`))return;
+  const codes=[...docSel];
+  try{
+    await luuDoc0();                               // giữ kết quả vừa gõ (nếu có)
+    await post(window.SLIDE.mark,{codes,trangThai:'doc',bsDoc:$('bsAll').value.trim()||null});
+    const j=await post(window.SLIDE.finish,{codes});
+    docSel=new Set();await taiDoc();
+    if(j.n)toast(`Đã đọc xong và chốt <b>${j.n}</b> mã vào lịch sử`);
+    if(j.vuong.length)toast('Đã ghi là đã đọc nhưng chưa chốt được: '+j.vuong.map(esc).join(' · '),true);
+  }catch(e){toast('Không ghi được: '+e.message,true)}
+}
+
+/**
+ * Chốt các mã đã đọc mà còn vướng (phiếu hóa mô chưa đọc KQ, hội chẩn chưa chốt)
+ * sau khi đã xử lý xong phần vướng đó.
  */
 async function hoanTat(){
-  if(!docSel.size)return toast('Tích chọn mã đã đọc xong để chốt',true);
+  if(!docSel.size)return toast('Tích chọn mã cần chốt',true);
   const ds=docRows.filter(r=>docSel.has(r.code));
   const chuaDu=ds.filter(r=>r.ttDoc!=='doc');
   if(chuaDu.length)return toast(`Chưa chốt được: ${chuaDu.length} mã chưa ở trạng thái đã đọc `
