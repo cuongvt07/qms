@@ -428,7 +428,8 @@ tr.blank td{background:#fcfdfe}
         <span class="push hint" id="ttCount"></span></div>
       <div class="twrap"><table><thead><tr>
         <th>Mã tiêu bản</th><th class="ctr">Block</th><th class="ctr">Lam</th><th>Ngày soạn</th><th class="ctr">Giá</th>
-        <th>KTV soạn</th><th>BS đọc</th><th>Kết quả / tình trạng</th><th>Bệnh nhân (HMMD)</th><th>Marker</th><th>Tình trạng</th>
+        <th>KTV soạn</th><th>BS đọc</th><th>Kết quả / tình trạng</th><th>Bệnh nhân (HMMD)</th><th>Marker</th>
+        <th>Hội chẩn</th><th>Tình trạng</th>
       </tr></thead><tbody id="ttBody"></tbody></table></div>
     </div>
   </section>
@@ -1593,8 +1594,11 @@ async function taiTinhTrang(){
     <td>${esc(r.ketQua)||'<span class="sub">—</span>'}</td>
     <td>${esc(r.benhNhan)||'<span class="sub">—</span>'}${r.khoa?`<div class="sub">${esc(r.khoa)}</div>`:''}</td>
     <td><div class="mk-chips">${r.markers.map(m=>`<span class="chip ro">${esc(m)}</span>`).join('')}</div></td>
+    <td>${r.hoiChan==='chot'?`<span class="badge b-xong">đã thống nhất</span>
+        ${r.ketLuanHc?`<div class="sub">${esc(r.ketLuanHc)}</div>`:''}`
+      :r.hoiChan==='mo'?'<span class="badge b-hc">đang hội chẩn</span>':'<span class="sub">—</span>'}</td>
     <td><span class="badge b-${s[0]}">${s[1]}</span></td></tr>`}).join('')
-    :'<tr><td colspan="11" class="empty">Không có mã nào phù hợp.</td></tr>';
+    :'<tr><td colspan="12" class="empty">Không có mã nào phù hợp.</td></tr>';
   $('ttCount').textContent=`${d.rows.length}/${d.tong} mã`;
 }
 function xoaLocTt(){$('ttQ').value='';window.__tt='';taiTinhTrang()}

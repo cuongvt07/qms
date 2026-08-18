@@ -1193,7 +1193,7 @@ class SlideBookController extends Controller
             $dem[$st]++;
 
             $hay = mb_strtolower($r->code . ' ' . $r->gia_so . ' ' . $r->bs_doc . ' ' . $r->ktv_soan . ' '
-                . $r->ktv_cat . ' ' . $r->ket_qua . ' ' . $r->ghi_chu . ' '
+                . $r->ktv_cat . ' ' . $r->ket_qua . ' ' . $r->ghi_chu . ' ' . ($c->ket_luan ?? '') . ' '
                 . ($h ? $h->pluck('benh_nhan')->implode(' ') . ' ' . $h->pluck('markers')->flatten()->implode(' ') : ''));
             if ($q !== '' && ! str_contains($hay, mb_strtolower($q))) {
                 continue;
@@ -1207,6 +1207,9 @@ class SlideBookController extends Controller
                 'markers'   => $h ? $h->pluck('markers')->flatten()->unique()->values()->all() : [],
                 'benhNhan'  => $h?->first()?->benh_nhan ?? '',
                 'khoa'      => $h?->first()?->khoa ?? '',
+                // ca đã thống nhất kết quả hội chẩn phải nhìn thấy được ngay ở bảng tổng hợp
+                'hoiChan'   => $c ? ($c->ket_luan ? 'chot' : 'mo') : '',
+                'ketLuanHc' => $c->ket_luan ?? '',
             ];
         }
 
@@ -1234,9 +1237,11 @@ class SlideBookController extends Controller
 
         $rs  = SlideRecord::where('yy', $yy)->where('letter', $letter)->orderBy('seq')->get();
         $ihc = SlideIhc::whereIn('slide_code', $rs->pluck('code'))->get()->groupBy('slide_code');
+        $hc  = SlideConsult::whereIn('slide_code', $rs->pluck('code'))->get()->keyBy('slide_code');
 
-        $rows = $rs->map(function ($r) use ($ihc) {
+        $rows = $rs->map(function ($r) use ($ihc, $hc) {
             $h = $ihc->get($r->code);
+            $c = $hc->get($r->code);
 
             return [
                 $r->code, $r->so_block, $r->so_tieu_ban,
@@ -1248,6 +1253,10 @@ class SlideBookController extends Controller
                     'doc'  => 'Đã đọc ' . ($r->ngay_doc?->format('d/m/Y') ?? ''),
                 ][$r->trang_thai_doc] ?? 'Chưa đọc',
                 $h ? $h->pluck('markers')->flatten()->unique()->implode(', ') : '',
+                $c ? ($c->ket_luan
+                    ? 'Đã thống nhất kết quả hội chẩn ' . ($c->ngay_chot?->format('d/m/Y') ?? '') . ': ' . $c->ket_luan
+                    : 'Đang hội chẩn')
+                    : '',
                 $r->ghi_chu ?? '',
             ];
         })->all();
@@ -1257,8 +1266,8 @@ class SlideBookController extends Controller
             'title'  => 'SỔ SOẠN TIÊU BẢN — ĐẦU MÃ ' . $prefix,
             'note'   => ['Xuất ngày ' . now()->format('d/m/Y H:i') . ' · ' . $rs->count() . ' mã đã nhập'],
             'header' => ['Mã tiêu bản', 'Số block', 'Số tiêu bản', 'Ngày soạn', 'Giá', 'KTV cắt', 'KTV soạn',
-                'BS đọc', 'Kết quả / tình trạng', 'Trạng thái đọc', 'Marker HMMD', 'Ghi chú'],
-            'widths' => [14, 9, 10, 12, 7, 14, 14, 14, 38, 16, 30, 24],
+                'BS đọc', 'Kết quả / tình trạng', 'Trạng thái đọc', 'Marker HMMD', 'Hội chẩn', 'Ghi chú'],
+            'widths' => [14, 9, 10, 12, 7, 14, 14, 14, 38, 16, 30, 40, 24],
             'rows'   => $rows,
         ]]);
     }
