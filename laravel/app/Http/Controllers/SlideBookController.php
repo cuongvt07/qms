@@ -27,6 +27,13 @@ class SlideBookController extends Controller
 {
     private const SO_DONG = 9999;
 
+    /**
+     * Khoảng trống dài hơn số mã này thì coi là đổi dải số (kíp nhảy sang 26A2900
+     * chẳng hạn), không phải bỏ quên — nếu không, một lần nhảy dải sẽ gắn cờ hàng
+     * nghìn mã vô nghĩa.
+     */
+    private const TOI_DA_NHAY = 50;
+
     public function page()
     {
         return view('modules.slide-book');
@@ -287,32 +294,34 @@ class SlideBookController extends Controller
             if ($soan->count() < 1) {
                 continue;
             }
-            // chỉ xét trong dải đã dùng của đầu mã, mã trước mã đầu tiên là chưa cấp chứ không phải bỏ quên
-            $min    = $soan->min('seq');
-            $max    = $soan->max('seq');
-            $daSoan = $soan->keyBy('seq');
+            // xét từng khoảng trống giữa hai mã đã soạn liền nhau; khoảng quá dài là đổi dải số
             $coDong = $g->keyBy('seq');
+            $seqs   = $soan->pluck('seq')->all();
 
-            for ($s = $min; $s <= $max && count($out) < 200; $s++) {
-                if (isset($daSoan[$s])) {
+            for ($i = 1, $n = count($seqs); $i < $n && count($out) < 300; $i++) {
+                $truoc = $seqs[$i - 1];
+                $sau   = $soan[$i];
+                if ($sau->seq - $truoc - 1 < 1 || $sau->seq - $truoc - 1 > self::TOI_DA_NHAY) {
                     continue;
                 }
-                $r = $coDong[$s] ?? null;
-                // phiên nào đã nhảy qua mã này — lấy ngày soạn của mã kế tiếp
-                $sau = $soan->first(fn ($x) => $x->seq > $s);
-                $tu  = $sau?->ngay_soan;
+                $tu = $sau->ngay_soan;                  // phiên đã nhảy qua khoảng này
 
-                $out[] = [
-                    'code'      => $prefix . sprintf('%04d', $s),
-                    'prefix'    => $prefix,
-                    'seq'       => $s,
-                    'lyDo'      => $r?->ghi_chu ?? '',
-                    'ngayHen'   => $r?->ngay_hen?->toDateString() ?? '',
-                    'boQuaTu'   => $tu?->toDateString() ?? '',
-                    'soNgayCho' => $tu ? (int) $tu->diffInDays($hom) : null,
-                    'quaHen'    => (bool) ($r?->ngay_hen && $r->ngay_hen->lt($hom)),
-                    'treHen'    => $r?->ngay_hen && $r->ngay_hen->lt($hom) ? (int) $r->ngay_hen->diffInDays($hom) : null,
-                ];
+                for ($s = $truoc + 1; $s < $sau->seq && count($out) < 300; $s++) {
+                    $r = $coDong[$s] ?? null;
+
+                    $out[] = [
+                        'code'      => $prefix . sprintf('%04d', $s),
+                        'prefix'    => $prefix,
+                        'seq'       => $s,
+                        'lyDo'      => $r?->ghi_chu ?? '',
+                        'ngayHen'   => $r?->ngay_hen?->toDateString() ?? '',
+                        'boQuaTu'   => $tu?->toDateString() ?? '',
+                        'soNgayCho' => $tu ? (int) $tu->diffInDays($hom) : null,
+                        'quaHen'    => (bool) ($r?->ngay_hen && $r->ngay_hen->lt($hom)),
+                        'treHen'    => $r?->ngay_hen && $r->ngay_hen->lt($hom)
+                            ? (int) $r->ngay_hen->diffInDays($hom) : null,
+                    ];
+                }
             }
         }
 

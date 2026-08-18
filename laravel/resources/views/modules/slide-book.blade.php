@@ -928,7 +928,7 @@ let PH={ma:[],buoc:1,gia:[],today:''};
 const coSo=x=>String(x.soBlock??'').trim()!==''||String(x.soTieuBan??'').trim()!=='';
 
 async function moPhien(danNgay){
-  PH={ma:[],buoc:1,gia:[],today:D.today||'',maxSoan:0};
+  PH={ma:[],buoc:1,gia:[],today:D.today||'',boQua:new Set()};
   ['phTu','phGia','phCat','phSoan','phGhiChu'].forEach(i=>$(i).value='');
   $('phErr').textContent='';
   $('danMode').value='ma';dongKhungDan();
@@ -943,13 +943,22 @@ async function moPhien(danNgay){
   if(danNgay)return moKhungDan();
   const o=$('phBody').querySelector('input');if(o)o.focus();
 }
+/* Khoảng trống dài hơn ngần này mã là đổi dải số (kíp nhảy sang 26A2900 chẳng hạn),
+   không phải bỏ quên — nếu không một lần nhảy dải sẽ gắn cờ hàng nghìn mã. */
+const TOI_DA_NHAY=50;
 /** Toàn bộ mã chưa soạn của đầu mã đang mở — tính tại chỗ từ sổ, không hỏi máy chủ. */
 function dsMaTrong(){
   const co=v=>String(v??'').trim()!=='';
-  PH.maxSoan=0;
-  Object.values(D.rows||{}).forEach(r=>{
-    if((co(r.soBlock)||co(r.soTieuBan))&&Number(r.seq)>PH.maxSoan)PH.maxSoan=Number(r.seq);
-  });
+  const daSoan=Object.values(D.rows||{})
+    .filter(r=>co(r.soBlock)||co(r.soTieuBan)).map(r=>Number(r.seq)).sort((a,b)=>a-b);
+
+  // mã bị phiên soạn nhảy qua = nằm trong khoảng trống ngắn giữa hai mã đã soạn
+  PH.boQua=new Set();
+  for(let i=1;i<daSoan.length;i++){
+    const a=daSoan[i-1],b=daSoan[i];
+    if(b-a-1<1||b-a-1>TOI_DA_NHAY)continue;
+    for(let s=a+1;s<b;s++)PH.boQua.add(s);
+  }
   const ds=[],n=D.soDong||9999;
   for(let s=1;s<=n;s++)if(!daCoDl(s))ds.push({seq:s,code:maCua(s),soBlock:'',soTieuBan:''});
   return ds;
@@ -987,7 +996,7 @@ function vePhBody(epLai){
 
   let html=start>0?`<tr class="sp"><td colspan="4" style="height:${start*PHROW}px"></td></tr>`:'';
   for(let i=start;i<end;i++){
-    const x=list[i],boQua=x.seq<PH.maxSoan;       // nằm lọt trong dải đã soạn = mã bị nhảy qua
+    const x=list[i],boQua=PH.boQua&&PH.boQua.has(x.seq);   // bị phiên soạn nhảy qua
     html+=`<tr class="${boQua?'gap':''}">
       <td class="ma">${x.code}${boQua?' <span class="badge b-hc">bỏ qua</span>':''}</td>
       <td><input data-ph="${i}" data-phf="soBlock" type="number" min="0" inputmode="numeric" value="${esc(x.soBlock)}"></td>
@@ -1003,11 +1012,11 @@ function vePhBody(epLai){
 }
 function demPhien(){
   const n=PH.ma.filter(coSo).length;
-  const boQua=PH.ma.filter(x=>x.seq<PH.maxSoan).length;
+  const boQua=PH.boQua?PH.boQua.size:0;
   $('phDem').innerHTML=`Đã nhập <b>${n}</b> mã · tổng <b>${PH.ma.length}</b> mã chưa soạn`
     +(boQua?` · <b>${boQua}</b> mã bị nhảy qua`:'');
   $('phGiaiThich').innerHTML=`Đang mở <b>toàn bộ ${PH.ma.length} mã chưa soạn</b> của đầu mã ${D.prefix} — cuộn hoặc dùng
-    <b>Đi đến mã</b> để tới đúng mã cần nhập. Mã nằm lọt trong dải đã soạn được đánh dấu <b>bỏ qua</b>.
+    <b>Đi đến mã</b> để tới đúng mã cần nhập. Mã bị phiên soạn nhảy qua được đánh dấu <b>bỏ qua</b>.
     Mã để trống cả hai ô sẽ không ghi vào sổ.`;
 }
 function boMaPhien(i){PH.ma.splice(i,1);vePhBody(true)}
